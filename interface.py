@@ -29,28 +29,38 @@ class VerticalScrollArea(QScrollArea):
 
 
 class PianoKey(QWidget):
-    def __init__(self, isBlack, isPressed, parent=None):
+    def __init__(self, isBlack=False, isPressed=False, parent=None):
         super().__init__(parent)
-        self.isPressed = False
-        self.isBlack = False
+        self.isPressed = isPressed
+        self.isBlack = isBlack
 
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
         if self.isBlack:
-            if self.isPressed:
-                color = Qt.gray
-            else:
-                color = Qt.black
+            color = Qt.gray if self.isPressed else Qt.black
         else:
-            if self.isPressed:
-                color = Qt.lightGray
-            else:
-                color = Qt.white
-        
-        painter.setPen(QColor(255, 0, 0))
-        painter.fillRect(QRect(), color)
+            color = Qt.lightGray if self.isPressed else Qt.white
+
+        #pen = QPen()
+        #pen.setColor(color)
+        #painter.setPen(pen)
+        painter.fillRect(self.rect(), color)
         painter.end()
+
+        #brush = QBrush()
+        #brush.setColor(QColor('red'))
+        #brush.setStyle(Qt.SolidPattern)
+        #rect = QRect(0, 0, painter.device().width(), painter.device().height())
+        #painter.fillRect(rect, brush)
+
+    def mousePressEvent(self, event):
+        self.isPressed = True
+        self.repaint()
+
+    def mouseReleaseEvent(self, event):
+        self.isPressed = False
+        self.repaint()
 
 
 class PianoWidget(QWidget):
@@ -63,17 +73,18 @@ class PianoWidget(QWidget):
         self.whiteKeys = []
         self.blackKeys = []
 
-        for i in range(53):
+        for i in range(14):
             key = PianoKey(False, False, parent=self)
             self.whiteKeys.append(key)
             layout.addWidget(key)
-        
-        for i in range(37):
+
+        for i in range(10):
             key = PianoKey(True, False, parent=self)
             self.blackKeys.append(key)
-            layout.addWidget(key)
+            #layout.addWidget(key)
 
-        self.arrangeBlackKeys()
+        self.setLayout(layout)
+        self.resize(800, 200)
 
     def arrangeBlackKeys(self):
 
@@ -81,16 +92,18 @@ class PianoWidget(QWidget):
         keyWidth = self.whiteKeys[0].width() / 1.6
         keyHeight = self.whiteKeys[0].height() / 1.6
         offset = self.whiteKeys[0].width() / 1.5
-        yPos = self.whiteKeys[0].pos().y()
+        yPos = self.whiteKeys[0].y()
+        print(self.whiteKeys[0].width())
 
         for i in range(len(self.blackKeys)):
-            pos = blackLocations[i % 5]
-            xPos = self.whiteKeys[pos].pos().x() + offset
+            oct, key = divmod(i, 5)
+            pos = oct * 7 + blackLocations[key]
+            xPos = self.whiteKeys[pos].x() + offset
             self.blackKeys[i].resize(keyWidth, keyHeight)
             self.blackKeys[i].move(xPos, yPos)
 
-
-            
+    def resizeEvent(self, event):
+        self.arrangeBlackKeys()
 
 
 def drawMenuBar(window):
@@ -341,13 +354,11 @@ def drawWorkspace(window):
 
 
 def drawPiano(window):
+    piano = PianoWidget()
 
-    pianoArea = QScrollArea()
+    pianoArea = QScrollArea(parent=window)
     pianoArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-    layout = QVBoxLayout()
-
-    piano = PianoKey(True, False, parent=pianoArea)
+    pianoArea.setWidget(piano)
 
     return pianoArea
 
