@@ -14,11 +14,11 @@ class VerticalScrollArea(QScrollArea):
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        
+
         #content = QWidget(self)
         #content.setSizePolicy(QSizePolicy.Preferred)
         #layout = QVBoxLayout(content)
-        
+
         #self.setWidget(content)
         self.installEventFilter(self)
 
@@ -124,7 +124,7 @@ def drawMenuBar(window):
     settingsMenu = menuBar.addMenu("Settings")
     instrumentsMenu = settingsMenu.addMenu("Instrument")
     for ins in ["Harp", "Double Bass", "Bass Drum", "Snare Drum", "Click"]:
-            instrumentsMenu.addAction(ins)
+        instrumentsMenu.addAction(ins)
     settingsMenu.addSeparator()
     settingsMenu.addAction("Song info...")
     settingsMenu.addAction("Song properties...")
@@ -175,10 +175,10 @@ def drawToolBar(window):
         "play": qta.icon('mdi.play')
         "pause": qta.icon('mdi.pause')
         "stop": qta.icon('mdi.stop')
-        "loop_on": 
+        "loop_on":
         "loop_off":
-        "undo": 
-        "redo": 
+        "undo":
+        "redo":
     }
     '''
 
@@ -207,7 +207,7 @@ def drawToolBar(window):
     toolbar.addAction(icons["song_stats"], "Song stats")
     toolbar.addAction(icons["midi_devices"], "MIDI device manager")
     toolbar.addAction(icons["settings"], "Settings")
-    
+
     spacer = QWidget()
     spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
     toolbar.addWidget(spacer)
@@ -250,15 +250,15 @@ def drawLayers(window):
         layer.addWidget(nameBox)
         layer.addAction(icons["volume"], "Volume")
         layer.addAction(icons["stereo"], "Stereo panning")
-        layer.addAction(icons["lock_unlocked"], "Lock this layer")        
-        layer.addAction(icons["solo"], "Solo this layer")        
+        layer.addAction(icons["lock_unlocked"], "Lock this layer")
+        layer.addAction(icons["solo"], "Solo this layer")
         layer.addAction(icons["select_all"], "Select all note blocks in this layer")
         layer.addAction(icons["insert"], "Add empty layer here")
         layer.addAction(icons["remove"], "Remove this layer")
         layer.addAction(icons["shift_up"], "Shift layer up")
         layer.addAction(icons["shift_down"], "Shift layer down")
         layer.setLayout(innerLayout)
-        
+
         innerLayout.addWidget(layer)
 
         frame = QFrame()
@@ -296,7 +296,7 @@ def drawWorkspace(window):
     #brush = QBrush()
     #brush.setColor(color)
     #view.setBackgroundBrush(brush)
-    
+
     pen = QPen()
     color = QColor()
     #pen.setWidth(10)
@@ -336,7 +336,7 @@ def drawWorkspace(window):
     #layout.addWidget(scrollBar)
     #container = QWidget()
     #container.setLayout(layout)
-    
+
     return splitter
 
 
@@ -355,13 +355,13 @@ def drawPiano(window):
 def drawMainArea(window):
     workspace = drawWorkspace(window)
     piano = drawPiano(window)
-    
+
     #layout = QSplitter()
     #layout.setContentsMargins(0, 0, 0, 0)
     #layout.setSpacing(0)
     #layout.addWidget(workspace)
     #layout.addWidget(piano)
-    
+
     #mainArea.setLayout(layout)
     #return mainArea
 
