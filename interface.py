@@ -38,14 +38,26 @@ class PianoKey(QWidget):
         painter = QPainter()
         painter.begin(self)
         if self.isBlack:
-            color = Qt.gray if self.isPressed else Qt.black
+            color = QColor(100, 100, 100) if self.isPressed else QColor(30, 30, 30)
+            bevelColor = color.darker(200)
         else:
-            color = Qt.lightGray if self.isPressed else Qt.white
+            color = QColor(230, 230, 230) if self.isPressed else QColor(255, 255, 255)
+            bevelColor = color.darker(110)
+
+        rect = self.rect()
+        if self.isPressed:
+            rect.translate(0, 10)
 
         #pen = QPen()
         #pen.setColor(color)
         #painter.setPen(pen)
-        painter.fillRect(self.rect(), color)
+        painter.fillRect(rect, color)
+
+        bevel = self.rect()
+        bevel.setHeight(self.height()/9)
+        bevel.moveBottom(rect.bottom())
+        painter.fillRect(bevel, bevelColor)
+
         painter.end()
 
         #brush = QBrush()
