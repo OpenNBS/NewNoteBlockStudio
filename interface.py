@@ -69,38 +69,39 @@ class PianoWidget(QWidget):
         self.init()
 
     def init(self):
-        layout = QHBoxLayout()
+        self.keys = []
         self.whiteKeys = []
         self.blackKeys = []
+        self.blackPositions = [1, 3, 6, 8, 10]
+        layout = QHBoxLayout()
 
-        for i in range(14):
-            key = PianoKey(False, False, parent=self)
-            self.whiteKeys.append(key)
-            layout.addWidget(key)
-
-        for i in range(10):
-            key = PianoKey(True, False, parent=self)
-            self.blackKeys.append(key)
-            #layout.addWidget(key)
+        for i in range(81):
+            black = (i % 12) in self.blackPositions
+            if black:
+                key = PianoKey(True, False, parent=self)
+                self.blackKeys.append(key)
+            else:
+                key = PianoKey(False, False, parent=self)
+                self.whiteKeys.append(key)
+                layout.addWidget(key)
+            self.keys.append(key)
 
         self.setLayout(layout)
-        self.resize(800, 200)
+        self.resize(2400, 150)
 
     def arrangeBlackKeys(self):
-
-        blackLocations = [0, 1, 3, 4, 5]
         keyWidth = self.whiteKeys[0].width() / 1.6
         keyHeight = self.whiteKeys[0].height() / 1.6
         offset = self.whiteKeys[0].width() / 1.5
-        yPos = self.whiteKeys[0].y()
-        print(self.whiteKeys[0].width())
+        yPos = self.whiteKeys[0].y() - 10
 
         for i in range(len(self.blackKeys)):
             oct, key = divmod(i, 5)
-            pos = oct * 7 + blackLocations[key]
-            xPos = self.whiteKeys[pos].x() + offset
+            pos = oct * 12 + self.blackPositions[key]
+            xPos = self.keys[pos-1].x() + offset
             self.blackKeys[i].resize(keyWidth, keyHeight)
             self.blackKeys[i].move(xPos, yPos)
+            self.blackKeys[i].raise_()
 
     def resizeEvent(self, event):
         self.arrangeBlackKeys()
