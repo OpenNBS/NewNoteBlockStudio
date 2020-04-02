@@ -36,6 +36,21 @@ class PianoKey(QWidget):
         self.isPressed = isPressed
         self.isOutOfRange = isOutOfRange
         self.isActive = isActive
+        self.previousKey = None
+        self.currentKey = None
+        self.installEventFilter(self)
+
+    def pressKey(self):
+        if not self.isPressed:
+            print("Pressed key", self.label)
+            self.isPressed = True
+            self.repaint()
+
+    def releaseKey(self):
+        if self.isPressed:
+            print("Released key", self.label)
+            self.isPressed = False
+            self.repaint()
 
     def paintEvent(self, event):
         # Colors
@@ -81,13 +96,29 @@ class PianoKey(QWidget):
         painter.drawText(textRect, Qt.AlignCenter + Qt.AlignBottom, self.label)
         painter.end()
 
-    def mousePressEvent(self, event):
-        self.isPressed = True
-        self.repaint()
-
-    def mouseReleaseEvent(self, event):
-        self.isPressed = False
-        self.repaint()
+    def eventFilter(self, obj, event):
+        '''
+        Since widgets happens to grab the mouse whenever you click one,
+        in order to allow sliding the mouse over the piano, we install
+        an eventFilter on every piano key to detect when the mouse moves
+        over a certain key, then tell that key to be pressed.
+        '''
+        if event.type() == QEvent.MouseButtonPress:
+            self.pressKey()
+        if event.type() == QEvent.MouseButtonRelease:
+            self.releaseKey()
+            if self.currentKey is not None:
+                self.currentKey.releaseKey()
+        if event.type() == QEvent.MouseMove:
+            moveEvent = QMouseEvent(event)
+            widget = qApp.widgetAt(moveEvent.globalPos())
+            self.currentKey = widget if isinstance(widget, PianoKey) else None
+            if self.previousKey is not None and self.previousKey != self.currentKey:
+                self.previousKey.releaseKey()
+            if self.currentKey is not None and moveEvent.buttons() == Qt.LeftButton:
+                self.currentKey.pressKey()
+            self.previousKey = self.currentKey
+        return False
 
 
 class PianoWidget(QWidget):
