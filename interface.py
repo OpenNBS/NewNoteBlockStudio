@@ -24,47 +24,62 @@ class VerticalScrollArea(QScrollArea):
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Resize:
-            obj.setMinimumWidth(self.minimumSizeHint().width()+ 40)
+            obj.setMinimumWidth(self.minimumSizeHint().width() + 40)
         return super().eventFilter(obj, event)
 
 
 class PianoKey(QWidget):
-    def __init__(self, isBlack=False, isPressed=False, parent=None):
+    def __init__(self, label="", isBlack=False, isPressed=False, isOutOfRange=False, isActive=False, parent=None):
         super().__init__(parent)
-        self.isPressed = isPressed
+        self.label = label
         self.isBlack = isBlack
+        self.isPressed = isPressed
+        self.isOutOfRange = isOutOfRange
+        self.isActive = isActive
 
     def paintEvent(self, event):
-        painter = QPainter()
-        painter.begin(self)
+        # Colors
         if self.isBlack:
-            color = QColor(100, 100, 100) if self.isPressed else QColor(30, 30, 30)
-            bevelColor = color.darker(200)
+            if self.isPressed:
+                color = QColor(51, 102, 255)
+            elif self.isOutOfRange:
+                color = QColor(61, 15, 15)
+            else:
+                color = QColor(100, 100, 100) if self.isPressed else QColor(30, 30, 30)
+            textColor = Qt.white
         else:
-            color = QColor(230, 230, 230) if self.isPressed else QColor(255, 255, 255)
-            bevelColor = color.darker(110)
+            if self.isPressed:
+                color = QColor(51, 102, 255)
+            elif self.isOutOfRange:
+                color = QColor(234, 170, 168)
+            else:
+                color = QColor(230, 230, 230) if self.isPressed else QColor(255, 255, 255)
+            textColor = Qt.black
+        bevelColor = color.darker(130)
+        outlineColor = color.darker(200)
 
+        # Geometry
         rect = self.rect()
         if self.isPressed:
             rect.translate(0, 10)
-
-        #pen = QPen()
-        #pen.setColor(color)
-        #painter.setPen(pen)
-        painter.fillRect(rect, color)
-
         bevel = self.rect()
-        bevel.setHeight(self.height()/9)
+        bevel.setHeight(12)
         bevel.moveBottom(rect.bottom())
+        textRect = self.rect()
+        textRect.setBottom(bevel.top() - 15)
+
+        # Paint
+        painter = QPainter()
+        painter.begin(self)
+        painter.fillRect(rect, color)
         painter.fillRect(bevel, bevelColor)
-
+        pen = QPen(outlineColor)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.drawRects(rect, bevel)
+        painter.setPen(textColor)
+        painter.drawText(textRect, Qt.AlignCenter + Qt.AlignBottom, self.label)
         painter.end()
-
-        #brush = QBrush()
-        #brush.setColor(QColor('red'))
-        #brush.setStyle(Qt.SolidPattern)
-        #rect = QRect(0, 0, painter.device().width(), painter.device().height())
-        #painter.fillRect(rect, brush)
 
     def mousePressEvent(self, event):
         self.isPressed = True
@@ -84,22 +99,31 @@ class PianoWidget(QWidget):
         self.keys = []
         self.whiteKeys = []
         self.blackKeys = []
-        self.blackPositions = [1, 3, 6, 8, 10]
+        self.blackPositions = [1, 4, 6, 9, 11]#[1, 3, 6, 8, 10]
+        keys = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
         layout = QHBoxLayout()
+        # Bigger margin on the top to accomodate raised black keys
+        layout.setContentsMargins(10, 15, 10, 25)
+        layout.setSpacing(2)
 
-        for i in range(81):
-            black = (i % 12) in self.blackPositions
-            if black:
-                key = PianoKey(True, False, parent=self)
+        for i in range(88):
+            isOutOfRange = False
+            if i < 33 or i > 57:
+                isOutOfRange = True
+            oct, key = divmod(i, 12)
+            label = keys[key] + str(oct)
+            isBlack = key in self.blackPositions
+            if isBlack:
+                key = PianoKey(label, True, False, isOutOfRange, parent=self)
                 self.blackKeys.append(key)
             else:
-                key = PianoKey(False, False, parent=self)
+                key = PianoKey(label, False, False, isOutOfRange, parent=self)
                 self.whiteKeys.append(key)
                 layout.addWidget(key)
             self.keys.append(key)
 
         self.setLayout(layout)
-        self.resize(2400, 150)
+        self.resize(2400, 160)
 
     def arrangeBlackKeys(self):
         keyWidth = self.whiteKeys[0].width() / 1.6
