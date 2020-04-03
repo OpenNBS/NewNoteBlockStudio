@@ -1,5 +1,7 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtCore import Qt
 import interface
 
 class MainWindow(QMainWindow):
@@ -24,7 +26,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainArea)
 
 if __name__ == '__main__':
+    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     app = QApplication(sys.argv)
+    app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
