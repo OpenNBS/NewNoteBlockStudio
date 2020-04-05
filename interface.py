@@ -178,23 +178,34 @@ class PianoScroll(QScrollArea):
     """A scrolling area containing a piano widget."""
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.mouseNearLeftEdge = False
+        self.mouseNearRightEdge = False
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setMouseTracking(True)
         self.setWidget(PianoWidget())
+        self.startTimer(10)
+
+    def timerEvent(self, event):
+        self.autoScroll()
+
+    def autoScroll(self):
+        sb = self.horizontalScrollBar()
+        if self.mouseNearLeftEdge:
+            sb.setValue(sb.value() - 5)
+        elif self.mouseNearRightEdge:
+            sb.setValue(sb.value() + 5)
 
     def mouseMoveEvent(self, event):
-        """ Allow scrolling the piano by placing the mouse near the edges."""
+        """Allow scrolling the piano by placing the mouse near the edges."""
         leftEdge = self.rect()
         leftEdge.setRight(50)
         rightEdge = self.rect()
         rightEdge.setLeft(self.width()-50)
-        sb = self.horizontalScrollBar()
-        if leftEdge.contains(event.pos()):
-            sb.setValue(sb.value()-10)
-            print("LEFT")
-        if rightEdge.contains(event.pos()):
-            sb.setValue(sb.value()+10)
-            print("RIGHT")
+        mousePos = event.pos()
+        self.mouseNearLeftEdge = leftEdge.contains(mousePos)
+        self.mouseNearRightEdge = rightEdge.contains(mousePos)
+
 
 def drawMenuBar(window):
     # Create menu bar
