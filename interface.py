@@ -27,15 +27,33 @@ class VerticalScrollArea(QScrollArea):
             obj.setMinimumWidth(self.minimumSizeHint().width() + 40)
         return super().eventFilter(obj, event)
 
-
 class PianoKey(QWidget):
-    def __init__(self, label="", isBlack=False, isPressed=False, isOutOfRange=False, isActive=False, parent=None):
+    """
+    A single piano key, which can be white or black.
+
+    Arguments:
+        num (int): the number of this key within the parent PianoWidget
+        label (str): the label that will appear on this key
+        isBlack (bool): whether this key is black or white (default False)
+        isOutOfRange (bool): whether this key is outside the valid range (default False)
+
+    Attributes:
+
+    """
+
+    # Using the 'object' type since the value can
+    # be either a number (int) or None (NoneType)
+    keyPressed = pyqtSignal(object)
+    keyReleased = pyqtSignal(object)
+
+    def __init__(self, num, label="", isBlack=False, isOutOfRange=False, parent=None):
         super().__init__(parent)
+        self.num = num
         self.label = label
         self.isBlack = isBlack
-        self.isPressed = isPressed
         self.isOutOfRange = isOutOfRange
-        self.isActive = isActive
+        self.isPressed = False
+        self.isActive = False
         self.previousKey = None
         self.currentKey = None
         self.installEventFilter(self)
@@ -43,32 +61,38 @@ class PianoKey(QWidget):
     def pressKey(self):
         if not self.isPressed:
             print("Pressed key", self.label)
+            self.keyPressed.emit(self.num)
             self.isPressed = True
             self.repaint()
 
     def releaseKey(self):
         if self.isPressed:
             print("Released key", self.label)
+            self.keyReleased.emit(self.num)
             self.isPressed = False
             self.repaint()
 
     def paintEvent(self, event):
         # Colors
         if self.isBlack:
-            if self.isPressed:
+            if self.isActive:
                 color = QColor(51, 102, 255)
             elif self.isOutOfRange:
                 color = QColor(61, 15, 15)
             else:
-                color = QColor(100, 100, 100) if self.isPressed else QColor(30, 30, 30)
+                color = QColor(30, 30, 30)
+            if self.isPressed:
+                color = color.lighter(110)
             textColor = Qt.white
         else:
-            if self.isPressed:
+            if self.isActive:
                 color = QColor(51, 102, 255)
             elif self.isOutOfRange:
                 color = QColor(234, 170, 168)
             else:
-                color = QColor(230, 230, 230) if self.isPressed else QColor(255, 255, 255)
+                color = QColor(255, 255, 255)
+            if self.isPressed:
+                color = color.darker(120)
             textColor = Qt.black
         bevelColor = color.darker(130)
         outlineColor = color.darker(200)
@@ -122,50 +146,108 @@ class PianoKey(QWidget):
 
 
 class PianoWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.init()
+    """
+    Create a piano widget.
 
-    def init(self):
+    Arguments:
+        keyCount (int): number of keys
+        offset (int): offset from C0 to apply to the first key
+        validRange (int, int): a 2-tuple representing the interval (inclusive)
+            in which keys will be considered in range
+
+    Attributes:
+
+    Methods:
+
+    """
+
+    def __init__(self, keyCount, offset, validRange=(), parent=None):
+        super().__init__(parent)
+        self.keyCount = keyCount
+        self.offset = offset
+        if not validRange:
+            self._validRange = (0, self.keyCount)
+        else:
+            self._validRange = validRange
+        self._activeKey = None
+        self.initUI()
+
+    @property
+    def validRange(self):
+        return self._validRange
+
+    @validRange.setter
+    def validRange(self, value):
+        self._validRange = (min(value[0], 0), max(value[1], self.keyCount))
+        self.repaint()
+
+    @property
+    def activeKey(self):
+        return self._activeKey
+
+    @activeKey.setter
+    def activeKey(self, value):
+        if self._activeKey is not None:
+            self.keys[self._activeKey].isActive = False
+        self.keys[value].isActive = True
+        self._activeKey = value
+        self.repaint()
+
+    @pyqtSlot(object)
+    def setActiveKey(self, key):
+        self.activeKey = key
+
+    def initUI(self):
         self.keys = []
         self.whiteKeys = []
         self.blackKeys = []
-        self.blackPositions = [1, 4, 6, 9, 11]#[1, 3, 6, 8, 10]
-        keys = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
-        layout = QHBoxLayout()
+        self.blackPositions = (1, 3, 6, 8, 10)
+        labels = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+        self.layout = QHBoxLayout()
         # Bigger margin on the top to accomodate raised black keys
-        layout.setContentsMargins(10, 15, 10, 25)
-        layout.setSpacing(2)
+        self.layout.setContentsMargins(10, 15, 10, 25)
+        self.layout.setSpacing(2)
 
-        for i in range(88):
-            isOutOfRange = False
-            if i < 33 or i > 57:
-                isOutOfRange = True
-            oct, key = divmod(i, 12)
-            label = keys[key] + str(oct)
+        for i in range(self.keyCount):
+            rangeMin, rangeMax = self._validRange
+            isOutOfRange = not (rangeMin <= i <= rangeMax)
+            oct, key = divmod(i + self.offset, 12)
+            label = labels[key] + str(oct)
             isBlack = key in self.blackPositions
+            key = PianoKey(i, label, isBlack, isOutOfRange, parent=self)
             if isBlack:
-                key = PianoKey(label, True, False, isOutOfRange, parent=self)
                 self.blackKeys.append(key)
             else:
-                key = PianoKey(label, False, False, isOutOfRange, parent=self)
                 self.whiteKeys.append(key)
-                layout.addWidget(key)
+                self.layout.addWidget(key)
+            key.keyPressed.connect(self.setActiveKey)
             self.keys.append(key)
 
-        self.setLayout(layout)
+        self.setLayout(self.layout)
         self.resize(2400, 160)
 
-    def arrangeBlackKeys(self):
-        keyWidth = self.whiteKeys[0].width() / 1.6
-        keyHeight = self.whiteKeys[0].height() / 1.6
-        offset = self.whiteKeys[0].width() / 1.5
-        yPos = self.whiteKeys[0].y() - 10
+    def blackKeysInRange(self, min, max):
+        """Return the number of black keys in a given range."""
+        count = 0
+        for i in range(min, max):
+            key = i % 12
+            if key in self.blackPositions:
+                count += 1
+        return count
 
+    def arrangeBlackKeys(self):
+        """Update position of the black keys on the piano."""
+        key = self.whiteKeys[0]
+        keyWidth = key.width() / 1.6
+        keyHeight = key.height() / 1.6
+        keyOffset = key.width() / 1.5
+        yPos = key.y() - 10
+        offset = self.blackKeysInRange(0, self.offset)
         for i in range(len(self.blackKeys)):
-            oct, key = divmod(i, 5)
-            pos = oct * 12 + self.blackPositions[key]
-            xPos = self.keys[pos-1].x() + offset
+            oct, key = divmod(i + offset, 5)
+            pos = oct * 12 + self.blackPositions[key] - self.offset
+            # Set x pos based on the position of the previous (white) key
+            xPos = self.keys[pos-1].x() + keyOffset
             self.blackKeys[i].resize(keyWidth, keyHeight)
             self.blackKeys[i].move(xPos, yPos)
             self.blackKeys[i].raise_()
@@ -175,21 +257,24 @@ class PianoWidget(QWidget):
 
 
 class PianoScroll(QScrollArea):
-    """A scrolling area containing a piano widget."""
-    def __init__(self, parent=None):
+    """
+    A scrolling area containing a piano widget.
+    Takes the same arguments as PianoWidget().
+    """
+    def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
         self.mouseNearLeftEdge = False
         self.mouseNearRightEdge = False
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setMouseTracking(True)
-        self.setWidget(PianoWidget())
+        self.setWidget(PianoWidget(*args, **kwargs))
         self.startTimer(10)
 
     def timerEvent(self, event):
-        self.autoScroll()
+        self.checkAutoScroll()
 
-    def autoScroll(self):
+    def checkAutoScroll(self):
         sb = self.horizontalScrollBar()
         if self.mouseNearLeftEdge:
             sb.setValue(sb.value() - 5)
@@ -455,7 +540,7 @@ def drawWorkspace(window):
 
 
 def drawPiano(window):
-    piano = PianoScroll(parent=window)
+    piano = PianoScroll(keyCount=88, offset=9, validRange=(33, 57), parent=window)
     return piano
 
 
