@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
 
         menuBar = interface.drawMenuBar(self)
         toolBar = interface.drawToolBar(self)
-        mainArea = interface.drawMainArea(self)
+        mainArea = interface.CentralArea(self)
 
         # replace all this with a single class/function that draws all
         #mainArea = interface.MainArea()

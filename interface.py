@@ -414,153 +414,175 @@ def drawToolBar(window):
 
     return toolbar
 
-def drawLayers(window):
 
-    icons = {
-        "volume":           qta.icon('mdi.volume-high'),
-        "stereo":           qta.icon('mdi.equalizer'),
-        "lock_locked":      qta.icon('mdi.lock-outline'),
-        "lock_unlocked":    qta.icon('mdi.lock-open-variant-outline'),
-        "solo":             qta.icon('mdi.exclamation-thick'),
-        "select_all":       qta.icon('mdi.select-all'),
-        "insert":           qta.icon('mdi.plus-circle-outline'), #mdi.plus-box
-        "remove":           qta.icon('mdi.delete-outline'), #mdi.trash-can
-        "shift_up":         qta.icon('mdi.arrow-up-bold'),
-        "shift_down":       qta.icon('mdi.arrow-down-bold')
-    }
+class NoteBlockArea(QGraphicsScene):
+    """
+    A scrolling area that holds the note blocks in a song.
+    """
 
-    layout = QVBoxLayout()
-    layout.setSpacing(0)
-    layout.setContentsMargins(5, 5, 0, 0)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.view = QGraphicsView(self, parent)
+        self.gridLines = []
+        self.initUI()
 
-    for i in range(0, 25):
-        innerLayout = QHBoxLayout()
-        innerLayout.setContentsMargins(5, 0, 5, 0)
+    def initUI(self):
+        self.setSceneRect(0, 0, 32000, 32000)
+        self.drawGridLines()
 
-        nameBox = QLineEdit()
-        nameBox.setFixedSize(76, 16)
-        nameBox.setPlaceholderText("Layer {}".format(i+1))
-
-        layer = QToolBar()
-        layer.setIconSize(QSize(20, 24))
-        layer.setFixedHeight(32)
-        layer.setMaximumWidth(342) # calculate instead of hardcode
-        layer.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        layer.addWidget(nameBox)
-        layer.addAction(icons["volume"], "Volume")
-        layer.addAction(icons["stereo"], "Stereo panning")
-        layer.addAction(icons["lock_unlocked"], "Lock this layer")
-        layer.addAction(icons["solo"], "Solo this layer")
-        layer.addAction(icons["select_all"], "Select all note blocks in this layer")
-        layer.addAction(icons["insert"], "Add empty layer here")
-        layer.addAction(icons["remove"], "Remove this layer")
-        layer.addAction(icons["shift_up"], "Shift layer up")
-        layer.addAction(icons["shift_down"], "Shift layer down")
-        layer.setLayout(innerLayout)
-
-        innerLayout.addWidget(layer)
-
-        frame = QFrame()
-        frame.setFrameStyle(QFrame.Panel)
-        frame.setFrameShadow(QFrame.Raised)
-        frame.setLineWidth(1)
-        frame.setLayout(innerLayout)
-        #frame = QWidget()
-        #frame.setLayout(innerLayout)
-
-        layout.addWidget(frame)
-
-    container = QWidget()
-    container.setLayout(layout)
-    container.setContentsMargins(0, 0, 0, 0)
-
-    layerBox = VerticalScrollArea()
-    layerBox.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    layerBox.setMaximumWidth(layer.width())
-    layerBox.setWidget(container)
-
-    return layerBox
+    def drawGridLines(self):
+        x1, y1, x2, y2 = self.sceneRect().getRect()
+        color = QColor()
+        pen = QPen()
+        for x in range(int(x2)):
+            if x % 4 == 0:
+                color.setRgb(127, 127, 127)
+            else:
+                color.setRgb(200, 200, 200)
+            pen.setColor(color)
+            line = QGraphicsLineItem()
+            line.setLine(x*32, y1, x*32, y2)
+            line.setPen(pen)
+            self.gridLines.append(line)
+            self.addItem(line)
 
 
-def drawWorkspace(window):
+class LayerBar(QToolBar):
+    """A single layer bar."""
 
-    layerWidget = drawLayers(window)
+    def __init__(self, num, name="", volume=100, panning=100, locked=False, solo=False, parent=None):
+        super().__init__(parent)
+        self.num = num
+        self.name = name
+        self.volume = volume
+        self.panning = panning
+        self.locked = locked
+        self.solo = solo
+        self.icons = self.initIcons()
+        self.initUI()
 
-    scene = QGraphicsScene()
-    scene.setSceneRect(0, 0, 2000, 2000)
-    view = QGraphicsView(scene, parent=window)
+    def initIcons(self):
+        return {
+            "volume":           qta.icon("mdi.volume-high"),
+            "stereo":           qta.icon("mdi.equalizer"),
+            "lock_locked":      qta.icon("mdi.lock-outline"),
+            "lock_unlocked":    qta.icon("mdi.lock-open-variant-outline"),
+            "solo":             qta.icon("mdi.exclamation-thick"),
+            "select_all":       qta.icon("mdi.select-all"),
+            "insert":           qta.icon("mdi.plus-circle-outline"), #mdi.plus-box
+            "remove":           qta.icon("mdi.delete-outline"), #mdi.trash-can
+            "shift_up":         qta.icon("mdi.arrow-up-bold"),
+            "shift_down":       qta.icon("mdi.arrow-down-bold")
+        }
 
-    #color = QColor()
-    #color.setRgb(10, 10, 10)
-    #brush = QBrush()
-    #brush.setColor(color)
-    #view.setBackgroundBrush(brush)
+    def initUI(self):
+        self.setIconSize(QSize(20, 24))
+        self.setFixedHeight(32)
+        self.setMaximumWidth(342) # calculate instead of hardcode
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        self.addFrame()
+        self.addContents()
 
-    pen = QPen()
-    color = QColor()
-    #pen.setWidth(10)
+    def addFrame(self):
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(5, 0, 5, 0)
+        self.layout.addWidget(self)
+        self.frame = QFrame()
+        self.frame.setFrameStyle(QFrame.Panel)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setLineWidth(1)
+        self.frame.setLayout(self.layout)
 
-    x1, y1, x2, y2 = scene.sceneRect().getRect()
-    for x in range(int(x2)):
-        if x % 4 == 0:
-            color.setRgb(127, 127, 127)
+    def addContents(self):
+        self.nameBox = QLineEdit()
+        self.nameBox.setFixedSize(76, 16)
+        self.nameBox.setPlaceholderText("Layer {}".format(self.num+1))
+        self.addWidget(self.nameBox)
+        self.addAction(self.icons["volume"], "Volume")
+        self.addAction(self.icons["stereo"], "Stereo panning")
+        self.addAction(self.icons["lock_unlocked"], "Lock this layer")
+        self.addAction(self.icons["solo"], "Solo this layer")
+        self.addAction(self.icons["select_all"], "Select all note blocks in this layer")
+        self.addAction(self.icons["insert"], "Add empty layer here")
+        self.addAction(self.icons["remove"], "Remove this layer")
+        self.addAction(self.icons["shift_up"], "Shift layer up")
+        self.addAction(self.icons["shift_down"], "Shift layer down")
+
+
+class LayerArea(VerticalScrollArea):
+    def __init__(self, layerCount=32000, parent=None):
+        super().__init__(parent)
+        self.layerCount = layerCount
+        self.layers = []
+        self.initUI()
+
+    def initUI(self):
+        self.layout = QVBoxLayout()
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(5, 5, 0, 0)
+        self.container = QWidget()
+        self.container.setLayout(self.layout)
+        self.container.setContentsMargins(0, 0, 0, 0)
+        for i in range(20):
+            layer = LayerBar(i)
+            self.layout.addWidget(layer.frame)
+            self.layers.append(layer)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setMaximumWidth(self.layers[0].width())
+        self.setWidget(self.container)
+
+
+class Workspace(QSplitter):
+    """
+    A splitter holding a layer area on the left and a note
+    block area on the right.
+    """
+
+    def __init__(self, layerWidget=None, noteBlockWidget=None, parent=None):
+        super().__init__(parent)
+        if layerWidget is None:
+            self.layerWidget = LayerArea()
         else:
-            color.setRgb(200, 200, 200)
-        pen.setColor(color)
-        line = QGraphicsLineItem()
-        line.setLine(x*32, y1, x*32, y2)
-        line.setPen(pen)
-        scene.addItem(line)
+            self.layerWidget = layerWidget
+        if noteBlockWidget is None:
+            self.noteBlockWidget = NoteBlockArea()
+        else:
+            self.noteBlockWidget = noteBlockWidget
+        self.addWidget(self.layerWidget)
+        self.addWidget(self.noteBlockWidget.view)
+        self.setHandleWidth(2)
 
-    splitter = QSplitter()
-    splitter.setHandleWidth(2)
-    splitter.addWidget(layerWidget)
-    splitter.addWidget(view)
-    #splitter.setStretchFactor(0.5, 0.5)
-
-    # We add the workspace and a horizontal scrollbar to a
-    # vertical layout, so now we have a scrollbar at the bottom
-    # that spans both the layer box and the note block area.
-    # Comment this section to have the scrollbar span just
-    # the note block area.
-    #view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-    #scrollBar = QScrollBar()
-    #scrollBar.setOrientation(Qt.Horizontal)
-    #scrollBar.setMinimum(0)
-    #scrollBar.setMaximum(150)
-    #layout = QVBoxLayout()
-    #layout.setContentsMargins(0, 0, 0, 0)
-    #layout.setSpacing(0)
-    #layout.addWidget(splitter)
-    #layout.addWidget(scrollBar)
-    #container = QWidget()
-    #container.setLayout(layout)
-
-    return splitter
+    def setSingleScrollBar(self):
+        """
+        Add the workspace and a horizontal scrollbar to a
+        vertical layout, creating a scrollbar at the bottom
+        that spans both the layer box and the note block area.
+        Remove the call to this function to have the scrollbar
+        span just the note block area.
+        """
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scrollBar = QScrollBar()
+        scrollBar.setOrientation(Qt.Horizontal)
+        scrollBar.setMinimum(0)
+        scrollBar.setMaximum(150)
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self)
+        layout.addWidget(scrollBar)
+        container = QWidget()
+        container.setLayout(layout)
 
 
-def drawPiano(window):
-    piano = PianoScroll(keyCount=88, offset=9, validRange=(33, 57), parent=window)
-    return piano
+class CentralArea(QSplitter):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.workspace = Workspace()
+        self.piano = PianoScroll(keyCount=88, offset=9, validRange=(33, 57))
+        self.initUI()
 
-
-def drawMainArea(window):
-    workspace = drawWorkspace(window)
-    piano = drawPiano(window)
-
-    #layout = QSplitter()
-    #layout.setContentsMargins(0, 0, 0, 0)
-    #layout.setSpacing(0)
-    #layout.addWidget(workspace)
-    #layout.addWidget(piano)
-
-    #mainArea.setLayout(layout)
-    #return mainArea
-
-    splitter = QSplitter()
-    splitter.setOrientation(Qt.Vertical)
-    splitter.setHandleWidth(2)
-    splitter.addWidget(workspace)
-    splitter.addWidget(piano)
-
-    return splitter
+    def initUI(self):
+        self.setOrientation(Qt.Vertical)
+        self.setHandleWidth(2)
+        self.addWidget(self.workspace)
+        self.addWidget(self.piano)
