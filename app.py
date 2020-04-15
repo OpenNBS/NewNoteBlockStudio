@@ -1,10 +1,9 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
-from PyQt5.QtCore import Qt
+from PyQt5 import QtCore, QtWidgets
 import interface
 
-class MainWindow(QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Open Note Block Studio')
@@ -27,9 +26,9 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-    app = QApplication(sys.argv)
-    app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    app = QtWidgets.QApplication(sys.argv)
+    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    app.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())

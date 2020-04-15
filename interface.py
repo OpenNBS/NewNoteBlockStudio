@@ -1,33 +1,25 @@
-#from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QMenuBar, QMenu, QToolBar, QSizePolicy, QGraphicsScene, QGraphicsView
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5 import QtCore, QtGui, QtWidgets
 import qtawesome as qta
 
 
-class VerticalScrollArea(QScrollArea):
+class VerticalScrollArea(QtWidgets.QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setup()
 
     def setup(self):
         self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-
-        #content = QWidget(self)
-        #content.setSizePolicy(QSizePolicy.Preferred)
-        #layout = QVBoxLayout(content)
-
-        #self.setWidget(content)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.installEventFilter(self)
 
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Resize:
+        if event.type() == QtCore.QEvent.Resize:
             obj.setMinimumWidth(self.minimumSizeHint().width() + 40)
         return super().eventFilter(obj, event)
 
-class PianoKey(QWidget):
+
+class PianoKey(QtWidgets.QWidget):
     """
     A single piano key, which can be white or black.
 
@@ -43,8 +35,8 @@ class PianoKey(QWidget):
 
     # Using the 'object' type since the value can
     # be either a number (int) or None (NoneType)
-    keyPressed = pyqtSignal(object)
-    keyReleased = pyqtSignal(object)
+    keyPressed = QtCore.pyqtSignal(object)
+    keyReleased = QtCore.pyqtSignal(object)
 
     def __init__(self, num, label="", isBlack=False, isOutOfRange=False, parent=None):
         super().__init__(parent)
@@ -76,24 +68,24 @@ class PianoKey(QWidget):
         # Colors
         if self.isBlack:
             if self.isActive:
-                color = QColor(51, 102, 255)
+                color = QtGui.QColor(51, 102, 255)
             elif self.isOutOfRange:
-                color = QColor(61, 15, 15)
+                color = QtGui.QColor(61, 15, 15)
             else:
-                color = QColor(30, 30, 30)
+                color = QtGui.QColor(30, 30, 30)
             if self.isPressed:
                 color = color.lighter(110)
-            textColor = Qt.white
+            textColor = QtCore.Qt.white
         else:
             if self.isActive:
-                color = QColor(51, 102, 255)
+                color = QtGui.QColor(51, 102, 255)
             elif self.isOutOfRange:
-                color = QColor(234, 170, 168)
+                color = QtGui.QColor(234, 170, 168)
             else:
-                color = QColor(255, 255, 255)
+                color = QtGui.QColor(255, 255, 255)
             if self.isPressed:
                 color = color.darker(120)
-            textColor = Qt.black
+            textColor = QtCore.Qt.black
         bevelColor = color.darker(130)
         outlineColor = color.darker(200)
 
@@ -108,16 +100,16 @@ class PianoKey(QWidget):
         textRect.setBottom(bevel.top() - 15)
 
         # Paint
-        painter = QPainter()
+        painter = QtGui.QPainter()
         painter.begin(self)
         painter.fillRect(rect, color)
         painter.fillRect(bevel, bevelColor)
-        pen = QPen(outlineColor)
+        pen = QtGui.QPen(outlineColor)
         pen.setWidth(2)
         painter.setPen(pen)
         painter.drawRects(rect, bevel)
         painter.setPen(textColor)
-        painter.drawText(textRect, Qt.AlignCenter + Qt.AlignBottom, self.label)
+        painter.drawText(textRect, QtCore.Qt.AlignCenter + QtCore.Qt.AlignBottom, self.label)
         painter.end()
 
     def eventFilter(self, obj, event):
@@ -127,25 +119,25 @@ class PianoKey(QWidget):
         an eventFilter on every piano key to detect when the mouse moves
         over a certain key, then tell that key to be pressed.
         '''
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() == QtCore.QEvent.MouseButtonPress:
             self.pressKey()
-        if event.type() == QEvent.MouseButtonRelease:
+        if event.type() == QtCore.QEvent.MouseButtonRelease:
             self.releaseKey()
             if self.currentKey is not None:
                 self.currentKey.releaseKey()
-        if event.type() == QEvent.MouseMove:
-            moveEvent = QMouseEvent(event)
-            widget = qApp.widgetAt(moveEvent.globalPos())
+        if event.type() == QtCore.QEvent.MouseMove:
+            moveEvent = QtGui.QMouseEvent(event)
+            widget = QtWidgets.qApp.widgetAt(moveEvent.globalPos())
             self.currentKey = widget if isinstance(widget, PianoKey) else None
             if self.previousKey is not None and self.previousKey != self.currentKey:
                 self.previousKey.releaseKey()
-            if self.currentKey is not None and moveEvent.buttons() == Qt.LeftButton:
+            if self.currentKey is not None and moveEvent.buttons() == QtCore.Qt.LeftButton:
                 self.currentKey.pressKey()
             self.previousKey = self.currentKey
         return False
 
 
-class PianoWidget(QWidget):
+class PianoWidget(QtWidgets.QWidget):
     """
     Create a piano widget.
 
@@ -193,7 +185,7 @@ class PianoWidget(QWidget):
         self._activeKey = value
         self.repaint()
 
-    @pyqtSlot(object)
+    @QtCore.pyqtSlot(object)
     def setActiveKey(self, key):
         self.activeKey = key
 
@@ -203,7 +195,7 @@ class PianoWidget(QWidget):
         self.blackKeys = []
         self.blackPositions = (1, 3, 6, 8, 10)
         labels = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-        self.layout = QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         # Bigger margin on the top to accomodate raised black keys
         self.layout.setContentsMargins(10, 15, 10, 25)
         self.layout.setSpacing(2)
@@ -256,7 +248,7 @@ class PianoWidget(QWidget):
         self.arrangeBlackKeys()
 
 
-class PianoScroll(QScrollArea):
+class PianoScroll(QtWidgets.QScrollArea):
     """
     A scrolling area containing a piano widget.
     Takes the same arguments as PianoWidget().
@@ -265,10 +257,14 @@ class PianoScroll(QScrollArea):
         super().__init__(parent)
         self.mouseNearLeftEdge = False
         self.mouseNearRightEdge = False
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.piano = PianoWidget(*args, **kwargs)
+        self.initUI()
+
+    def initUI(self):
+        self.setWidget(self.piano)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setMouseTracking(True)
-        self.setWidget(PianoWidget(*args, **kwargs))
         self.startTimer(10)
 
     def timerEvent(self, event):
@@ -293,15 +289,14 @@ class PianoScroll(QScrollArea):
 
 
 def drawMenuBar(window):
-    # Create menu bar
-    menuBar = QMenuBar(parent=window)
+    menuBar = QtWidgets.QMenuBar(parent=window)
 
     # File
     fileMenu = menuBar.addMenu("File")
     fileMenu.addAction("New song")
     fileMenu.addAction("Open song...")
-    recentSongs = fileMenu.addMenu(QIcon(), 'Open recent')
-    recentSongs.addSection(QIcon(), "No recent songs")
+    recentSongs = fileMenu.addMenu(QtGui.QIcon(), 'Open recent')
+    recentSongs.addSection(QtGui.QIcon(), "No recent songs")
     importMenu = fileMenu.addMenu("Import")
     importFromSchematicAction = importMenu.addAction("From schematic")
     importFromMidiAction = importMenu.addAction("From MIDI")
@@ -381,7 +376,7 @@ def drawToolBar(window):
     }
     '''
 
-    toolbar = QToolBar(parent=window)
+    toolbar = QtWidgets.QToolBar(parent=window)
     toolbar.addAction(icons["new_song"], "New song")
     toolbar.addAction(icons["open_song"], "Open song")
     toolbar.addAction(icons["save_song"], "Save song")
@@ -407,22 +402,22 @@ def drawToolBar(window):
     toolbar.addAction(icons["midi_devices"], "MIDI device manager")
     toolbar.addAction(icons["settings"], "Settings")
 
-    spacer = QWidget()
-    spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+    spacer = QtWidgets.QWidget()
+    spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
     toolbar.addWidget(spacer)
     toolbar.addAction("Compatible")
 
     return toolbar
 
 
-class NoteBlockArea(QGraphicsScene):
+class NoteBlockArea(QtWidgets.QGraphicsScene):
     """
     A scrolling area that holds the note blocks in a song.
     """
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.view = QGraphicsView(self, parent)
+        self.view = QtWidgets.QGraphicsView(self, parent)
         self.gridLines = []
         self.initUI()
 
@@ -432,22 +427,22 @@ class NoteBlockArea(QGraphicsScene):
 
     def drawGridLines(self):
         x1, y1, x2, y2 = self.sceneRect().getRect()
-        color = QColor()
-        pen = QPen()
+        color = QtGui.QColor()
+        pen = QtGui.QPen()
         for x in range(int(x2)):
             if x % 4 == 0:
                 color.setRgb(127, 127, 127)
             else:
                 color.setRgb(200, 200, 200)
             pen.setColor(color)
-            line = QGraphicsLineItem()
+            line = QtWidgets.QGraphicsLineItem()
             line.setLine(x*32, y1, x*32, y2)
             line.setPen(pen)
             self.gridLines.append(line)
             self.addItem(line)
 
 
-class LayerBar(QToolBar):
+class LayerBar(QtWidgets.QToolBar):
     """A single layer bar."""
 
     def __init__(self, num, name="", volume=100, panning=100, locked=False, solo=False, parent=None):
@@ -476,25 +471,25 @@ class LayerBar(QToolBar):
         }
 
     def initUI(self):
-        self.setIconSize(QSize(20, 24))
+        self.setIconSize(QtCore.QSize(20, 24))
         self.setFixedHeight(32)
         self.setMaximumWidth(342) # calculate instead of hardcode
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         self.addFrame()
         self.addContents()
 
     def addFrame(self):
-        self.layout = QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(5, 0, 5, 0)
         self.layout.addWidget(self)
-        self.frame = QFrame()
-        self.frame.setFrameStyle(QFrame.Panel)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame = QtWidgets.QFrame()
+        self.frame.setFrameStyle(QtWidgets.QFrame.Panel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setLineWidth(1)
         self.frame.setLayout(self.layout)
 
     def addContents(self):
-        self.nameBox = QLineEdit()
+        self.nameBox = QtWidgets.QLineEdit()
         self.nameBox.setFixedSize(76, 16)
         self.nameBox.setPlaceholderText("Layer {}".format(self.num+1))
         self.addWidget(self.nameBox)
@@ -510,29 +505,29 @@ class LayerBar(QToolBar):
 
 
 class LayerArea(VerticalScrollArea):
-    def __init__(self, layerCount=32000, parent=None):
+    def __init__(self, layerCount=200, parent=None):
         super().__init__(parent)
         self.layerCount = layerCount
         self.layers = []
         self.initUI()
 
     def initUI(self):
-        self.layout = QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(5, 5, 0, 0)
-        self.container = QWidget()
+        self.container = QtWidgets.QWidget()
         self.container.setLayout(self.layout)
         self.container.setContentsMargins(0, 0, 0, 0)
-        for i in range(20):
+        for i in range(self.layerCount):
             layer = LayerBar(i)
             self.layout.addWidget(layer.frame)
             self.layers.append(layer)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setMaximumWidth(self.layers[0].width())
         self.setWidget(self.container)
 
 
-class Workspace(QSplitter):
+class Workspace(QtWidgets.QSplitter):
     """
     A splitter holding a layer area on the left and a note
     block area on the right.
@@ -561,20 +556,20 @@ class Workspace(QSplitter):
         span just the note block area.
         """
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scrollBar = QScrollBar()
-        scrollBar.setOrientation(Qt.Horizontal)
+        scrollBar = QtWidgets.QScrollBar()
+        scrollBar.setOrientation(QtCore.Qt.Horizontal)
         scrollBar.setMinimum(0)
         scrollBar.setMaximum(150)
-        layout = QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self)
         layout.addWidget(scrollBar)
-        container = QWidget()
+        container = QtWidgets.QWidget()
         container.setLayout(layout)
 
 
-class CentralArea(QSplitter):
+class CentralArea(QtWidgets.QSplitter):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.workspace = Workspace()
@@ -582,7 +577,7 @@ class CentralArea(QSplitter):
         self.initUI()
 
     def initUI(self):
-        self.setOrientation(Qt.Vertical)
+        self.setOrientation(QtCore.Qt.Vertical)
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
         self.addWidget(self.piano)
