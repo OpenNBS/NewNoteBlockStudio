@@ -15,6 +15,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(toolBar)
         self.setCentralWidget(mainArea)
 
+        nb = nbs.ui.components.NoteBlock(0, 5, 33, 0)
+        mainArea.workspace.noteBlockWidget.addItem(nb)
+
     def drawMenuBar(self):
         pass
 

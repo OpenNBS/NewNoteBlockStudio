@@ -442,6 +442,56 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.addItem(line)
 
 
+class NoteBlock(QtWidgets.QGraphicsItem):
+    def __init__(self, x, y, key, ins, vel=100, pan=0, pit=0, parent=None):
+        super().__init__(parent)
+        self.x = x
+        self.y = y
+        self.key = key
+        self.ins = ins
+        self.vel = vel
+        self.pan = pan
+        self.pit = pit
+        self.mouseOver = False
+        self.selected = False
+
+    def boundingRect(self):
+        return QtCore.QRectF(0, 0, 32, 32)
+
+    def paint(self, painter, option, widget):
+        # Geometry
+        rect = self.boundingRect()
+        midpoint = rect.height() / 2
+        labelRect = self.boundingRect()
+        labelRect.setBottom(midpoint)
+        numberRect = self.boundingRect()
+        numberRect.setTop(midpoint)
+
+        # Colors
+        blockColor = QtGui.QColor(0, 0, 255) # replace with instrument color
+        labelColor = QtCore.Qt.yellow
+        numberColor = QtCore.Qt.white
+
+        # Font
+        font = QtGui.QFont()
+        font.setPointSize(9)
+
+        # Paint
+        pixmap = QtGui.QPixmap("images/note_block.png")
+        painter.drawPixmap(rect.toAlignedRect(), pixmap)
+        brush = QtGui.QBrush(QtCore.Qt.SolidPattern)
+        brush.setColor(blockColor)
+        painter.setBrush(brush)
+        painter.setCompositionMode(QtGui.QPainter.CompositionMode_Overlay)
+        painter.drawRect(rect)
+        painter.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
+        painter.setFont(font)
+        painter.setPen(labelColor)
+        painter.drawText(labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, "A#4")
+        painter.setPen(numberColor)
+        painter.drawText(numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, str(23))
+
+
 class LayerBar(QtWidgets.QToolBar):
     """A single layer bar."""
 
