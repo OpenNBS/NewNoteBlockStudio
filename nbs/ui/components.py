@@ -49,6 +49,7 @@ class PianoKey(QtWidgets.QWidget):
         self.isActive = False
         self.previousKey = None
         self.currentKey = None
+        self.setCursor(QtCore.Qt.PointingHandCursor)
         self.installEventFilter(self)
 
     def pressKey(self):
@@ -420,10 +421,15 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         super().__init__(parent)
         self.view = QtWidgets.QGraphicsView(self, parent)
         self.gridLines = []
+        self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
+        self.selectionStart = None
+        self.isDraggingSelection = False
         self.initUI()
 
     def initUI(self):
         self.setSceneRect(0, 0, 32000, 32000)
+        self.view.setCursor(QtCore.Qt.PointingHandCursor)
+        self.view.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
         self.drawGridLines()
 
     def drawGridLines(self):
@@ -473,15 +479,28 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.removeItem(clicked)
 
     def mousePressEvent(self, event):
-        clickPos = event.scenePos()
-        # Left click: place block
-        if event.button() == QtCore.Qt.LeftButton:
-            # If there's already a note block at the click pos, remove it
-            self.removeBlock(clickPos)
-            self.addBlock(clickPos, 0, 5, 33, 0)
-        # Right click: remove block
-        elif event.button() == QtCore.Qt.RightButton:
-            self.removeBlock(clickPos)
+        self.selectionStart = event.scenePos()
+        self.selection.show()
+
+    def mouseReleaseEvent(self, event):
+        if self.isDraggingSelection:
+            self.selection.hide()
+            self.isDraggingSelection = False
+        else:
+            clickPos = event.scenePos()
+            # Left click: place block
+            if event.button() == QtCore.Qt.LeftButton:
+                # If there's already a note block at the click pos, remove it
+                self.removeBlock(clickPos)
+                self.addBlock(clickPos, 0, 5, 33, 0)
+            # Right click: remove block
+            elif event.button() == QtCore.Qt.RightButton:
+                self.removeBlock(clickPos)
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == QtCore.Qt.LeftButton:
+            self.selection.setGeometry(QtCore.QRectF(self.selectionStart, event.scenePos()).normalized().toRect())
+            self.isDraggingSelection = True
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
@@ -502,6 +521,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.mouseOver = False
         self.selected = False
         self.setAcceptHoverEvents(True)
+        self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 32, 32)
