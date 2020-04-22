@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import qtawesome as qta
+import math
 
 
 class VerticalScrollArea(QtWidgets.QScrollArea):
@@ -436,6 +437,50 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             line = QtCore.QLineF(x*32, y1, x*32, y2)
             lineItem = self.addLine(line, color)
             self.gridLines.append(lineItem)
+
+    def getGridPos(self, point):
+        """
+        Return the grid coordinates of a position in the scene.
+
+        Args:
+            point (QtCore.QPoint): the position to be converted
+
+        Returns:
+            tuple (int, int)
+        """
+        x = math.floor(point.x() / 32)
+        y = math.floor(point.y() / 32)
+        return x, y
+
+    def getScenePos(self, x, y):
+        """Return the top left scene position of a set of grid coordinates."""
+        return QtCore.QPoint(x*32, y*32)
+
+    def addBlock(self, pos: QtCore.QPointF, *args, **kwargs):
+        """Add a note block at the specified position."""
+        x, y = self.getGridPos(pos)
+        blockPos = self.getScenePos(x, y)
+        block = NoteBlock(x, y, *args, **kwargs)
+        block.setPos(blockPos)
+        self.addItem(block)
+
+    def removeBlock(self, pos: QtCore.QPointF):
+        """Remove the note block at the specified position."""
+        x, y = self.getGridPos(pos)
+        clicked = self.itemAt(pos, QtGui.QTransform())
+        if isinstance(clicked, NoteBlock):
+            self.removeItem(clicked)
+
+    def mousePressEvent(self, event):
+        clickPos = event.scenePos()
+        # Left click: place block
+        if event.button() == QtCore.Qt.LeftButton:
+            # If there's already a note block at the click pos, remove it
+            self.removeBlock(clickPos)
+            self.addBlock(clickPos, 0, 5, 33, 0)
+        # Right click: remove block
+        elif event.button() == QtCore.Qt.RightButton:
+            self.removeBlock(clickPos)
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
