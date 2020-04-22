@@ -426,20 +426,16 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.drawGridLines()
 
     def drawGridLines(self):
+        self.setBackgroundBrush(QtGui.QColor(240, 240, 240)) # dark: 30, 30, 30
         x1, y1, x2, y2 = self.sceneRect().getRect()
-        color = QtGui.QColor()
-        pen = QtGui.QPen()
         for x in range(int(x2)):
             if x % 4 == 0:
-                color.setRgb(127, 127, 127)
+                color = QtGui.QColor(181, 181, 181)
             else:
-                color.setRgb(200, 200, 200)
-            pen.setColor(color)
-            line = QtWidgets.QGraphicsLineItem()
-            line.setLine(x*32, y1, x*32, y2)
-            line.setPen(pen)
-            self.gridLines.append(line)
-            self.addItem(line)
+                color = QtGui.QColor(216, 216, 216)
+            line = QtCore.QLineF(x*32, y1, x*32, y2)
+            lineItem = self.addLine(line, color)
+            self.gridLines.append(lineItem)
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
