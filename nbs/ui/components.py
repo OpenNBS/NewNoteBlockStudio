@@ -462,6 +462,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         blockPos = self.getScenePos(x, y)
         block = NoteBlock(x, y, *args, **kwargs)
         block.setPos(blockPos)
+        block.mouseOver = True
         self.addItem(block)
 
     def removeBlock(self, pos: QtCore.QPointF):
@@ -484,6 +485,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
+
+    labels = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+
     def __init__(self, x, y, key, ins, vel=100, pan=0, pit=0, parent=None):
         super().__init__(parent)
         self.x = x
@@ -493,15 +497,18 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.vel = vel
         self.pan = pan
         self.pit = pit
+        self.label = self.getLabel()
+        self.isOutOfRange = False
         self.mouseOver = False
         self.selected = False
+        self.setAcceptHoverEvents(True)
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 32, 32)
 
     def paint(self, painter, option, widget):
         # Geometry
-        rect = self.boundingRect()
+        rect = self.boundingRect().toAlignedRect()
         midpoint = rect.height() / 2
         labelRect = self.boundingRect()
         labelRect.setBottom(midpoint)
@@ -509,9 +516,10 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         numberRect.setTop(midpoint)
 
         # Colors
-        blockColor = QtGui.QColor(0, 0, 255) # replace with instrument color
+        blockColor = QtGui.QColor(60, 60, 255) # replace with instrument color
         labelColor = QtCore.Qt.yellow
         numberColor = QtCore.Qt.white
+        hoverColor = QtGui.QColor(255, 255, 255, 100)
 
         # Font
         font = QtGui.QFont()
@@ -519,7 +527,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
         # Paint
         pixmap = QtGui.QPixmap("images/note_block.png")
-        painter.drawPixmap(rect.toAlignedRect(), pixmap)
+        painter.drawPixmap(rect, pixmap)
         brush = QtGui.QBrush(QtCore.Qt.SolidPattern)
         brush.setColor(blockColor)
         painter.setBrush(brush)
@@ -528,9 +536,30 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
         painter.setFont(font)
         painter.setPen(labelColor)
-        painter.drawText(labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, "A#4")
+        painter.drawText(labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label)
         painter.setPen(numberColor)
-        painter.drawText(numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, str(23))
+        painter.drawText(numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, str(self.key))
+        if self.mouseOver:
+            painter.setPen(QtCore.Qt.NoPen)
+            painter.setBrush(hoverColor)
+            painter.drawRect(rect)
+        if self.isOutOfRange:
+            painter.setPen(QtCore.Qt.red)
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.drawRect(rect)
+
+    def hoverEnterEvent(self, event):
+        self.mouseOver = True
+        self.update()
+
+    def hoverLeaveEvent(self, event):
+        self.mouseOver = False
+        self.update()
+
+    def getLabel(self):
+        key, octave = divmod(self.key + 9, 12)
+        label = self.labels[key] + str(octave)
+        return label
 
 
 class LayerBar(QtWidgets.QToolBar):
