@@ -421,6 +421,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         super().__init__(parent)
         self.view = QtWidgets.QGraphicsView(self, parent)
         self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
+        self.selectionPath = QtGui.QPainterPath()
         self.gridLines = []
         self.selectionStart = None
         self.isDraggingSelection = False
@@ -480,33 +481,40 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.removeItem(clicked)
 
     def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self.selectionPath = QtGui.QPainterPath()
         self.selectionStart = event.scenePos()
+        if event.button() == QtCore.Qt.RightButton:
+            self.selection.setStyleSheet("selection-background-color: rgba(255, 0, 0, 128);")
+        elif event.button() == QtCore.Qt.LeftButton:
+            self.selection.setStyleSheet("")
         self.selection.show()
 
     def mouseReleaseEvent(self, event):
         if self.isDraggingSelection:
+            self.selectionPath.addPolygon(self.view.mapToScene(self.selection.geometry()))
+            self.setSelectionArea(self.selectionPath)
             self.selection.hide()
             self.selection.setGeometry(QtCore.QRect(0, 0, 0, 0))
             self.isDraggingSelection = False
         else:
             clickPos = event.scenePos()
-            # Left click: place block
             if event.button() == QtCore.Qt.LeftButton:
-                # If there's already a note block at the click pos, remove it
                 self.removeBlock(clickPos)
                 self.addBlock(clickPos, 0, 5, 33, 0)
-            # Right click: remove block
             elif event.button() == QtCore.Qt.RightButton:
                 self.removeBlock(clickPos)
 
     def mouseMoveEvent(self, event):
-        if event.buttons() == QtCore.Qt.LeftButton:
-            self.selection.setGeometry(QtCore.QRectF(self.selectionStart, event.scenePos()).normalized().toRect())
+        if event.buttons() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.RightButton:
             self.isDraggingSelection = True
+            selectionRect = QtCore.QRectF(self.selectionStart, event.scenePos()).normalized().toRect()
+            self.selection.setGeometry(selectionRect)
         else:
-            # if no buttons are being pressed, call the parent's mouseMoveEvent
-            # to allow the scene items to detect hover events
+            # call the parent's mouseMoveEvent to allow
+            # the scene items to detect hover events
             super().mouseMoveEvent(event)
+            self.selection.hide()
 
 class NoteBlock(QtWidgets.QGraphicsItem):
 
@@ -544,13 +552,17 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         blockColor = QtGui.QColor(60, 60, 255) # replace with instrument color
         labelColor = QtCore.Qt.yellow
         numberColor = QtCore.Qt.white
-        hoverColor = QtGui.QColor(255, 255, 255, 100)
+        selectedColor = QtGui.QColor(255, 255, 255, 180)
 
         # Font
         font = QtGui.QFont()
         font.setPointSize(9)
 
         # Paint
+        if self.mouseOver:
+            painter.setOpacity(1)
+        else:
+            painter.setOpacity(0.75)
         pixmap = QtGui.QPixmap("images/note_block.png")
         painter.drawPixmap(rect, pixmap)
         brush = QtGui.QBrush(QtCore.Qt.SolidPattern)
@@ -559,14 +571,15 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_Overlay)
         painter.drawRect(rect)
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
+        painter.setOpacity(1)
         painter.setFont(font)
         painter.setPen(labelColor)
         painter.drawText(labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label)
         painter.setPen(numberColor)
         painter.drawText(numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, str(self.key))
-        if self.mouseOver:
+        if self.isSelected():
             painter.setPen(QtCore.Qt.NoPen)
-            painter.setBrush(hoverColor)
+            painter.setBrush(selectedColor)
             painter.drawRect(rect)
         if self.isOutOfRange:
             painter.setPen(QtCore.Qt.red)
