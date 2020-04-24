@@ -421,7 +421,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         super().__init__(parent)
         self.view = QtWidgets.QGraphicsView(self, parent)
         self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
-        self.selectionPath = QtGui.QPainterPath()
         self.gridLines = []
         self.selectionStart = None
         self.isDraggingSelection = False
@@ -480,20 +479,31 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         if isinstance(clicked, NoteBlock):
             self.removeItem(clicked)
 
+    def setSelected(self, area, value=True):
+        for item in self.items(area):
+            item.setSelected(value)
+
+    def clearSelection(self):
+        for item in self.selectedItems():
+            item.setSelected(False)
+
     def mousePressEvent(self, event):
-        super().mousePressEvent(event)
-        self.selectionPath = QtGui.QPainterPath()
         self.selectionStart = event.scenePos()
         if event.button() == QtCore.Qt.RightButton:
             self.selection.setStyleSheet("selection-background-color: rgba(255, 0, 0, 128);")
         elif event.button() == QtCore.Qt.LeftButton:
+            if not QtGui.QGuiApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
+                self.clearSelection()
             self.selection.setStyleSheet("")
         self.selection.show()
 
     def mouseReleaseEvent(self, event):
         if self.isDraggingSelection:
-            self.selectionPath.addPolygon(self.view.mapToScene(self.selection.geometry()))
-            self.setSelectionArea(self.selectionPath)
+            selectionArea = self.view.mapToScene(self.selection.geometry())
+            if event.button() == QtCore.Qt.LeftButton:
+                self.setSelected(selectionArea, True)
+            elif event.button() == QtCore.Qt.RightButton:
+                self.setSelected(selectionArea, False)
             self.selection.hide()
             self.selection.setGeometry(QtCore.QRect(0, 0, 0, 0))
             self.isDraggingSelection = False
