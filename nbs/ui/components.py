@@ -420,8 +420,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.view = QtWidgets.QGraphicsView(self, parent)
-        self.gridLines = []
         self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
+        self.gridLines = []
         self.selectionStart = None
         self.isDraggingSelection = False
         self.initUI()
@@ -429,7 +429,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def initUI(self):
         self.setSceneRect(0, 0, 32000, 32000)
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
-        self.view.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+        self.selectionProxy = self.addWidget(self.selection)
+        self.selectionProxy.setZValue(1)
         self.drawGridLines()
 
     def drawGridLines(self):
@@ -485,6 +486,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def mouseReleaseEvent(self, event):
         if self.isDraggingSelection:
             self.selection.hide()
+            self.selection.setGeometry(QtCore.QRect(0, 0, 0, 0))
             self.isDraggingSelection = False
         else:
             clickPos = event.scenePos()
@@ -501,7 +503,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         if event.buttons() == QtCore.Qt.LeftButton:
             self.selection.setGeometry(QtCore.QRectF(self.selectionStart, event.scenePos()).normalized().toRect())
             self.isDraggingSelection = True
-
+        else:
+            # if no buttons are being pressed, call the parent's mouseMoveEvent
+            # to allow the scene items to detect hover events
+            super().mouseMoveEvent(event)
 
 class NoteBlock(QtWidgets.QGraphicsItem):
 
