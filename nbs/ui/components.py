@@ -424,6 +424,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.gridLines = []
         self.selectionStart = None
         self.isDraggingSelection = False
+        self.selectionCleared = False
         self.initUI()
 
     def initUI(self):
@@ -484,13 +485,15 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             item.setSelected(value)
 
     def clearSelection(self):
+        if len(self.selectedItems()) > 0:
+            self.selectionCleared = True
         for item in self.selectedItems():
             item.setSelected(False)
 
     def mousePressEvent(self, event):
         self.selectionStart = event.scenePos()
         if event.button() == QtCore.Qt.RightButton:
-            self.selection.setStyleSheet("selection-background-color: rgba(255, 0, 0, 128);")
+            self.selection.setStyleSheet("selection-background-color: rgb(255, 0, 0);")
         elif event.button() == QtCore.Qt.LeftButton:
             if not QtGui.QGuiApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
                 self.clearSelection()
@@ -507,6 +510,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.selection.hide()
             self.selection.setGeometry(QtCore.QRect(0, 0, 0, 0))
             self.isDraggingSelection = False
+        elif self.selectionCleared:
+            # If this mouse press cleared a previous
+            # selection, we don't want to add a block
+            self.selectionCleared = False
         else:
             clickPos = event.scenePos()
             if event.button() == QtCore.Qt.LeftButton:
