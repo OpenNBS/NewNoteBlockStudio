@@ -57,14 +57,14 @@ class PianoKey(QtWidgets.QWidget):
             print("Pressed key", self.label)
             self.keyPressed.emit(self.num)
             self.isPressed = True
-            self.repaint()
+            self.update()
 
     def releaseKey(self):
         if self.isPressed:
             print("Released key", self.label)
             self.keyReleased.emit(self.num)
             self.isPressed = False
-            self.repaint()
+            self.update()
 
     def paintEvent(self, event):
         # Colors
