@@ -424,6 +424,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.gridLines = []
         self.selectionStart = None
         self.isDraggingSelection = False
+        self.isMovingBlocks = False
         self.selectionCleared = False
         self.initUI()
 
@@ -495,12 +496,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         if event.button() == QtCore.Qt.RightButton:
             self.selection.setStyleSheet("selection-background-color: rgb(255, 0, 0);")
         elif event.button() == QtCore.Qt.LeftButton:
-            if not QtGui.QGuiApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
-                self.clearSelection()
-            self.selection.setStyleSheet("")
+            clickedItem = self.itemAt(event.scenePos(), QtGui.QTransform())
+            if clickedItem is not None and clickedItem.isSelected():
+                self.isMovingBlocks = True
+                self.movedItem = clickedItem
+            else:
+                if not QtGui.QGuiApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
+                    self.clearSelection()
+                self.selection.setStyleSheet("")
         self.selection.show()
 
     def mouseReleaseEvent(self, event):
+        self.isMovingBlocks = False
         if self.isDraggingSelection:
             selectionArea = self.view.mapToScene(self.selection.geometry())
             if event.button() == QtCore.Qt.LeftButton:
@@ -523,7 +530,17 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.removeBlock(clickPos)
 
     def mouseMoveEvent(self, event):
-        if event.buttons() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.RightButton:
+        if self.isMovingBlocks and event.buttons() == QtCore.Qt.LeftButton:
+            pos = event.scenePos()
+            x = math.floor(pos.x() / 32) * 32
+            y = math.floor(pos.y() / 32) * 32
+            origx = self.movedItem.x()
+            origy = self.movedItem.y()
+            dx = x - origx
+            dy = y - origy
+            for item in self.selectedItems():
+                item.moveBy(dx, dy)
+        elif event.buttons() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.RightButton:
             self.isDraggingSelection = True
             selectionRect = QtCore.QRectF(self.selectionStart, event.scenePos()).normalized().toRect()
             self.selection.setGeometry(selectionRect)
@@ -537,10 +554,10 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     labels = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
-    def __init__(self, x, y, key, ins, vel=100, pan=0, pit=0, parent=None):
+    def __init__(self, xx, yy, key, ins, vel=100, pan=0, pit=0, parent=None):
         super().__init__(parent)
-        self.x = x
-        self.y = y
+        self.xx = xx
+        self.yy = yy
         self.key = key
         self.ins = ins
         self.vel = vel
