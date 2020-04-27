@@ -424,8 +424,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.gridLines = []
         self.selectionStart = None
         self.isDraggingSelection = False
+        self.isClearingSelection = False
         self.isMovingBlocks = False
-        self.selectionCleared = False
         self.initUI()
 
     def initUI(self):
@@ -487,7 +487,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def clearSelection(self):
         if len(self.selectedItems()) > 0:
-            self.selectionCleared = True
+            # This is done to prevent the next mouse
+            # release from adding a note block
+            self.isClearingSelection = True
         for item in self.selectedItems():
             item.setSelected(False)
 
@@ -516,10 +518,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.selection.hide()
             self.selection.setGeometry(QtCore.QRect(0, 0, 0, 0))
             self.isDraggingSelection = False
-        elif self.selectionCleared:
-            # If this mouse press cleared a previous
-            # selection, we don't want to add a block
-            self.selectionCleared = False
+        elif self.isClearingSelection:
+            self.isClearingSelection = False
         elif self.isMovingBlocks:
             self.isMovingBlocks = False
         else:
