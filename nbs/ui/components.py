@@ -538,8 +538,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             origy = self.movedItem.y()
             dx = x - origx
             dy = y - origy
+            movex = dx
+            movey = dy
+            if any(item.x() + dx < 0 for item in self.selectedItems()):
+                movex = 0
+            if any(item.y() + dy < 0 for item in self.selectedItems()):
+                movey = 0
             for item in self.selectedItems():
-                item.moveBy(dx, dy)
+                item.moveBy(movex, movey)
         elif event.buttons() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.RightButton:
             self.isDraggingSelection = True
             selectionRect = QtCore.QRectF(self.selectionStart, event.scenePos()).normalized().toRect()
