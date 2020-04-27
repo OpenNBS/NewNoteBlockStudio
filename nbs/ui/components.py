@@ -507,7 +507,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selection.show()
 
     def mouseReleaseEvent(self, event):
-        self.isMovingBlocks = False
         if self.isDraggingSelection:
             selectionArea = self.view.mapToScene(self.selection.geometry())
             if event.button() == QtCore.Qt.LeftButton:
@@ -521,6 +520,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             # If this mouse press cleared a previous
             # selection, we don't want to add a block
             self.selectionCleared = False
+        elif self.isMovingBlocks:
+            self.isMovingBlocks = False
         else:
             clickPos = event.scenePos()
             if event.button() == QtCore.Qt.LeftButton:
