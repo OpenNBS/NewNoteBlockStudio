@@ -419,9 +419,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.view = QtWidgets.QGraphicsView(self, parent)
+        self.view = QtWidgets.QGraphicsView(self)
         self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
-        self.gridLines = []
         self.selectionStart = None
         self.isDraggingSelection = False
         self.isClearingSelection = False
@@ -431,21 +430,23 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def initUI(self):
         self.setSceneRect(0, 0, 32000, 32000)
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
+        self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
         self.selectionProxy = self.addWidget(self.selection)
         self.selectionProxy.setZValue(1)
-        self.drawGridLines()
 
-    def drawGridLines(self):
-        self.setBackgroundBrush(QtGui.QColor(240, 240, 240)) # dark: 30, 30, 30
-        x1, y1, x2, y2 = self.sceneRect().getRect()
-        for x in range(int(x2)):
+    def drawBackground(self, painter, rect):
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(QtGui.QColor(240, 240, 240))
+        painter.drawRect(rect)
+        painter.setPen(QtCore.Qt.SolidLine)
+        start = int(rect.x() // 32)
+        end = int(rect.right() // 32 + 1)
+        for x in range(start, end):
             if x % 4 == 0:
-                color = QtGui.QColor(181, 181, 181)
+                painter.setPen(QtGui.QColor(181, 181, 181))
             else:
-                color = QtGui.QColor(216, 216, 216)
-            line = QtCore.QLineF(x*32, y1, x*32, y2)
-            lineItem = self.addLine(line, color)
-            self.gridLines.append(lineItem)
+                painter.setPen(QtGui.QColor(216, 216, 216))
+            painter.drawLine(x*32, rect.y(), x*32, rect.bottom())
 
     def getGridPos(self, point):
         """
