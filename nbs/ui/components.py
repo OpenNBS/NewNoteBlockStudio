@@ -485,14 +485,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def setSelected(self, area, value=True):
         for item in self.items(area):
             item.setSelected(value)
+            item.setZValue(1 if value else 0)
 
     def clearSelection(self):
         if len(self.selectedItems()) > 0:
             # This is done to prevent the next mouse
             # release from adding a note block
             self.isClearingSelection = True
-        for item in self.selectedItems():
-            item.setSelected(False)
+            for item in self.selectedItems():
+                for i in item.collidingItems():
+                    self.removeItem(i)
+                item.setSelected(False)
+                item.setZValue(0)
 
     def mousePressEvent(self, event):
         self.selectionStart = event.scenePos()
