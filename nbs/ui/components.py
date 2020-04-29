@@ -415,6 +415,7 @@ def drawToolBar(window):
 class NoteBlockView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.currentScale = 1
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
     def wheelEvent(self, event):
@@ -423,7 +424,9 @@ class NoteBlockView(QtWidgets.QGraphicsView):
                 zoomFactor = 1.25
             else:
                 zoomFactor = 1 / 1.25
-            self.scale(zoomFactor, zoomFactor)
+            if 0.25 < self.currentScale * zoomFactor < 4:
+                self.scale(zoomFactor, zoomFactor)
+                self.currentScale *= zoomFactor
         else:
             super().wheelEvent(event)
 
