@@ -412,6 +412,22 @@ def drawToolBar(window):
     return toolbar
 
 
+class NoteBlockView(QtWidgets.QGraphicsView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+
+    def wheelEvent(self, event):
+        if event.modifiers() == QtCore.Qt.ControlModifier:
+            if event.angleDelta().y() > 0:
+                zoomFactor = 1.25
+            else:
+                zoomFactor = 1 / 1.25
+            self.scale(zoomFactor, zoomFactor)
+        else:
+            super().wheelEvent(event)
+
+
 class NoteBlockArea(QtWidgets.QGraphicsScene):
     """
     A scrolling area that holds the note blocks in a song.
@@ -419,7 +435,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.view = QtWidgets.QGraphicsView(self)
+        self.view = NoteBlockView(self)
         self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
         self.selectionStart = None
         self.isDraggingSelection = False
