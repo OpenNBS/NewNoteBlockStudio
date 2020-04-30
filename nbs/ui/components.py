@@ -581,6 +581,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             super().mouseMoveEvent(event)
             self.selection.hide()
 
+
 class NoteBlock(QtWidgets.QGraphicsItem):
 
     labels = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
