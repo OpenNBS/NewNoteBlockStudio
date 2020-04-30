@@ -738,7 +738,7 @@ class LayerArea(VerticalScrollArea):
     def initUI(self):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.setSpacing(0)
-        self.layout.setContentsMargins(5, 5, 0, 0)
+        self.layout.setContentsMargins(5, 0, 0, 0)
         self.container = QtWidgets.QWidget()
         self.container.setLayout(self.layout)
         self.container.setContentsMargins(0, 0, 0, 0)
