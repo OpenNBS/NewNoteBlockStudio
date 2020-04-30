@@ -485,18 +485,17 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         """Return the top left scene position of a set of grid coordinates."""
         return QtCore.QPoint(x*32, y*32)
 
-    def addBlock(self, pos: QtCore.QPointF, *args, **kwargs):
+    def addBlock(self, x, y, *args, **kwargs):
         """Add a note block at the specified position."""
-        x, y = self.getGridPos(pos)
         blockPos = self.getScenePos(x, y)
         block = NoteBlock(x, y, *args, **kwargs)
         block.setPos(blockPos)
         block.mouseOver = True
         self.addItem(block)
 
-    def removeBlock(self, pos: QtCore.QPointF):
+    def removeBlock(self, x, y):
         """Remove the note block at the specified position."""
-        x, y = self.getGridPos(pos)
+        pos = self.getScenePos(x, y)
         clicked = self.itemAt(pos, QtGui.QTransform())
         if isinstance(clicked, NoteBlock):
             self.removeItem(clicked)
@@ -548,11 +547,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.isMovingBlocks = False
         else:
             clickPos = event.scenePos()
+            x, y = self.getGridPos(clickPos)
             if event.button() == QtCore.Qt.LeftButton:
-                self.removeBlock(clickPos)
-                self.addBlock(clickPos, 0, 5, 33, 0)
+                self.removeBlock(x, y)
+                self.addBlock(x, y, 0, 5, 33, 0)
             elif event.button() == QtCore.Qt.RightButton:
-                self.removeBlock(clickPos)
+                self.removeBlock(x, y)
 
     def mouseMoveEvent(self, event):
         if self.isMovingBlocks and event.buttons() == QtCore.Qt.LeftButton:
