@@ -23,8 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                {"tick": 3, "layer": 4, "key": 4, "instrument": 0},
                                                                {"tick": 4, "layer": 5, "key": 5, "instrument": 0}]})  # testing
         for note in current_song.notes:
-            note_block = nbs.ui.components.NoteBlock(note["tick"], note["layer"], note["key"], note["instrument"])
-            mainArea.workspace.noteBlockWidget.addItem(note_block)  # this is bugged, it only adds the last note.
+            mainArea.workspace.noteBlockWidget.addBlock(note["tick"], note["layer"], note["key"], note["instrument"])
 
     def drawMenuBar(self):
         pass
