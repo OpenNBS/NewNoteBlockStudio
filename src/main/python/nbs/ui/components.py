@@ -296,15 +296,23 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.currentScale = 1
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
+    @QtCore.pyqtSlot()
+    def setScale(self, value):
+        factor = value / self.currentScale
+        self.changeScale(factor)
+
+    @QtCore.pyqtSlot()
+    def changeScale(self, factor):
+        if 0.2 < self.currentScale * factor < 4:
+            self.scale(factor, factor)
+            self.currentScale *= factor
+
     def wheelEvent(self, event):
         if event.modifiers() == QtCore.Qt.ControlModifier:
             if event.angleDelta().y() > 0:
-                zoomFactor = 1.25
+                self.changeScale(1.2)
             else:
-                zoomFactor = 1 / 1.25
-            if 0.25 < self.currentScale * zoomFactor < 4:
-                self.scale(zoomFactor, zoomFactor)
-                self.currentScale *= zoomFactor
+                self.changeScale(1 / 1.2)
         else:
             super().wheelEvent(event)
 
