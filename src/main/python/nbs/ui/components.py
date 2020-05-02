@@ -487,6 +487,9 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.selected = False
         self.setAcceptHoverEvents(True)
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
+        # TODO: experiment with other caching mores such as ItemCoordinateCache,
+        # optimize drawing code by reducing detail when zoomed out far etc.
+        self.setCacheMode(QtWidgets.QGraphicsItem.DeviceCoordinateCache)
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, 32, 32)
