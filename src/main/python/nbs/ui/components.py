@@ -386,7 +386,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         if isinstance(clicked, NoteBlock):
             self.removeItem(clicked)
 
-    def setSelected(self, area, value=True):
+    def setSelected(self, area: QtCore.QRectF, value=True):
         for item in self.items(area):
             item.setSelected(value)
             item.setZValue(1 if value else 0)
@@ -419,7 +419,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def mouseReleaseEvent(self, event):
         if self.isDraggingSelection:
-            selectionArea = self.view.mapToScene(self.selection.geometry())
+            selectionArea = QtCore.QRectF(self.selection.geometry())
             if event.button() == QtCore.Qt.LeftButton:
                 self.setSelected(selectionArea, True)
             elif event.button() == QtCore.Qt.RightButton:
