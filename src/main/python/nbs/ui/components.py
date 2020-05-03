@@ -550,7 +550,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.update()
 
     def getLabel(self):
-        key, octave = divmod(self.key + 9, 12)
+        octave, key = divmod(self.key + 9, 12)
         label = self.labels[key] + str(octave)
         return label
 
