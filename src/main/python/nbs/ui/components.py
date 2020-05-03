@@ -482,6 +482,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.pan = pan
         self.pit = pit
         self.label = self.getLabel()
+        self.clicks = self.getClicks()
         self.isOutOfRange = False
         self.mouseOver = False
         self.selected = False
@@ -530,7 +531,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         painter.setPen(labelColor)
         painter.drawText(labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label)
         painter.setPen(numberColor)
-        painter.drawText(numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, str(self.key))
+        painter.drawText(numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, self.clicks)
         if self.isSelected():
             painter.setPen(QtCore.Qt.NoPen)
             painter.setBrush(selectedColor)
@@ -552,6 +553,15 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         key, octave = divmod(self.key + 9, 12)
         label = self.labels[key] + str(octave)
         return label
+
+    def getClicks(self):
+        # TODO: replace hardcoded values with the note instrument's valid range
+        if self.key < 33:
+            return "<"
+        elif self.key > 57:
+            return ">"
+        else:
+            return str(self.key - 33)
 
 
 class LayerBar(QtWidgets.QToolBar):
