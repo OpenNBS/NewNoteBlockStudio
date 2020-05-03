@@ -549,6 +549,21 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.mouseOver = False
         self.update()
 
+    def wheelEvent(self, event):
+        if event.delta() > 0:
+            self.changeKey(1)
+        else:
+            self.changeKey(-1)
+
+    def changeKey(self, value):
+        self.key += value
+        self.refresh()
+
+    def refresh(self):
+        self.label = self.getLabel()
+        self.clicks = self.getClicks()
+        self.update()
+
     def getLabel(self):
         octave, key = divmod(self.key + 9, 12)
         label = self.labels[key] + str(octave)
