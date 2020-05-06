@@ -111,6 +111,17 @@ class MainWindow(QtWidgets.QMainWindow):
         }
         '''
 
+        instrument_list = ["harp", "double_bass", "bass_drum", "snare_drum", "click", "guitar", "flute", "bell",
+                           "chime", "xylophone", "iron_xylophone", "cow_bell", "didgeridoo", "bit", "banjo", "pling"]
+        instrument_button_list = [nbs.ui.components.InstrumentButton(instrument) for instrument in instrument_list]
+        for instrument in self.currentSong.custom_instruments:  # TODO: reset custom instruments on new song
+            instrument_button_list.append(nbs.ui.components.InstrumentButton("custom"))  # TODO: put in custom name
+
+        instrument_buttons = QtWidgets.QButtonGroup(self)
+        instrument_buttons.setExclusive(True)
+        for button in instrument_button_list:
+            instrument_buttons.addButton(button)
+
         toolbar = QtWidgets.QToolBar(parent=self)
         toolbar.addAction(icons["new_song"], "New song", self.new_song)
         toolbar.addAction(icons["open_song"], "Open song", self.load_song)
@@ -123,24 +134,8 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(icons["record"], "Record key presses")
         toolbar.addAction(icons["loop"], "Toggle looping")
         toolbar.addSeparator()
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("harp"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("double_bass"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("bass_drum"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("snare_drum"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("click"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("guitar"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("flute"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("bell"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("chime"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("xylophone"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("iron_xylophone"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("cow_bell"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("didgeridoo"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("bit"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("banjo"))
-        toolbar.addWidget(nbs.ui.components.InstrumentButton("pling"))
-        for instrument in self.currentSong.custom_instruments:
-            toolbbar.addWidget(nbs.ui.components.InstrumentButton("custom"))  # TODO: put in custom name
+        for button in instrument_buttons.buttons():
+            toolbar.addWidget(button)
         toolbar.addSeparator()
         toolbar.addAction(icons["undo"], "Undo")
         toolbar.addAction(icons["redo"], "Redo")
