@@ -51,7 +51,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Settings
         settingsMenu = menuBar.addMenu("Settings")
         instrumentsMenu = settingsMenu.addMenu("Instrument")
-        for ins in ["Harp", "Double Bass", "Bass Drum", "Snare Drum", "Click"]:
+        for ins in ["Harp", "Double Bass", "Bass Drum", "Snare Drum", "Click", "Guitar", "Flute", "Bell", "Chime",
+                    "Xylophone", "Iron Xylophone", "Cow Bell", "Didgeridoo", "Bit", "Banjo", "Pling"]:
             instrumentsMenu.addAction(ins)
         settingsMenu.addSeparator()
         settingsMenu.addAction("Song info...")
