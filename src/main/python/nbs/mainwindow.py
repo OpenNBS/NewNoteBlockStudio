@@ -169,20 +169,31 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def load_song(self, filename=None):
-        """Loads a .nbs file into the current session. passing a filename overrides opening the file dialog"""
-        if not filename:
+        """Loads a .nbs file into the current session. passing a filename overrides opening the file dialog.
+        loadFlag determines if the method is allowed to load the file and reset the workspace (needed in case the
+        user presses cancel on the open file dialog)."""
+        loadFlag = False
+
+        if filename:
+            loadFlag = True
+        else:
             dialog = QtWidgets.QFileDialog(self)
             dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+            dialog.setWindowTitle("Open song")
+            dialog.setLabelText(QtWidgets.QFileDialog.FileName, "Song name:")
             dialog.setNameFilter("Note Block Songs (*.nbs)")
             # dialog.restoreState()
             if dialog.exec():
                 filename = dialog.selectedFiles()[0]
                 # dialog.saveState()
-        self.currentSong = nbs.core.data.Song(filename=filename)
-        self.centralWidget().workspace.resetWorkspace()
-        # TODO: load layers
-        for note in self.currentSong.notes:
-            self.centralWidget().workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
+                loadFlag = True
+
+        if loadFlag:
+            self.currentSong = nbs.core.data.Song(filename=filename)
+            self.centralWidget().workspace.resetWorkspace()
+            # TODO: load layers
+            for note in self.currentSong.notes:
+                self.centralWidget().workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
 
     @QtCore.pyqtSlot()
     def save_song(self):
@@ -197,6 +208,8 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog = QtWidgets.QFileDialog(self)
         dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setWindowTitle("Save song")
+        dialog.setLabelText(QtWidgets.QFileDialog.FileName, "Song name:")
         dialog.setNameFilter("Note Block Songs (*.nbs)")
         # dialog.restoreState()
         if dialog.exec():
