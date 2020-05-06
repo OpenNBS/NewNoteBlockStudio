@@ -646,7 +646,7 @@ class LayerArea(VerticalScrollArea):
             self.layout.addWidget(layer.frame)
             self.layers.append(layer)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setMaximumWidth(self.layers[0].width())
+        self.setMaximumWidth(342) # TODO: calculate instead of hardcode
         self.setWidget(self.container)
 
 
@@ -690,6 +690,11 @@ class Workspace(QtWidgets.QSplitter):
         layout.addWidget(scrollBar)
         container = QtWidgets.QWidget()
         container.setLayout(layout)
+
+    def resetWorkspace(self):
+        self.layerWidget.initUI()
+        for item in self.noteBlockWidget.items():
+            self.noteBlockWidget.removeItem(item)
 
 
 class CentralArea(QtWidgets.QSplitter):

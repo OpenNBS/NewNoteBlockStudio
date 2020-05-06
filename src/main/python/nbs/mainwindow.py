@@ -27,8 +27,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # File
         fileMenu = menuBar.addMenu("File")
-        fileMenu.addAction("New song")
-        fileMenu.addAction("Open song...")
+        fileMenu.addAction("New song", self.new_song)
+        fileMenu.addAction("Open song...", self.load_song)
         recentSongs = fileMenu.addMenu(QtGui.QIcon(), 'Open recent')
         recentSongs.addSection(QtGui.QIcon(), "No recent songs")
         importMenu = fileMenu.addMenu("Import")
@@ -129,8 +129,8 @@ class MainWindow(QtWidgets.QMainWindow):
         '''
 
         toolbar = QtWidgets.QToolBar(parent=self)
-        toolbar.addAction(icons["new_song"], "New song")
-        toolbar.addAction(icons["open_song"], "Open song")
+        toolbar.addAction(icons["new_song"], "New song", self.new_song)
+        toolbar.addAction(icons["open_song"], "Open song", self.load_song)
         toolbar.addAction(icons["save_song"], "Save song")
         toolbar.addSeparator()
         toolbar.addAction(icons["rewind"], "Rewind")
@@ -183,9 +183,26 @@ class MainWindow(QtWidgets.QMainWindow):
     def drawStatusBar(self):
         pass
 
-    def load_song(self, filename):
-        """Loads a .nbs file into the current session."""
+    @QtCore.pyqtSlot()
+    def new_song(self):
+        self.currentSong = nbs.core.data.Song()
+        # TODO: save confirmation if editing unsaved work
+        self.centralWidget().workspace.resetWorkspace()
+
+    @QtCore.pyqtSlot()
+    def load_song(self, filename=None):
+        """Loads a .nbs file into the current session. passing a filename overrides opening the file dialog"""
         # TODO: import header details, layers, etc.
+        if not filename:
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+            dialog.setNameFilter("Note Block Songs *.nbs")
+            # dialog.restoreState()
+            if dialog.exec():
+                filename = dialog.selectedFiles()[0]
+                # dialog.saveState()
         self.currentSong = nbs.core.data.Song(filename=filename)
+        self.centralWidget().workspace.resetWorkspace()
+        # TODO: load layers
         for note in self.currentSong.notes:
             self.centralWidget().workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
