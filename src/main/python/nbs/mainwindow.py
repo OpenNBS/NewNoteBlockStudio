@@ -35,8 +35,8 @@ class MainWindow(QtWidgets.QMainWindow):
         importFromSchematicAction = importMenu.addAction("From schematic")
         importFromMidiAction = importMenu.addAction("From MIDI")
         fileMenu.addSeparator()
-        saveSongAction = fileMenu.addAction("Save song")
-        fileMenu.addAction("Save song as...")
+        saveSongAction = fileMenu.addAction("Save song", self.save_song)
+        fileMenu.addAction("Save song as...", self.song_save_as)
         exportMenu = fileMenu.addMenu("Export as...")
         exportMenu.addAction("MIDI")
         exportMenu.addAction("Audio file")
@@ -125,7 +125,7 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar = QtWidgets.QToolBar(parent=self)
         toolbar.addAction(icons["new_song"], "New song", self.new_song)
         toolbar.addAction(icons["open_song"], "Open song", self.load_song)
-        toolbar.addAction(icons["save_song"], "Save song")
+        toolbar.addAction(icons["save_song"], "Save song", self.save_song)
         toolbar.addSeparator()
         toolbar.addAction(icons["rewind"], "Rewind")
         toolbar.addAction(icons["play"], "Play")
@@ -170,11 +170,10 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def load_song(self, filename=None):
         """Loads a .nbs file into the current session. passing a filename overrides opening the file dialog"""
-        # TODO: import header details, layers, etc.
         if not filename:
             dialog = QtWidgets.QFileDialog(self)
             dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-            dialog.setNameFilter("Note Block Songs *.nbs")
+            dialog.setNameFilter("Note Block Songs (*.nbs)")
             # dialog.restoreState()
             if dialog.exec():
                 filename = dialog.selectedFiles()[0]
@@ -184,3 +183,23 @@ class MainWindow(QtWidgets.QMainWindow):
         # TODO: load layers
         for note in self.currentSong.notes:
             self.centralWidget().workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
+
+    @QtCore.pyqtSlot()
+    def save_song(self):
+        """Save current file without bringing up the save dialog if it has a defined location on disk"""
+        if not self.currentSong.location:
+            self.song_save_as()
+        else:
+            self.currentSong.save()
+
+    @QtCore.pyqtSlot()
+    def song_save_as(self):
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setNameFilter("Note Block Songs (*.nbs)")
+        # dialog.restoreState()
+        if dialog.exec():
+            location = dialog.selectedFiles()[0]
+            self.currentSong.save(location)
+            # dialog.saveState()
