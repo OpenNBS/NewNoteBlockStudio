@@ -694,7 +694,8 @@ class Workspace(QtWidgets.QSplitter):
     def resetWorkspace(self):
         self.layerWidget.initUI()
         for item in self.noteBlockWidget.items():
-            self.noteBlockWidget.removeItem(item)
+            if type(item) == NoteBlock:
+                self.noteBlockWidget.removeItem(item)
 
 
 class CentralArea(QtWidgets.QSplitter):
