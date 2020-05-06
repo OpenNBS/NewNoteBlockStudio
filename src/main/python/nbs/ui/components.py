@@ -711,7 +711,14 @@ class CentralArea(QtWidgets.QSplitter):
         self.addWidget(self.piano)
 
 
-class InstrumentIcon(QtGui.QIcon):
+class InstrumentButton(QtWidgets.QToolButton):
+    """Buttons for the instrument selection in the toolbar"""
     def __init__(self, instrument, parent=None):
         super().__init__(parent)
-        self.addFile("../resources/base/images/{}.png".format(instrument))
+        self.setCheckable(True)
+
+        icon = QtGui.QIcon()
+        icon.addFile("../resources/base/images/instrument_{}.png".format(instrument))
+        # TODO: make icon for custom instruments
+        self.setIcon(icon)
+        self.setToolTip("Change instrument to {}".format(" ".join(instrument.split("_")).title()))
