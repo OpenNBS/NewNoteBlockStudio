@@ -1,4 +1,4 @@
-import nbs.core.scripts.loader as loader
+import nbs.core.scripts.load as load
 
 
 class Song:
@@ -15,4 +15,4 @@ class Song:
             self.load_song(filename)
 
     def load_song(self, filename):
-        self.header, self.notes, self.layers, self.custom_instruments = loader.load_nbs(filename)
+        self.header, self.notes, self.layers, self.custom_instruments = load.load_nbs(filename)
