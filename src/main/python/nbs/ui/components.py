@@ -704,3 +704,9 @@ class CentralArea(QtWidgets.QSplitter):
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
         self.addWidget(self.piano)
+
+
+class InstrumentIcon(QtGui.QIcon):
+    def __init__(self, instrument, parent=None):
+        super().__init__(parent)
+        self.addFile("../resources/base/images/{}.png".format(instrument))

@@ -10,6 +10,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
 
+        self.currentSong = nbs.core.data.Song()  # Initialize empty song object at the start of session
+
         menuBar = self.drawMenuBar()
         toolBar = self.drawToolBar()
         mainArea = nbs.ui.components.CentralArea(self)
@@ -17,8 +19,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(menuBar)
         self.addToolBar(toolBar)
         self.setCentralWidget(mainArea)
-
-        self.currentSong = nbs.core.data.Song()  # Initialize empty song object at the start of session
 
         self.load_song("test.nbs")  # Testing
 
@@ -70,30 +70,48 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def drawToolBar(self):
         icons = {
-            "new_song":         qta.icon('mdi.file-plus'),
-            "open_song":        qta.icon('mdi.folder-open'),
-            "save_song":        qta.icon('mdi.content-save'),
-            "rewind":           qta.icon('mdi.rewind'),
-            "fast_forward":     qta.icon('mdi.fast-forward'),
-            "play":             qta.icon('mdi.play'),
-            "pause":            qta.icon('mdi.pause'),
-            "stop":             qta.icon('mdi.stop'),
-            "record":           qta.icon('mdi.record'),
-            "loop":             qta.icon('mdi.repeat'),
-            "loop_off":         qta.icon('mdi.repeat-off'),
-            "undo":             qta.icon('mdi.undo'),
-            "redo":             qta.icon('mdi.redo'),
-            "cut":              qta.icon('mdi.content-cut'),
-            "copy":             qta.icon('mdi.content-copy'),
-            "paste":            qta.icon('mdi.content-paste'),
-            "delete":           qta.icon('mdi.delete'),
-            "select_all":       qta.icon('mdi.select-all'),
-            "song_instruments": qta.icon('mdi.piano'),
-            "song_info":        qta.icon('mdi.information'),
-            "song_properties":  qta.icon('mdi.label'),
-            "song_stats":       qta.icon('mdi.file-document-edit'),
-            "midi_devices":     qta.icon('mdi.usb'),
-            "settings":         qta.icon('mdi.settings')
+            "new_song":                     qta.icon('mdi.file-plus'),
+            "open_song":                    qta.icon('mdi.folder-open'),
+            "save_song":                    qta.icon('mdi.content-save'),
+            "rewind":                       qta.icon('mdi.rewind'),
+            "fast_forward":                 qta.icon('mdi.fast-forward'),
+            "play":                         qta.icon('mdi.play'),
+            "pause":                        qta.icon('mdi.pause'),
+            "stop":                         qta.icon('mdi.stop'),
+            "record":                       qta.icon('mdi.record'),
+            "loop":                         qta.icon('mdi.repeat'),
+            "loop_off":                     qta.icon('mdi.repeat-off'),
+            "instrument_harp":              nbs.ui.components.InstrumentIcon('instrument_harp'),
+            "instrument_double_bass":       nbs.ui.components.InstrumentIcon('instrument_double_bass'),
+            "instrument_bass_drum":         nbs.ui.components.InstrumentIcon('instrument_bass_drum'),
+            "instrument_snare":             nbs.ui.components.InstrumentIcon('instrument_snare'),
+            "instrument_click":             nbs.ui.components.InstrumentIcon('instrument_click'),
+            "instrument_guitar":            nbs.ui.components.InstrumentIcon('instrument_guitar'),
+            "instrument_flute":             nbs.ui.components.InstrumentIcon('instrument_flute'),
+            "instrument_bell":              nbs.ui.components.InstrumentIcon('instrument_bell'),
+            "instrument_chime":             nbs.ui.components.InstrumentIcon('instrument_chime'),
+            "instrument_xylophone":         nbs.ui.components.InstrumentIcon('instrument_xylophone'),
+            "instrument_iron_xylophone":    nbs.ui.components.InstrumentIcon('instrument_iron_xylophone'),
+            "instrument_cow_bell":          nbs.ui.components.InstrumentIcon('instrument_cow_bell'),
+            "instrument_didgeridoo":        nbs.ui.components.InstrumentIcon('instrument_didgeridoo'),
+            "instrument_bit":               nbs.ui.components.InstrumentIcon('instrument_bit'),
+            "instrument_banjo":             nbs.ui.components.InstrumentIcon('instrument_banjo'),
+            "instrument_pling":             nbs.ui.components.InstrumentIcon('instrument_pling'),
+            "instrument_custom":            nbs.ui.components.InstrumentIcon('instrument_custom'),
+            # TODO: make icon for custom instruments
+            "undo":                         qta.icon('mdi.undo'),
+            "redo":                         qta.icon('mdi.redo'),
+            "cut":                          qta.icon('mdi.content-cut'),
+            "copy":                         qta.icon('mdi.content-copy'),
+            "paste":                        qta.icon('mdi.content-paste'),
+            "delete":                       qta.icon('mdi.delete'),
+            "select_all":                   qta.icon('mdi.select-all'),
+            "song_instruments":             qta.icon('mdi.piano'),
+            "song_info":                    qta.icon('mdi.information'),
+            "song_properties":              qta.icon('mdi.label'),
+            "song_stats":                   qta.icon('mdi.file-document-edit'),
+            "midi_devices":                 qta.icon('mdi.usb'),
+            "settings":                     qta.icon('mdi.settings')
         }
         '''
         icons = {
@@ -121,6 +139,25 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(icons["fast_forward"], "Fast-forward")
         toolbar.addAction(icons["record"], "Record key presses")
         toolbar.addAction(icons["loop"], "Toggle looping")
+        toolbar.addSeparator()
+        toolbar.addAction(icons["instrument_harp"], "Change instrument to Harp")
+        toolbar.addAction(icons["instrument_double_bass"], "Change instrument to Double Bass")
+        toolbar.addAction(icons["instrument_bass_drum"], "Change instrument to Bass Drum")
+        toolbar.addAction(icons["instrument_snare"], "Change instrument to Snare Drum")
+        toolbar.addAction(icons["instrument_click"], "Change instrument to Click")
+        toolbar.addAction(icons["instrument_guitar"], "Change instrument to Guitar")
+        toolbar.addAction(icons["instrument_flute"], "Change instrument to Flute")
+        toolbar.addAction(icons["instrument_bell"], "Change instrument to Bell")
+        toolbar.addAction(icons["instrument_chime"], "Change instrument to Chime")
+        toolbar.addAction(icons["instrument_xylophone"], "Change instrument to Xylophone")
+        toolbar.addAction(icons["instrument_iron_xylophone"], "Change instrument to Iron Xylophone")
+        toolbar.addAction(icons["instrument_cow_bell"], "Change instrument to Cow Bell")
+        toolbar.addAction(icons["instrument_didgeridoo"], "Change instrument to Didgeridoo")
+        toolbar.addAction(icons["instrument_bit"], "Change instrument to Bit")
+        toolbar.addAction(icons["instrument_banjo"], "Change instrument to Banjo")
+        toolbar.addAction(icons["instrument_pling"], "Change instrument to Pling")
+        for instrument in self.currentSong.custom_instruments:
+            toolbbar.addAction(icons["instrument_custom"], "Change instrument to Custom")  # TODO: put in custom name
         toolbar.addSeparator()
         toolbar.addAction(icons["undo"], "Undo")
         toolbar.addAction(icons["redo"], "Redo")
