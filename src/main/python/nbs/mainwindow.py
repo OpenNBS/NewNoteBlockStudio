@@ -71,45 +71,31 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def drawToolBar(self):
         icons = {
-            "new_song":                     qta.icon('mdi.file-plus'),
-            "open_song":                    qta.icon('mdi.folder-open'),
-            "save_song":                    qta.icon('mdi.content-save'),
-            "rewind":                       qta.icon('mdi.rewind'),
-            "fast_forward":                 qta.icon('mdi.fast-forward'),
-            "play":                         qta.icon('mdi.play'),
-            "pause":                        qta.icon('mdi.pause'),
-            "stop":                         qta.icon('mdi.stop'),
-            "record":                       qta.icon('mdi.record'),
-            "loop":                         qta.icon('mdi.repeat'),
-            "loop_off":                     qta.icon('mdi.repeat-off'),
-            "undo":                         qta.icon('mdi.undo'),
-            "redo":                         qta.icon('mdi.redo'),
-            "cut":                          qta.icon('mdi.content-cut'),
-            "copy":                         qta.icon('mdi.content-copy'),
-            "paste":                        qta.icon('mdi.content-paste'),
-            "delete":                       qta.icon('mdi.delete'),
-            "select_all":                   qta.icon('mdi.select-all'),
-            "song_instruments":             qta.icon('mdi.piano'),
-            "song_info":                    qta.icon('mdi.information'),
-            "song_properties":              qta.icon('mdi.label'),
-            "song_stats":                   qta.icon('mdi.file-document-edit'),
-            "midi_devices":                 qta.icon('mdi.usb'),
-            "settings":                     qta.icon('mdi.settings')
+            "new_song":         qta.icon('mdi.file-plus'),
+            "open_song":        qta.icon('mdi.folder-open'),
+            "save_song":        qta.icon('mdi.content-save'),
+            "rewind":           qta.icon('mdi.rewind'),
+            "fast_forward":     qta.icon('mdi.fast-forward'),
+            "play":             qta.icon('mdi.play'),
+            "pause":            qta.icon('mdi.pause'),
+            "stop":             qta.icon('mdi.stop'),
+            "record":           qta.icon('mdi.record'),
+            "loop":             qta.icon('mdi.repeat'),
+            "loop_off":         qta.icon('mdi.repeat-off'),
+            "undo":             qta.icon('mdi.undo'),
+            "redo":             qta.icon('mdi.redo'),
+            "cut":              qta.icon('mdi.content-cut'),
+            "copy":             qta.icon('mdi.content-copy'),
+            "paste":            qta.icon('mdi.content-paste'),
+            "delete":           qta.icon('mdi.delete'),
+            "select_all":       qta.icon('mdi.select-all'),
+            "song_instruments": qta.icon('mdi.piano'),
+            "song_info":        qta.icon('mdi.information'),
+            "song_properties":  qta.icon('mdi.label'),
+            "song_stats":       qta.icon('mdi.file-document-edit'),
+            "midi_devices":     qta.icon('mdi.usb'),
+            "settings":         qta.icon('mdi.settings')
         }
-        '''
-        icons = {
-            "new_song": qta.icon('mdi.file'),
-            "open_song": qta.icon('mdi.folder-open'),
-            "save_song": qta.icon('mdi.save')
-            "play": qta.icon('mdi.play')
-            "pause": qta.icon('mdi.pause')
-            "stop": qta.icon('mdi.stop')
-            "loop_on":
-            "loop_off":
-            "undo":
-            "redo":
-        }
-        '''
 
         instrument_list = ["harp", "double_bass", "bass_drum", "snare_drum", "click", "guitar", "flute", "bell",
                            "chime", "xylophone", "iron_xylophone", "cow_bell", "didgeridoo", "bit", "banjo", "pling"]
