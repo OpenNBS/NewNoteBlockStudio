@@ -115,12 +115,12 @@ class PianoKey(QtWidgets.QWidget):
         painter.end()
 
     def eventFilter(self, obj, event):
-        '''
+        """
         Since widgets happens to grab the mouse whenever you click one,
         in order to allow sliding the mouse over the piano, we install
         an eventFilter on every piano key to detect when the mouse moves
         over a certain key, then tell that key to be pressed.
-        '''
+        """
         if event.type() == QtCore.QEvent.MouseButtonPress:
             self.pressKey()
         if event.type() == QtCore.QEvent.MouseButtonRelease:
@@ -505,7 +505,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         numberRect.setTop(midpoint)
 
         # Colors
-        blockColor = QtGui.QColor(60, 60, 255) # replace with instrument color
+        blockColor = QtGui.QColor(60, 60, 255)  # replace with instrument color
         labelColor = QtCore.Qt.yellow
         numberColor = QtCore.Qt.white
         selectedColor = QtGui.QColor(255, 255, 255, 180)
@@ -519,7 +519,8 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             painter.setOpacity(1)
         else:
             painter.setOpacity(0.75)
-        pixmap = QtGui.QPixmap("images/note_block.png")
+
+        pixmap = QtGui.QPixmap("../resources/base/images/note_block_greyscale.png")
         painter.drawPixmap(rect, pixmap)
         painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QBrush(blockColor, QtCore.Qt.SolidPattern))
@@ -601,8 +602,8 @@ class LayerBar(QtWidgets.QToolBar):
             "lock_unlocked":    qta.icon("mdi.lock-open-variant-outline"),
             "solo":             qta.icon("mdi.exclamation-thick"),
             "select_all":       qta.icon("mdi.select-all"),
-            "insert":           qta.icon("mdi.plus-circle-outline"), #mdi.plus-box
-            "remove":           qta.icon("mdi.delete-outline"), #mdi.trash-can
+            "insert":           qta.icon("mdi.plus-circle-outline"),  # mdi.plus-box
+            "remove":           qta.icon("mdi.delete-outline"),  # mdi.trash-can
             "shift_up":         qta.icon("mdi.arrow-up-bold"),
             "shift_down":       qta.icon("mdi.arrow-down-bold")
         }
@@ -610,7 +611,7 @@ class LayerBar(QtWidgets.QToolBar):
     def initUI(self):
         self.setIconSize(QtCore.QSize(20, 24))
         self.setFixedHeight(32)
-        self.setMaximumWidth(342) # calculate instead of hardcode
+        self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
         self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         self.addFrame()
         self.addContents()
@@ -660,7 +661,7 @@ class LayerArea(VerticalScrollArea):
             self.layout.addWidget(layer.frame)
             self.layers.append(layer)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setMaximumWidth(self.layers[0].width())
+        self.setMaximumWidth(342) # TODO: calculate instead of hardcode
         self.setWidget(self.container)
 
 
@@ -705,6 +706,12 @@ class Workspace(QtWidgets.QSplitter):
         container = QtWidgets.QWidget()
         container.setLayout(layout)
 
+    def resetWorkspace(self):
+        self.layerWidget.initUI()
+        for item in self.noteBlockWidget.items():
+            if type(item) == NoteBlock:
+                self.noteBlockWidget.removeItem(item)
+
 
 class CentralArea(QtWidgets.QSplitter):
     def __init__(self, parent=None):
@@ -718,3 +725,16 @@ class CentralArea(QtWidgets.QSplitter):
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
         self.addWidget(self.piano)
+
+
+class InstrumentButton(QtWidgets.QToolButton):
+    """Buttons for the instrument selection in the toolbar"""
+    def __init__(self, instrument, parent=None):
+        super().__init__(parent)
+        self.setCheckable(True)
+
+        icon = QtGui.QIcon()
+        icon.addFile("../resources/base/images/instrument_{}.png".format(instrument))
+        # TODO: make icon for custom instruments
+        self.setIcon(icon)
+        self.setToolTip("Change instrument to {}".format(" ".join(instrument.split("_")).title()))

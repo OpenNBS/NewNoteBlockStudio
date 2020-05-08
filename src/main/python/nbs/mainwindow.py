@@ -3,11 +3,14 @@ import qtawesome as qta
 import nbs.ui.components
 import nbs.core.data
 
+
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
+
+        self.currentSong = nbs.core.data.Song()  # Initialize empty song object at the start of session
 
         menuBar = self.drawMenuBar()
         toolBar = self.drawToolBar()
@@ -17,33 +20,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(toolBar)
         self.setCentralWidget(mainArea)
 
-       # current_song = nbs.core.data.Song(song_dict={"header": None, "layers": None, "instruments": None,
-       #                                              "notes": [{"tick": 0, "layer": 1, "key": 1, "instrument": 0},
-       #                                                        {"tick": 1, "layer": 2, "key": 2, "instrument": 0},
-       #                                                        {"tick": 2, "layer": 3, "key": 3, "instrument": 0},
-       #                                                        {"tick": 3, "layer": 4, "key": 4, "instrument": 0},
-       #                                                        {"tick": 4, "layer": 5, "key": 5, "instrument": 0}]})  # testing
-
-        current_song = nbs.core.data.Song(filename="test.nbs")
-
-        for note in current_song.notes:
-            mainArea.workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
+        self.load_song("test.nbs")  # Testing
 
     def drawMenuBar(self):
         menuBar = QtWidgets.QMenuBar(parent=self)
 
         # File
         fileMenu = menuBar.addMenu("File")
-        fileMenu.addAction("New song")
-        fileMenu.addAction("Open song...")
+        fileMenu.addAction("New song", self.new_song)
+        fileMenu.addAction("Open song...", self.load_song)
         recentSongs = fileMenu.addMenu(QtGui.QIcon(), 'Open recent')
         recentSongs.addSection(QtGui.QIcon(), "No recent songs")
         importMenu = fileMenu.addMenu("Import")
         importFromSchematicAction = importMenu.addAction("From schematic")
         importFromMidiAction = importMenu.addAction("From MIDI")
         fileMenu.addSeparator()
-        saveSongAction = fileMenu.addAction("Save song")
-        fileMenu.addAction("Save song as...")
+        saveSongAction = fileMenu.addAction("Save song", self.save_song)
+        fileMenu.addAction("Save song as...", self.song_save_as)
         exportMenu = fileMenu.addMenu("Export as...")
         exportMenu.addAction("MIDI")
         exportMenu.addAction("Audio file")
@@ -58,7 +51,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Settings
         settingsMenu = menuBar.addMenu("Settings")
         instrumentsMenu = settingsMenu.addMenu("Instrument")
-        for ins in ["Harp", "Double Bass", "Bass Drum", "Snare Drum", "Click"]:
+        for ins in ["Harp", "Double Bass", "Bass Drum", "Snare Drum", "Click", "Guitar", "Flute", "Bell", "Chime",
+                    "Xylophone", "Iron Xylophone", "Cow Bell", "Didgeridoo", "Bit", "Banjo", "Pling"]:
             instrumentsMenu.addAction(ins)
         settingsMenu.addSeparator()
         settingsMenu.addAction("Song info...")
@@ -77,30 +71,30 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def drawToolBar(self):
         icons = {
-            "new_song":         qta.icon('mdi.file-plus'),
-            "open_song":        qta.icon('mdi.folder-open'),
-            "save_song":        qta.icon('mdi.content-save'),
-            "rewind":           qta.icon('mdi.rewind'),
-            "fast_forward":     qta.icon('mdi.fast-forward'),
-            "play":             qta.icon('mdi.play'),
-            "pause":            qta.icon('mdi.pause'),
-            "stop":             qta.icon('mdi.stop'),
-            "record":           qta.icon('mdi.record'),
-            "loop":             qta.icon('mdi.repeat'),
-            "loop_off":         qta.icon('mdi.repeat-off'),
-            "undo":             qta.icon('mdi.undo'),
-            "redo":             qta.icon('mdi.redo'),
-            "cut":              qta.icon('mdi.content-cut'),
-            "copy":             qta.icon('mdi.content-copy'),
-            "paste":            qta.icon('mdi.content-paste'),
-            "delete":           qta.icon('mdi.delete'),
-            "select_all":       qta.icon('mdi.select-all'),
-            "song_instruments": qta.icon('mdi.piano'),
-            "song_info":        qta.icon('mdi.information'),
-            "song_properties":  qta.icon('mdi.label'),
-            "song_stats":       qta.icon('mdi.file-document-edit'),
-            "midi_devices":     qta.icon('mdi.usb'),
-            "settings":         qta.icon('mdi.settings')
+            "new_song":                     qta.icon('mdi.file-plus'),
+            "open_song":                    qta.icon('mdi.folder-open'),
+            "save_song":                    qta.icon('mdi.content-save'),
+            "rewind":                       qta.icon('mdi.rewind'),
+            "fast_forward":                 qta.icon('mdi.fast-forward'),
+            "play":                         qta.icon('mdi.play'),
+            "pause":                        qta.icon('mdi.pause'),
+            "stop":                         qta.icon('mdi.stop'),
+            "record":                       qta.icon('mdi.record'),
+            "loop":                         qta.icon('mdi.repeat'),
+            "loop_off":                     qta.icon('mdi.repeat-off'),
+            "undo":                         qta.icon('mdi.undo'),
+            "redo":                         qta.icon('mdi.redo'),
+            "cut":                          qta.icon('mdi.content-cut'),
+            "copy":                         qta.icon('mdi.content-copy'),
+            "paste":                        qta.icon('mdi.content-paste'),
+            "delete":                       qta.icon('mdi.delete'),
+            "select_all":                   qta.icon('mdi.select-all'),
+            "song_instruments":             qta.icon('mdi.piano'),
+            "song_info":                    qta.icon('mdi.information'),
+            "song_properties":              qta.icon('mdi.label'),
+            "song_stats":                   qta.icon('mdi.file-document-edit'),
+            "midi_devices":                 qta.icon('mdi.usb'),
+            "settings":                     qta.icon('mdi.settings')
         }
         '''
         icons = {
@@ -117,10 +111,21 @@ class MainWindow(QtWidgets.QMainWindow):
         }
         '''
 
+        instrument_list = ["harp", "double_bass", "bass_drum", "snare_drum", "click", "guitar", "flute", "bell",
+                           "chime", "xylophone", "iron_xylophone", "cow_bell", "didgeridoo", "bit", "banjo", "pling"]
+        instrument_button_list = [nbs.ui.components.InstrumentButton(instrument) for instrument in instrument_list]
+        for instrument in self.currentSong.custom_instruments:  # TODO: reset custom instruments on new song
+            instrument_button_list.append(nbs.ui.components.InstrumentButton("custom"))  # TODO: put in custom name
+
+        instrument_buttons = QtWidgets.QButtonGroup(self)
+        instrument_buttons.setExclusive(True)
+        for button in instrument_button_list:
+            instrument_buttons.addButton(button)
+
         toolbar = QtWidgets.QToolBar(parent=self)
-        toolbar.addAction(icons["new_song"], "New song")
-        toolbar.addAction(icons["open_song"], "Open song")
-        toolbar.addAction(icons["save_song"], "Save song")
+        toolbar.addAction(icons["new_song"], "New song", self.new_song)
+        toolbar.addAction(icons["open_song"], "Open song", self.load_song)
+        toolbar.addAction(icons["save_song"], "Save song", self.save_song)
         toolbar.addSeparator()
         toolbar.addAction(icons["rewind"], "Rewind")
         toolbar.addAction(icons["play"], "Play")
@@ -128,6 +133,9 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(icons["fast_forward"], "Fast-forward")
         toolbar.addAction(icons["record"], "Record key presses")
         toolbar.addAction(icons["loop"], "Toggle looping")
+        toolbar.addSeparator()
+        for button in instrument_buttons.buttons():
+            toolbar.addWidget(button)
         toolbar.addSeparator()
         toolbar.addAction(icons["undo"], "Undo")
         toolbar.addAction(icons["redo"], "Redo")
@@ -152,3 +160,59 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def drawStatusBar(self):
         pass
+
+    @QtCore.pyqtSlot()
+    def new_song(self):
+        self.currentSong = nbs.core.data.Song()
+        # TODO: save confirmation if editing unsaved work
+        self.centralWidget().workspace.resetWorkspace()
+
+    @QtCore.pyqtSlot()
+    def load_song(self, filename=None):
+        """Loads a .nbs file into the current session. passing a filename overrides opening the file dialog.
+        loadFlag determines if the method is allowed to load the file and reset the workspace (needed in case the
+        user presses cancel on the open file dialog)."""
+        loadFlag = False
+
+        if filename:
+            loadFlag = True
+        else:
+            dialog = QtWidgets.QFileDialog(self)
+            dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+            dialog.setWindowTitle("Open song")
+            dialog.setLabelText(QtWidgets.QFileDialog.FileName, "Song name:")
+            dialog.setNameFilter("Note Block Songs (*.nbs)")
+            # dialog.restoreState()
+            if dialog.exec():
+                filename = dialog.selectedFiles()[0]
+                # dialog.saveState()
+                loadFlag = True
+
+        if loadFlag:
+            self.currentSong = nbs.core.data.Song(filename=filename)
+            self.centralWidget().workspace.resetWorkspace()
+            # TODO: load layers
+            for note in self.currentSong.notes:
+                self.centralWidget().workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
+
+    @QtCore.pyqtSlot()
+    def save_song(self):
+        """Save current file without bringing up the save dialog if it has a defined location on disk"""
+        if not self.currentSong.location:
+            self.song_save_as()
+        else:
+            self.currentSong.save()
+
+    @QtCore.pyqtSlot()
+    def song_save_as(self):
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setWindowTitle("Save song")
+        dialog.setLabelText(QtWidgets.QFileDialog.FileName, "Song name:")
+        dialog.setNameFilter("Note Block Songs (*.nbs)")
+        # dialog.restoreState()
+        if dialog.exec():
+            location = dialog.selectedFiles()[0]
+            self.currentSong.save(location)
+            # dialog.saveState()
