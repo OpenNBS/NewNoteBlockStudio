@@ -330,6 +330,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.isDraggingSelection = False
         self.isClearingSelection = False
         self.isMovingBlocks = False
+        self.scrollSpeedX = 0
+        self.scrollSpeedY = 0
         self.initUI()
 
     def initUI(self):
@@ -338,6 +340,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
         self.selectionProxy = self.addWidget(self.selection)
         self.selectionProxy.setZValue(1)
+        self.startTimer(10)
 
     def drawBackground(self, painter, rect):
         painter.setPen(QtCore.Qt.NoPen)
@@ -352,6 +355,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             else:
                 painter.setPen(QtGui.QColor(216, 216, 216))
             painter.drawLine(x*32, rect.y(), x*32, rect.bottom())
+
+    def timerEvent(self, event):
+        # Auto-scroll when dragging/moving near the edges
+        hsb = self.view.horizontalScrollBar()
+        vsb = self.view.verticalScrollBar()
+        hsb.setValue(hsb.value() + self.scrollSpeedX)
+        vsb.setValue(vsb.value() + self.scrollSpeedY)
 
     def getGridPos(self, point):
         """
@@ -418,6 +428,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selection.show()
 
     def mouseReleaseEvent(self, event):
+        self.scrollSpeedX = 0
+        self.scrollSpeedY = 0
         if self.isDraggingSelection:
             selectionArea = QtCore.QRectF(self.selection.geometry())
             if event.button() == QtCore.Qt.LeftButton:
@@ -441,6 +453,20 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.removeBlock(x, y)
 
     def mouseMoveEvent(self, event):
+        # Auto-scroll when dragging/moving near the edges
+        # TODO: Scroll speed slows down as you move the mouse outside the scene.
+        # It should be capped at the max speed instead
+        if event.buttons() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.RightButton:
+            rect = self.view.rect()
+            pos = self.view.mapFromScene(event.scenePos())
+            if pos.x() < rect.center().x():
+                self.scrollSpeedX = max(0, 50 - abs(rect.left() - pos.x())) * -1
+            else:
+                self.scrollSpeedX = max(0, 50 - abs(rect.right() - pos.x()))
+            if pos.y() < rect.center().y():
+                self.scrollSpeedY = max(0, 50 - abs(rect.top() - pos.y())) * -1
+            else:
+                self.scrollSpeedY = max(0, 50 - abs(rect.bottom() - pos.y()))
         if self.isMovingBlocks and event.buttons() == QtCore.Qt.LeftButton:
             pos = event.scenePos()
             x = math.floor(pos.x() / 32) * 32
