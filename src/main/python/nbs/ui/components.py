@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import qtawesome as qta
 import math
 
@@ -759,8 +760,7 @@ class InstrumentButton(QtWidgets.QToolButton):
         super().__init__(parent)
         self.setCheckable(True)
 
-        icon = QtGui.QIcon()
-        icon.addFile("../resources/base/images/instrument_{}.png".format(instrument))
+        icon = QtGui.QIcon(ApplicationContext().get_resource("images/instruments/{}.png".format(instrument)))
         # TODO: make icon for custom instruments
         self.setIcon(icon)
         self.setToolTip("Change instrument to {}".format(" ".join(instrument.split("_")).title()))
