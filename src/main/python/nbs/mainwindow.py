@@ -20,8 +20,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(toolBar)
         self.setCentralWidget(mainArea)
 
-        self.load_song("test.nbs")  # Testing
-
     def drawMenuBar(self):
         menuBar = QtWidgets.QMenuBar(parent=self)
 
