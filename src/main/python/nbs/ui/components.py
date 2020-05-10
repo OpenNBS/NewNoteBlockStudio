@@ -317,6 +317,10 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         else:
             super().wheelEvent(event)
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.scene().updateSceneSize()
+
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
     """
@@ -336,7 +340,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.initUI()
 
     def initUI(self):
-        self.setSceneRect(0, 0, 32000, 32000)
+        self.updateSceneSize()
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
         self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
         self.selectionProxy = self.addWidget(self.selection)
@@ -364,6 +368,16 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         hsb.setValue(hsb.value() + self.scrollSpeedX)
         vsb.setValue(vsb.value() + self.scrollSpeedY)
 
+    def updateSceneSize(self):
+        if len(self.items()) > 1:
+            bbox = self.itemsBoundingRect()
+        else:
+            bbox = QtCore.QRectF(0, 0, 0, 0)
+        viewSize = self.view.rect()
+        newSize = (bbox.right() + viewSize.width(),
+                   bbox.bottom() + viewSize.height())
+        self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
+
     def getGridPos(self, point):
         """
         Return the grid coordinates of a position in the scene.
@@ -389,6 +403,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         block.setPos(blockPos)
         block.mouseOver = True
         self.addItem(block)
+        self.updateSceneSize()
 
     def removeBlock(self, x, y):
         """Remove the note block at the specified position."""
@@ -396,6 +411,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         clicked = self.itemAt(pos, QtGui.QTransform())
         if isinstance(clicked, NoteBlock):
             self.removeItem(clicked)
+        self.updateSceneSize()
 
     def setSelected(self, area: QtCore.QRectF, value=True):
         for item in self.items(area):
@@ -412,6 +428,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                     self.removeItem(i)
                 item.setSelected(False)
                 item.setZValue(0)
+            self.updateSceneSize()
 
     def mousePressEvent(self, event):
         self.selectionStart = event.scenePos()
