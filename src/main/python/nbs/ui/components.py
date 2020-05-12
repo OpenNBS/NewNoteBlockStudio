@@ -35,10 +35,8 @@ class PianoKey(QtWidgets.QWidget):
 
     """
 
-    # Using the 'object' type since the value can
-    # be either a number (int) or None (NoneType)
-    keyPressed = QtCore.pyqtSignal(object)
-    keyReleased = QtCore.pyqtSignal(object)
+    keyPressed = QtCore.pyqtSignal(int)
+    keyReleased = QtCore.pyqtSignal(int)
 
     def __init__(self, num, label="", isBlack=False, isOutOfRange=False, parent=None):
         super().__init__(parent)
@@ -156,6 +154,8 @@ class PianoWidget(QtWidgets.QWidget):
 
     """
 
+    activeKeyChanged = QtCore.pyqtSignal(int)
+
     def __init__(self, keyCount, offset, validRange=(), parent=None):
         super().__init__(parent)
         self.keyCount = keyCount
@@ -186,9 +186,10 @@ class PianoWidget(QtWidgets.QWidget):
             self.keys[self._activeKey].isActive = False
         self.keys[value].isActive = True
         self._activeKey = value
+        self.activeKeyChanged.emit(value)
         self.repaint()
 
-    @QtCore.pyqtSlot(object)
+    @QtCore.pyqtSlot(int)
     def setActiveKey(self, key):
         self.activeKey = key
 
@@ -337,6 +338,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.isMovingBlocks = False
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
+        self.activeKey = 45
         self.initUI()
 
     def initUI(self):
@@ -368,6 +370,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         vsb = self.view.verticalScrollBar()
         hsb.setValue(hsb.value() + self.scrollSpeedX)
         vsb.setValue(vsb.value() + self.scrollSpeedY)
+
+    @QtCore.pyqtSlot(int)
+    def setActiveKey(self, key):
+        self.activeKey = key
 
     def updateSceneSize(self):
         if len(self.items()) > 1:
@@ -473,7 +479,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             x, y = self.getGridPos(clickPos)
             if event.button() == QtCore.Qt.LeftButton:
                 self.removeBlockManual(x, y)
-                self.addBlockManual(x, y, 0, 5, 33, 0)
+                self.addBlockManual(x, y, self.activeKey, 100, 0, 0)
             elif event.button() == QtCore.Qt.RightButton:
                 self.removeBlockManual(x, y)
 
@@ -776,6 +782,7 @@ class CentralArea(QtWidgets.QSplitter):
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
         self.addWidget(self.piano)
+        self.piano.piano.activeKeyChanged.connect(self.workspace.noteBlockWidget.setActiveKey)
 
 
 class InstrumentButton(QtWidgets.QToolButton):
