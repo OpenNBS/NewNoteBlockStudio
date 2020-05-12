@@ -341,6 +341,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def initUI(self):
         self.updateSceneSize()
+        self.view.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
         self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
         self.selectionProxy = self.addWidget(self.selection)
