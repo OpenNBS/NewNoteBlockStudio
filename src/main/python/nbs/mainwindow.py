@@ -178,6 +178,12 @@ class MainWindow(QtWidgets.QMainWindow):
             # TODO: load layers
             for note in self.currentSong.notes:
                 self.centralWidget().workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
+            # It's really weird to updateSceneSize() here, there has to be a better solution.
+            self.centralWidget().workspace.noteBlockWidget.updateSceneSize()
+
+        # TODO: The main window should only interact with the workspace (consisting of layer area + note block area),
+        # not directly with the note block area. The workspace will do the talking between the layer and note block
+        # areas, keeping them in sync, and also provide an interface for interacting with both at the same time.
 
     @QtCore.pyqtSlot()
     def save_song(self):
