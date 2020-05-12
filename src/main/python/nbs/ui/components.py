@@ -352,6 +352,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selectionProxy.setZValue(1)
         self.startTimer(10)
 
+    def noteBlocks(self):
+        """An iterator which yields all the note blocks in the scene."""
+        for item in self.items():
+            if isinstance(item, NoteBlock):
+                yield item
+
     def drawBackground(self, painter, rect):
         painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QColor(240, 240, 240))
@@ -404,6 +410,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def getScenePos(self, x, y):
         """Return the top left scene position of a set of grid coordinates."""
         return QtCore.QPoint(x*32, y*32)
+
+    def clear(self):
+        """Clear all note blocks in the scene."""
+        for item in self.noteBlocks():
+            self.removeItem(item)
 
     def addBlock(self, x, y, *args, **kwargs):
         """Add a note block at the specified position."""
@@ -767,10 +778,7 @@ class Workspace(QtWidgets.QSplitter):
 
     def resetWorkspace(self):
         self.layerWidget.initUI()
-        # TODO: Move this method to NoteBlockArea and provide a call to it here
-        for item in self.noteBlockWidget.items():
-            if type(item) == NoteBlock:
-                self.noteBlockWidget.removeItem(item)
+        self.noteBlockWidget.clear()
 
 
 class CentralArea(QtWidgets.QSplitter):
