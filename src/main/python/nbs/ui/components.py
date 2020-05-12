@@ -300,12 +300,14 @@ class NoteBlockView(QtWidgets.QGraphicsView):
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
+        # TODO: Use reset_transform()
         factor = value / self.currentScale
         self.changeScale(factor)
 
     @QtCore.pyqtSlot()
     def changeScale(self, factor):
         if 0.2 < self.currentScale * factor < 4:
+            # TODO: Zoom in/out anyway, capping at the max/min scale level
             self.scale(factor, factor)
             self.currentScale *= factor
 
@@ -765,6 +767,7 @@ class Workspace(QtWidgets.QSplitter):
 
     def resetWorkspace(self):
         self.layerWidget.initUI()
+        # TODO: Move this method to NoteBlockArea and provide a call to it here
         for item in self.noteBlockWidget.items():
             if type(item) == NoteBlock:
                 self.noteBlockWidget.removeItem(item)
