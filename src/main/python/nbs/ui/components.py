@@ -404,6 +404,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         block.setPos(blockPos)
         block.mouseOver = True
         self.addItem(block)
+
+    def addBlockManual(self, x, y, *args, **kwargs):
+        self.addBlock(x, y, *args, **kwargs)
         self.updateSceneSize()
 
     def removeBlock(self, x, y):
@@ -412,6 +415,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         clicked = self.itemAt(pos, QtGui.QTransform())
         if isinstance(clicked, NoteBlock):
             self.removeItem(clicked)
+
+    def removeBlockManual(self, x, y):
+        self.removeBlock(x, y)
         self.updateSceneSize()
 
     def setSelected(self, area: QtCore.QRectF, value=True):
@@ -466,10 +472,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             clickPos = event.scenePos()
             x, y = self.getGridPos(clickPos)
             if event.button() == QtCore.Qt.LeftButton:
-                self.removeBlock(x, y)
-                self.addBlock(x, y, 0, 5, 33, 0)
+                self.removeBlockManual(x, y)
+                self.addBlockManual(x, y, 0, 5, 33, 0)
             elif event.button() == QtCore.Qt.RightButton:
-                self.removeBlock(x, y)
+                self.removeBlockManual(x, y)
 
     def mouseMoveEvent(self, event):
         # Auto-scroll when dragging/moving near the edges
