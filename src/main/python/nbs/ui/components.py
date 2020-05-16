@@ -4,6 +4,9 @@ import qtawesome as qta
 import math
 
 
+appctxt = ApplicationContext()
+
+
 class VerticalScrollArea(QtWidgets.QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -651,7 +654,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         else:
             painter.setOpacity(0.75)
 
-        pixmap = QtGui.QPixmap(ApplicationContext().get_resource("images/note_block_grayscale.png"))
+        pixmap = QtGui.QPixmap(appctxt.get_resource("images/note_block_grayscale.png"))
         painter.drawPixmap(rect, pixmap)
         painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QBrush(blockColor, QtCore.Qt.SolidPattern))
@@ -869,7 +872,7 @@ class InstrumentButton(QtWidgets.QToolButton):
         super().__init__(parent)
         self.setCheckable(True)
 
-        icon = QtGui.QIcon(ApplicationContext().get_resource("images/instruments/{}.png".format(instrument)))
+        icon = QtGui.QIcon(appctxt.get_resource("images/instruments/{}.png".format(instrument)))
         # TODO: make icon for custom instruments
         self.setIcon(icon)
         self.setToolTip("Change instrument to {}".format(" ".join(instrument.split("_")).title()))
