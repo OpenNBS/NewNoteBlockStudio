@@ -590,7 +590,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         else:
             painter.setOpacity(0.75)
 
-        pixmap = QtGui.QPixmap("../resources/base/images/note_block_greyscale.png")
+        pixmap = QtGui.QPixmap(ApplicationContext().get_resource("images/note_block_grayscale.png"))
         painter.drawPixmap(rect, pixmap)
         painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QBrush(blockColor, QtCore.Qt.SolidPattern))
