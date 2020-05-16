@@ -292,10 +292,69 @@ class PianoScroll(QtWidgets.QScrollArea):
         self.mouseNearRightEdge = rightEdge.contains(mousePos)
 
 
+class TimeRuler(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(32)
+        self.offset = 0
+
+    def timestr(self, ms):
+        seconds, ms = divmod(ms, 1000)
+        minutes, seconds = divmod(seconds, 60)
+        return f"{minutes:02d}:{seconds:02d},{ms:03d}"
+
+    def getTextRect(self, fm: QtGui.QFontMetrics, text, x, y):
+        textRect = fm.boundingRect(text)
+        textRect = fm.boundingRect(textRect, 0, text)
+        textRect.moveCenter(QtCore.QPoint(x, y))
+        if textRect.left() < 0:
+            textRect.moveLeft(1)
+        #if textRect.right() > rect.width():
+        #    textRect.moveRight(textRect.width() - 1)
+        return textRect
+
+    def paintEvent(self, event):
+        rect = self.rect()
+        mid = rect.height() / 2
+        painter = QtGui.QPainter()
+        painter.begin(self)
+        fm = painter.fontMetrics()
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(QtCore.Qt.white)
+        painter.drawRect(rect)
+        painter.setPen(QtCore.Qt.black)
+        painter.drawLine(rect.left(), mid, rect.right(), mid)
+        firstLabel, startPos = divmod(self.offset, 32)
+        # Bottom part
+        for x in range(startPos, rect.width(), 32):
+            painter.drawLine(x, rect.bottom() - 2, x, rect.bottom())
+            currentTick = x // 32
+            if currentTick % 4 == 0:
+                text = str(currentTick)
+                y = (mid + rect.bottom()) / 2 - 1
+                textRect = self.getTextRect(fm, text, x, y)
+                painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
+        # Top part
+        distance = fm.boundingRect(self.timestr(0)).width() + 50
+        for x in range(startPos, rect.width(), distance):
+            painter.drawLine(x, mid - 2, x, mid)
+            time = x * 50 # TODO: placeholder for actual time
+            text = self.timestr(time)
+            y = mid / 2 - 1
+            textRect = self.getTextRect(fm, text, x, y)
+            painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
+        painter.end()
+
+    def setOffset(self, value):
+        self.offset = value
+        self.update()
+
+
 class NoteBlockView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.currentScale = 1
+        #self.setViewportMargins(0, 80, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
     @QtCore.pyqtSlot()
@@ -389,6 +448,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         else:
             bbox = QtCore.QRectF(0, 0, 0, 0)
         viewSize = self.view.rect()
+        scrollBarSize = QtWidgets.qApp.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
+        # // 32 * 32, # - scrollBarSize - 32,
         newSize = (bbox.right() + viewSize.width(),
                    bbox.bottom() + viewSize.height())
         self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
@@ -738,21 +799,27 @@ class LayerArea(VerticalScrollArea):
 class Workspace(QtWidgets.QSplitter):
     """
     A splitter holding a layer area on the left and a note
-    block area on the right.
+    block area on the right, with a time ruler at the top.
+    Responsible for the communication between all elements.
     """
 
-    def __init__(self, layerWidget=None, noteBlockWidget=None, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        if layerWidget is None:
-            self.layerWidget = LayerArea()
-        else:
-            self.layerWidget = layerWidget
-        if noteBlockWidget is None:
-            self.noteBlockWidget = NoteBlockArea()
-        else:
-            self.noteBlockWidget = noteBlockWidget
+        self.layerWidget = LayerArea()
+        self.noteBlockWidget = NoteBlockArea()
+        self.rulerWidget = TimeRuler(self)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.rulerWidget)
+        layout.addWidget(self.noteBlockWidget.view)
+
+        container = QtWidgets.QWidget()
+        container.setLayout(layout)
+
         self.addWidget(self.layerWidget)
-        self.addWidget(self.noteBlockWidget.view)
+        self.addWidget(container)
         self.setHandleWidth(2)
 
     def setSingleScrollBar(self):
