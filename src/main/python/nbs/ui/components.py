@@ -327,11 +327,12 @@ class TimeRuler(QtWidgets.QWidget):
         painter.drawRect(rect)
         painter.setPen(QtCore.Qt.black)
         painter.drawLine(rect.left(), mid, rect.right(), mid)
-        firstLabel, startPos = divmod(self.offset, 32)
+        startTick, startPos = divmod(self.offset, 32)
         # Bottom part
-        for x in range(startPos, rect.width(), 32):
+        # We start on negative coordinates to fill the gap until the first visible line
+        for x in range(-startPos, rect.width(), 32):
             painter.drawLine(x, rect.bottom() - 2, x, rect.bottom())
-            currentTick = x // 32
+            currentTick = startTick + (startPos + x) // 32
             if currentTick % 4 == 0:
                 text = str(currentTick)
                 y = (mid + rect.bottom()) / 2 - 1
@@ -348,6 +349,7 @@ class TimeRuler(QtWidgets.QWidget):
             painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
         painter.end()
 
+    @QtCore.pyqtSlot(int)
     def setOffset(self, value):
         self.offset = value
         self.update()
@@ -824,6 +826,8 @@ class Workspace(QtWidgets.QSplitter):
         self.addWidget(self.layerWidget)
         self.addWidget(container)
         self.setHandleWidth(2)
+
+        self.noteBlockWidget.view.horizontalScrollBar().valueChanged.connect(self.rulerWidget.setOffset)
 
     def setSingleScrollBar(self):
         """
