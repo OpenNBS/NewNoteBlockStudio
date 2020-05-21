@@ -300,6 +300,7 @@ class TimeRuler(QtWidgets.QWidget):
         super().__init__(parent)
         self.setFixedHeight(32)
         self.offset = 0
+        self.scale = 1
         self.tempo = 10.00
 
     def timestr(self, seconds):
@@ -364,8 +365,17 @@ class TimeRuler(QtWidgets.QWidget):
         self.offset = value
         self.update()
 
+    @QtCore.pyqtSlot(float)
+    def setScale(self, value):
+        self.scale = value
+        print(self.scale)
+        self.update()
+
 
 class NoteBlockView(QtWidgets.QGraphicsView):
+
+    scaleChanged = QtCore.pyqtSignal(float)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.currentScale = 1
@@ -384,6 +394,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
             # TODO: Zoom in/out anyway, capping at the max/min scale level
             self.scale(factor, factor)
             self.currentScale *= factor
+            self.scaleChanged.emit(self.currentScale)
 
     def wheelEvent(self, event):
         if event.modifiers() == QtCore.Qt.ControlModifier:
@@ -838,6 +849,7 @@ class Workspace(QtWidgets.QSplitter):
         self.setHandleWidth(2)
 
         self.noteBlockWidget.view.horizontalScrollBar().valueChanged.connect(self.rulerWidget.setOffset)
+        self.noteBlockWidget.view.scaleChanged.connect(self.rulerWidget.setScale)
 
     def setSingleScrollBar(self):
         """
