@@ -374,9 +374,9 @@ class NoteBlockView(QtWidgets.QGraphicsView):
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
-        # TODO: Use reset_transform()
-        factor = value / self.currentScale
-        self.changeScale(factor)
+        self.resetTransform()
+        self.currentScale = 1
+        self.changeScale(value)
 
     @QtCore.pyqtSlot()
     def changeScale(self, factor):
