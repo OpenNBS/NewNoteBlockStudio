@@ -300,18 +300,21 @@ class TimeRuler(QtWidgets.QWidget):
         super().__init__(parent)
         self.setFixedHeight(32)
         self.offset = 0
+        self.tempo = 10.00
 
-    def timestr(self, ms):
-        seconds, ms = divmod(ms, 1000)
+    def timestr(self, seconds):
+        seconds, ms = divmod(int(seconds * 1000), 1000)
         minutes, seconds = divmod(seconds, 60)
         return f"{minutes:02d}:{seconds:02d},{ms:03d}"
 
-    def getTextRect(self, fm: QtGui.QFontMetrics, text, x, y):
+    def getTextRect(self, fm: QtGui.QFontMetrics, text, x=0, y=0):
         textRect = fm.boundingRect(text)
         textRect = fm.boundingRect(textRect, 0, text)
         textRect.moveCenter(QtCore.QPoint(x, y))
         if textRect.left() < 0:
             textRect.moveLeft(1)
+        #if textRect.left() < 0 and textRect.right() >= (textRect.width() / 2):
+        #    textRect.moveLeft(1)
         #if textRect.right() > rect.width():
         #    textRect.moveRight(textRect.width() - 1)
         return textRect
@@ -339,15 +342,39 @@ class TimeRuler(QtWidgets.QWidget):
                 textRect = self.getTextRect(fm, text, x, y)
                 painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
         # Top part
-        distance = fm.boundingRect(self.timestr(0)).width() + 50
-        for x in range(startPos, rect.width(), distance):
+        # We start with the length occupied by 250ms on the song, then double it
+        # (essentially halving the number of markings) until they're far enough apart
+
+        ticksPerSec = self.tempo
+        pixelsPerSec = ticksPerSec * 32
+
+        timeInterval = 0.25
+        distance = int(self.tempo / 4 * 32)
+        minDistance = self.getTextRect(fm, self.timestr(0)).width() + 50
+        print(minDistance, distance)
+        while distance < minDistance:
+            print(distance)
+            distance *= 2
+            timeInterval *= 2
+        startTime, startPos = divmod(self.offset, distance)
+        startTime = (self.offset // distance) * timeInterval
+
+        print("offset: {}, start time: {}, start pos: {}".format(self.offset, startTime, startPos))
+        for i, x in enumerate(range(-startPos, rect.width(), distance)):
             painter.drawLine(x, mid - 2, x, mid)
-            time = x * 50 # TODO: placeholder for actual time
+            time = startTime + i * timeInterval
+            #time = (startTime + (startPos + x) // 32) * (10 / self.tempo) * 1000
             text = self.timestr(time)
             y = mid / 2 - 1
             textRect = self.getTextRect(fm, text, x, y)
             painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
         painter.end()
+
+        # CALCULATING THE VALUE FOR THE START TIME:
+        # In 10 t/s, 1 second = 10 ticks = 320 px       1px = 1/320 second
+        # In 5 t/s, 1 second = 5 ticks = 160 px         1px = 1/160 second
+        # In 2.5 t/s, 1 second = 2.5 ticks = 80 px      1px = 1/80 second
+        # In 0.25 t/s, 1 second = 0.25 ticks = 8 px     1px = 1/8 second
 
     @QtCore.pyqtSlot(int)
     def setOffset(self, value):
