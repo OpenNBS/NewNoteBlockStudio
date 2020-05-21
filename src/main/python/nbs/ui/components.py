@@ -877,6 +877,11 @@ class CentralArea(QtWidgets.QSplitter):
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
         self.addWidget(self.piano)
+        pianoHeight = self.piano.piano.height()
+        self.setSizes([1, pianoHeight])
+        self.handle(1).setEnabled(False) # make handle unmovable
+        self.setStretchFactor(0, 1) # set workspace to stretch
+        self.setStretchFactor(1, 0) # set piano to NOT stretch
         self.piano.piano.activeKeyChanged.connect(self.workspace.noteBlockWidget.setActiveKey)
 
 
