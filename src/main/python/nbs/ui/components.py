@@ -351,7 +351,7 @@ class TimeRuler(QtWidgets.QWidget):
             timeInterval *= 2
         startTime, startPos = divmod(self.offset, distance)
         startTime *= timeInterval
-        for i, x in enumerate(range(-startPos, rect.width(), distance)):
+        for i, x in enumerate(range(-startPos, rect.width() + minDistance, distance)):
             painter.drawLine(x, mid - 2, x, mid)
             time = startTime + i * timeInterval
             text = self.timestr(time)
