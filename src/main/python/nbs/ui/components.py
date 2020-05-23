@@ -456,6 +456,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         self.activeKey = 45
+        self.markerPos = 0
         self.initUI()
 
     def initUI(self):
@@ -487,6 +488,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 painter.setPen(QtGui.QColor(216, 216, 216))
             painter.drawLine(x*32, rect.y(), x*32, rect.bottom())
 
+    def drawForeground(self, painter, rect):
+        pen = QtGui.QPen(QtCore.Qt.black)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.drawLine(self.markerPos, 0, self.markerPos, rect.height())
+
     def timerEvent(self, event):
         # Auto-scroll when dragging/moving near the edges
         hsb = self.view.horizontalScrollBar()
@@ -497,6 +504,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     @QtCore.pyqtSlot(int)
     def setActiveKey(self, key):
         self.activeKey = key
+
+    @QtCore.pyqtSlot(int)
+    def setMarkerPos(self, pos):
+        self.markerPos = pos
+        self.update()
 
     def updateSceneSize(self):
         if len(self.items()) > 1:
@@ -880,6 +892,7 @@ class Workspace(QtWidgets.QSplitter):
 
         self.noteBlockWidget.view.horizontalScrollBar().valueChanged.connect(self.rulerWidget.setOffset)
         self.noteBlockWidget.view.scaleChanged.connect(self.rulerWidget.setScale)
+        self.rulerWidget.markerChanged.connect(self.noteBlockWidget.setMarkerPos)
 
     def setSingleScrollBar(self):
         """
