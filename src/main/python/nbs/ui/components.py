@@ -309,6 +309,8 @@ class TimeRuler(QtWidgets.QWidget):
         return f"{minutes:02d}:{seconds:02d},{ms:03d}"
 
     def getTextRect(self, fm: QtGui.QFontMetrics, text, x=0, y=0):
+        # Calling boundingRect just once returns a wrong size. See:
+        # https://stackoverflow.com/a/32078341/9045426
         textRect = fm.boundingRect(text)
         textRect = fm.boundingRect(textRect, 0, text)
         textRect.moveCenter(QtCore.QPoint(x, y))
@@ -321,6 +323,7 @@ class TimeRuler(QtWidgets.QWidget):
     def paintEvent(self, event):
         rect = self.rect()
         mid = rect.height() / 2
+        blocksize = 32 * self.scale
         painter = QtGui.QPainter()
         painter.begin(self)
         fm = painter.fontMetrics()
@@ -329,22 +332,24 @@ class TimeRuler(QtWidgets.QWidget):
         painter.drawRect(rect)
         painter.setPen(QtCore.Qt.black)
         painter.drawLine(rect.left(), mid, rect.right(), mid)
-        startTick, startPos = divmod(self.offset, 32)
+        startTick, startPos = divmod(self.offset, blocksize)
         # Bottom part
         # We start on negative coordinates to fill the gap until the first visible line
-        for x in range(-startPos, rect.width(), 32):
+        x = -startPos
+        y = (mid + rect.bottom()) / 2 - 1
+        while x <= rect.width():
             painter.drawLine(x, rect.bottom() - 2, x, rect.bottom())
-            currentTick = startTick + (startPos + x) // 32
+            currentTick = startTick + round((startPos + x) / blocksize)
             if currentTick % 4 == 0:
-                text = str(currentTick)
-                y = (mid + rect.bottom()) / 2 - 1
-                textRect = self.getTextRect(fm, text, x, y)
+                text = str(int(currentTick))
+                textRect = self.getTextRect(fm, text, round(x), y)
                 painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
+            x += blocksize
         # Top part
         # We start with the length occupied by 250ms on the song, then double it
         # (essentially halving the number of markings) until they're far enough apart
         timeInterval = 0.25
-        distance = int(self.tempo / 4 * 32)
+        distance = int(self.tempo / 4 * blocksize)
         minDistance = self.getTextRect(fm, self.timestr(0)).width() + 50
         while distance < minDistance:
             distance *= 2
@@ -368,7 +373,6 @@ class TimeRuler(QtWidgets.QWidget):
     @QtCore.pyqtSlot(float)
     def setScale(self, value):
         self.scale = value
-        print(self.scale)
         self.update()
 
 
