@@ -296,12 +296,16 @@ class PianoScroll(QtWidgets.QScrollArea):
 
 
 class TimeRuler(QtWidgets.QWidget):
+
+    markerChanged = QtCore.pyqtSignal(int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(32)
         self.offset = 0
         self.scale = 1
         self.tempo = 10.00
+        self.markerPos = 0
 
     def timestr(self, seconds):
         seconds, ms = divmod(int(seconds * 1000), 1000)
@@ -363,7 +367,29 @@ class TimeRuler(QtWidgets.QWidget):
             y = mid / 2 - 1
             textRect = self.getTextRect(fm, text, x, y)
             painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
+        # Marker
+        markerColor = QtCore.Qt.black
+        pen = QtGui.QPen(markerColor)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.drawLine(self.markerPos, 0, self.markerPos, self.height())
+        painter.fillPath(self.getMarkerHead(self.markerPos), QtGui.QBrush(markerColor))
         painter.end()
+
+    def getMarkerHead(self, pos):
+        rect = QtCore.QRectF(pos - 8, 0, 16, 16)
+        path = QtGui.QPainterPath()
+        path.moveTo(rect.topLeft())
+        path.lineTo(rect.topRight())
+        path.lineTo(rect.left() + rect.width() / 2, rect.bottom())
+        path.lineTo(rect.topLeft())
+        return path
+
+    def mouseReleaseEvent(self, event):
+        pos = event.pos().x()
+        self.markerPos = pos
+        self.markerChanged.emit(pos)
+        self.update()
 
     @QtCore.pyqtSlot(int)
     def setOffset(self, value):
