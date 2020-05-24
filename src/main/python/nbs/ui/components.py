@@ -372,8 +372,9 @@ class TimeRuler(QtWidgets.QWidget):
         pen = QtGui.QPen(markerColor)
         pen.setWidth(2)
         painter.setPen(pen)
-        painter.drawLine(self.markerPos, 0, self.markerPos, self.height())
-        painter.fillPath(self.getMarkerHead(self.markerPos), QtGui.QBrush(markerColor))
+        pos = self.tickToPos(self.markerPos)
+        painter.drawLine(pos, 0, pos, self.height())
+        painter.fillPath(self.getMarkerHead(pos), QtGui.QBrush(markerColor))
         painter.end()
 
     def getMarkerHead(self, pos):
@@ -385,9 +386,15 @@ class TimeRuler(QtWidgets.QWidget):
         path.lineTo(rect.topLeft())
         return path
 
+    def posToTick(self, pos):
+        return (pos / (self.scale * 32)) + (self.offset / 32)
+
+    def tickToPos(self, tick):
+        return (tick * (self.scale * 32)) - self.offset
+
     def mouseReleaseEvent(self, event):
         pos = event.pos().x()
-        self.markerPos = pos
+        self.markerPos = self.posToTick(pos)
         self.markerChanged.emit(pos)
         self.update()
 
@@ -399,6 +406,10 @@ class TimeRuler(QtWidgets.QWidget):
     @QtCore.pyqtSlot(float)
     def setScale(self, value):
         self.scale = value
+        self.update()
+
+    def setMarkerPos(self, pos):
+        self.markerPos = self.posToTick(pos)
         self.update()
 
 
@@ -490,7 +501,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def drawForeground(self, painter, rect):
         pen = QtGui.QPen(QtCore.Qt.black)
-        pen.setWidth(2)
+        print(round(2 / self.view.currentScale))
+        pen.setWidth(2 / self.view.currentScale)
         painter.setPen(pen)
         painter.drawLine(self.markerPos, 0, self.markerPos, rect.height())
 
@@ -507,7 +519,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot(int)
     def setMarkerPos(self, pos):
-        self.markerPos = pos
+        scenePos = self.view.mapToScene(QtCore.QPoint(pos, 0)).x()
+        self.markerPos = scenePos
         self.update()
 
     def updateSceneSize(self):
