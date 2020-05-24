@@ -420,6 +420,8 @@ class NoteBlockView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.currentScale = 1
+        ########self.setStyleSheet("QGraphicsView { border-top: none; }")
+        #self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
         #self.setViewportMargins(0, 80, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
@@ -931,6 +933,10 @@ class Workspace(QtWidgets.QSplitter):
     def resetWorkspace(self):
         self.layerWidget.initUI()
         self.noteBlockWidget.clear()
+
+    def loadSong(self, notes, layers):
+        pass
+        # TODO: load notes to NoteBlockArea and layers to LayerArea here
 
 
 class CentralArea(QtWidgets.QSplitter):
