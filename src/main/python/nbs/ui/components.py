@@ -325,6 +325,7 @@ class TimeRuler(QtWidgets.QWidget):
         return textRect
 
     def paintEvent(self, event):
+        self.resize(self.parent().width(), self.height())
         rect = self.rect()
         mid = rect.height() / 2
         blocksize = 32 * self.scale
@@ -335,6 +336,7 @@ class TimeRuler(QtWidgets.QWidget):
         painter.setBrush(QtCore.Qt.white)
         painter.drawRect(rect)
         painter.setPen(QtCore.Qt.black)
+        painter.drawLine(rect.bottomLeft(), rect.bottomRight())
         painter.drawLine(rect.left(), mid, rect.right(), mid)
         startTick, startPos = divmod(self.offset, blocksize)
         # Bottom part
@@ -420,9 +422,10 @@ class NoteBlockView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.currentScale = 1
+        self.ruler = TimeRuler(parent=self)
         ########self.setStyleSheet("QGraphicsView { border-top: none; }")
         #self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
-        #self.setViewportMargins(0, 80, 0, 0)
+        self.setViewportMargins(0, 32, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
     @QtCore.pyqtSlot()
@@ -882,20 +885,17 @@ class LayerArea(VerticalScrollArea):
 class Workspace(QtWidgets.QSplitter):
     """
     A splitter holding a layer area on the left and a note
-    block area on the right, with a time ruler at the top.
-    Responsible for the communication between all elements.
+    block area on the right.
     """
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.layerWidget = LayerArea()
         self.noteBlockWidget = NoteBlockArea()
-        self.rulerWidget = TimeRuler(self)
 
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.rulerWidget)
         layout.addWidget(self.noteBlockWidget.view)
 
         container = QtWidgets.QWidget()
@@ -905,9 +905,9 @@ class Workspace(QtWidgets.QSplitter):
         self.addWidget(container)
         self.setHandleWidth(2)
 
-        self.noteBlockWidget.view.horizontalScrollBar().valueChanged.connect(self.rulerWidget.setOffset)
-        self.noteBlockWidget.view.scaleChanged.connect(self.rulerWidget.setScale)
-        self.rulerWidget.markerChanged.connect(self.noteBlockWidget.setMarkerPos)
+        self.noteBlockWidget.view.horizontalScrollBar().valueChanged.connect(self.noteBlockWidget.view.ruler.setOffset)
+        self.noteBlockWidget.view.scaleChanged.connect(self.noteBlockWidget.view.ruler.setScale)
+        self.noteBlockWidget.view.ruler.markerChanged.connect(self.noteBlockWidget.setMarkerPos)
 
     def setSingleScrollBar(self):
         """
