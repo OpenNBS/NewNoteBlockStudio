@@ -6,6 +6,8 @@ import math
 
 appctxt = ApplicationContext()
 
+SCROLL_BAR_SIZE = QtWidgets.qApp.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
+
 
 class VerticalScrollArea(QtWidgets.QScrollArea):
     def __init__(self, parent=None):
@@ -488,6 +490,11 @@ class NoteBlockView(QtWidgets.QGraphicsView):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
+        # Resize vertical scrollbar so it doesn't span the ruler at the top
+        vsb = self.verticalScrollBar()
+        vsb.move(0, 32)
+        vsb.resize(QtCore.QSize(vsb.width(), self.height() - 32 - SCROLL_BAR_SIZE))
+        self.ruler.update()
         self.scene().updateSceneSize()
 
 
