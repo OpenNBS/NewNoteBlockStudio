@@ -299,7 +299,7 @@ class PianoScroll(QtWidgets.QScrollArea):
 
 class TimeRuler(QtWidgets.QWidget):
 
-    markerChanged = QtCore.pyqtSignal(int)
+    clicked = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -399,7 +399,7 @@ class TimeRuler(QtWidgets.QWidget):
     def mouseReleaseEvent(self, event):
         pos = event.pos().x()
         self.markerPos = self.posToTick(pos)
-        self.markerChanged.emit(pos)
+        self.clicked.emit(pos)
         self.update()
 
     @QtCore.pyqtSlot(int)
@@ -464,6 +464,10 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         #self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
         self.setViewportMargins(0, 32, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+
+        self.horizontalScrollBar().valueChanged.connect(self.ruler.setOffset)
+        self.scaleChanged.connect(self.ruler.setScale)
+        self.ruler.clicked.connect(self.scene().setMarkerPos)
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
@@ -946,10 +950,6 @@ class Workspace(QtWidgets.QSplitter):
         self.addWidget(self.layerWidget)
         self.addWidget(container)
         self.setHandleWidth(2)
-
-        self.noteBlockWidget.view.horizontalScrollBar().valueChanged.connect(self.noteBlockWidget.view.ruler.setOffset)
-        self.noteBlockWidget.view.scaleChanged.connect(self.noteBlockWidget.view.ruler.setScale)
-        self.noteBlockWidget.view.ruler.markerChanged.connect(self.noteBlockWidget.setMarkerPos)
 
     def setSingleScrollBar(self):
         """
