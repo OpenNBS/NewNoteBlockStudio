@@ -415,6 +415,40 @@ class TimeRuler(QtWidgets.QWidget):
         self.update()
 
 
+class Marker(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_PaintOnScreen, True)
+        self.setAttribute(QtCore.Qt.WA_PaintUnclipped, True)
+        self.setFixedHeight(800)
+        self.raise_()
+        self.move(25, 0)
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter()
+        painter.begin(self)
+        painter.setPen(QtCore.Qt.red)
+        painter.drawLine(0, 0, 0, self.height())
+        markerColor = QtCore.Qt.green
+        pen = QtGui.QPen(markerColor)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        #pos = self.tickToPos(self.markerPos)
+        #painter.drawLine(pos, 0, pos, self.height())
+        painter.drawLine(self.x(), 0, self.x(), self.height())
+        painter.fillPath(self.getMarkerHead(self.x()), QtGui.QBrush(markerColor))
+        painter.end()
+
+    def getMarkerHead(self, pos):
+        rect = QtCore.QRectF(pos - 8, 0, 16, 16)
+        path = QtGui.QPainterPath()
+        path.moveTo(rect.topLeft())
+        path.lineTo(rect.topRight())
+        path.lineTo(rect.left() + rect.width() / 2, rect.bottom())
+        path.lineTo(rect.topLeft())
+        return path
+
+
 class NoteBlockView(QtWidgets.QGraphicsView):
 
     scaleChanged = QtCore.pyqtSignal(float)
@@ -423,6 +457,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         super().__init__(parent)
         self.currentScale = 1
         self.ruler = TimeRuler(parent=self)
+        self.marker = Marker(parent=self)
         ########self.setStyleSheet("QGraphicsView { border-top: none; }")
         #self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
         self.setViewportMargins(0, 32, 0, 0)
