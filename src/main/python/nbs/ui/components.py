@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import qtawesome as qta
-import math
 
 
 appctxt = ApplicationContext()
@@ -596,8 +595,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Returns:
             tuple (int, int)
         """
-        x = math.floor(point.x() / 32)
-        y = math.floor(point.y() / 32)
+        x = point.x() // 32
+        y = point.y() // 32
         return x, y
 
     def getScenePos(self, x, y):
@@ -706,8 +705,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.scrollSpeedY = max(0, 50 - abs(rect.bottom() - pos.y()))
         if self.isMovingBlocks and event.buttons() == QtCore.Qt.LeftButton:
             pos = event.scenePos()
-            x = math.floor(pos.x() / 32) * 32
-            y = math.floor(pos.y() / 32) * 32
+            x = (pos.x() // 32) * 32
+            y = (pos.y() // 32) * 32
             origx = self.movedItem.x()
             origy = self.movedItem.y()
             dx = x - origx
