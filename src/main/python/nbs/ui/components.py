@@ -306,7 +306,6 @@ class TimeRuler(QtWidgets.QWidget):
         self.offset = 0
         self.scale = 1
         self.tempo = 10.00
-        self.markerPos = 0
 
     def timestr(self, seconds):
         seconds, ms = divmod(int(seconds * 1000), 1000)
@@ -370,34 +369,10 @@ class TimeRuler(QtWidgets.QWidget):
             y = mid / 2 - 1
             textRect = self.getTextRect(fm, text, x, y)
             painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
-        # Marker
-        markerColor = QtCore.Qt.black
-        pen = QtGui.QPen(markerColor)
-        pen.setWidth(2)
-        painter.setPen(pen)
-        pos = self.tickToPos(self.markerPos)
-        painter.drawLine(pos, 0, pos, self.height())
-        painter.fillPath(self.getMarkerHead(pos), QtGui.QBrush(markerColor))
         painter.end()
-
-    def getMarkerHead(self, pos):
-        rect = QtCore.QRectF(pos - 8, 0, 16, 16)
-        path = QtGui.QPainterPath()
-        path.moveTo(rect.topLeft())
-        path.lineTo(rect.topRight())
-        path.lineTo(rect.left() + rect.width() / 2, rect.bottom())
-        path.lineTo(rect.topLeft())
-        return path
-
-    def posToTick(self, pos):
-        return (pos / (self.scale * 32)) + (self.offset / 32)
-
-    def tickToPos(self, tick):
-        return (tick * (self.scale * 32)) - self.offset
 
     def mouseReleaseEvent(self, event):
         pos = event.pos().x()
-        self.markerPos = self.posToTick(pos)
         self.clicked.emit(pos)
         self.update()
 
@@ -411,43 +386,66 @@ class TimeRuler(QtWidgets.QWidget):
         self.scale = value
         self.update()
 
-    def setMarkerPos(self, pos):
-        self.markerPos = self.posToTick(pos)
-        self.update()
-
 
 class Marker(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setAttribute(QtCore.Qt.WA_PaintOnScreen, True)
-        self.setAttribute(QtCore.Qt.WA_PaintUnclipped, True)
+        self.pos = 0
+        self.offset = 0
+        self.scale = 1
         self.setFixedHeight(800)
+        self.setFixedWidth(16)
         self.raise_()
         self.move(25, 0)
 
     def paintEvent(self, event):
         painter = QtGui.QPainter()
         painter.begin(self)
-        painter.setPen(QtCore.Qt.red)
-        painter.drawLine(0, 0, 0, self.height())
         markerColor = QtCore.Qt.green
         pen = QtGui.QPen(markerColor)
         pen.setWidth(2)
         painter.setPen(pen)
         #pos = self.tickToPos(self.markerPos)
         #painter.drawLine(pos, 0, pos, self.height())
-        painter.drawLine(self.x(), 0, self.x(), self.height())
-        painter.fillPath(self.getMarkerHead(self.x()), QtGui.QBrush(markerColor))
+        painter.drawLine(8, 0, 8, self.height())
+        painter.fillPath(self.getMarkerHead(), QtGui.QBrush(markerColor))
         painter.end()
 
-    def getMarkerHead(self, pos):
-        rect = QtCore.QRectF(pos - 8, 0, 16, 16)
+    def getMarkerHead(self):
+        point1 = QtCore.QPoint(0, 0)
+        point2 = QtCore.QPoint(16, 0)
+        point3 = QtCore.QPoint(8, 16)
+        shape = QtGui.QPolygon([point1, point2, point3])
+        region = QtGui.QRegion(shape)
         path = QtGui.QPainterPath()
-        path.moveTo(rect.topLeft())
-        path.lineTo(rect.topRight())
-        path.lineTo(rect.left() + rect.width() / 2, rect.bottom())
-        path.lineTo(rect.topLeft())
+        path.addRegion(region)
         return path
+
+    def posToTick(self, pos):
+        return (pos / (self.scale * 32)) + (self.offset / 32)
+
+    def tickToPos(self, tick):
+        # TODO: Fix click position being incorrect when the view is scaled. I'm really close here.
+        return tick * self.scale * 32 - self.offset
+
+    def updatePos(self):
+        print(self.pos, self.scale, self.offset)
+        self.move(self.tickToPos(self.pos) - 8, 0)
+
+    @QtCore.pyqtSlot(int)
+    def setPos(self, pos):
+        self.pos = self.posToTick(pos)
+        self.updatePos()
+
+    @QtCore.pyqtSlot(int)
+    def setOffset(self, value):
+        self.offset = value
+        self.updatePos()
+
+    @QtCore.pyqtSlot(float)
+    def setScale(self, value):
+        self.scale = value
+        self.updatePos()
 
 
 class NoteBlockView(QtWidgets.QGraphicsView):
@@ -465,8 +463,11 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
         self.horizontalScrollBar().valueChanged.connect(self.ruler.setOffset)
+        self.horizontalScrollBar().valueChanged.connect(self.marker.setOffset)
         self.scaleChanged.connect(self.ruler.setScale)
+        self.scaleChanged.connect(self.marker.setScale)
         self.ruler.clicked.connect(self.scene().setMarkerPos)
+        self.ruler.clicked.connect(self.marker.setPos)
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
