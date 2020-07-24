@@ -550,13 +550,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 painter.setPen(QtGui.QColor(216, 216, 216))
             painter.drawLine(x*32, rect.y(), x*32, rect.bottom())
 
-    def drawForeground(self, painter, rect):
-        pen = QtGui.QPen(QtCore.Qt.black)
-        print(round(2 / self.view.currentScale))
-        pen.setWidth(2 / self.view.currentScale)
-        painter.setPen(pen)
-        painter.drawLine(self.markerPos, 0, self.markerPos, rect.height())
-
     def timerEvent(self, event):
         # Auto-scroll when dragging/moving near the edges
         hsb = self.view.horizontalScrollBar()
