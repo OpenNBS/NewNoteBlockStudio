@@ -393,6 +393,8 @@ class Marker(QtWidgets.QWidget):
         self.pos = 0
         self.offset = 0
         self.scale = 1
+        self.setMouseTracking(True)
+        self.setCursor(QtCore.Qt.SizeHorCursor)
         self.setFixedHeight(800)
         self.setFixedWidth(16)
         self.raise_()
@@ -420,6 +422,15 @@ class Marker(QtWidgets.QWidget):
         path = QtGui.QPainterPath()
         path.addRegion(region)
         return path
+
+    def mouseMoveEvent(self, event):
+        # The event pos is relative to the bounding box of the widget, so we calculate
+        # how much it should move based on how far from the center the mouse moved
+        if event.buttons() == QtCore.Qt.LeftButton:
+            offset = event.pos().x() - 8
+            pos = self.tickToPos(self.pos) + offset
+            self.setPos(pos)
+        return
 
     def posToTick(self, pos):
         return (pos / (self.scale * 32)) + (self.offset / 32)
