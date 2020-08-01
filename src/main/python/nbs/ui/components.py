@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import qtawesome as qta
+import math
 
 
 appctxt = ApplicationContext()
@@ -588,8 +589,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         viewSize = self.view.rect()
         scrollBarSize = QtWidgets.qApp.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
         # // 32 * 32, # - scrollBarSize - 32,
-        newSize = (bbox.right() + viewSize.width(),
-                   bbox.bottom() + viewSize.height())
+        newSize = (math.ceil((bbox.right() + viewSize.width()) / 32) * 32,
+                   math.ceil((bbox.bottom() + viewSize.height()) / 32) * 32)
         self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
 
     def getGridPos(self, point):
