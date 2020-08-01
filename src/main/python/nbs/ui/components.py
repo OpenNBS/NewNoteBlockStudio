@@ -490,8 +490,10 @@ class NoteBlockView(QtWidgets.QGraphicsView):
     def changeScale(self, factor):
         if 0.2 < self.currentScale * factor < 4:
             # TODO: Zoom in/out anyway, capping at the max/min scale level
-            self.scale(factor, factor)
-            self.currentScale *= factor
+            # Round the factor so that multiplying it by 32 results in a whole number
+            newFactor = round(self.currentScale * factor * 32) / (self.currentScale * 32)
+            self.scale(newFactor, newFactor)
+            self.currentScale *= newFactor
             self.scaleChanged.emit(self.currentScale)
 
     def wheelEvent(self, event):
@@ -877,9 +879,11 @@ class LayerBar(QtWidgets.QToolBar):
 
     def initUI(self):
         self.setIconSize(QtCore.QSize(20, 24))
-        self.setFixedHeight(32)
+        self.setFixedHeight(30)
         self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
-        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = self.sizePolicy()
+        sizePolicy.setRetainSizeWhenHidden(True)
+        self.setSizePolicy(sizePolicy)
         self.addFrame()
         self.addContents()
 
@@ -908,8 +912,19 @@ class LayerBar(QtWidgets.QToolBar):
         self.addAction(self.icons["shift_up"], "Shift layer up")
         self.addAction(self.icons["shift_down"], "Shift layer down")
 
+    @QtCore.pyqtSlot(float)
+    def changeScale(self, factor):
+        self.setFixedHeight(factor * 32 - 2)
+        if factor < 0.5:
+            self.hide()
+        else:
+            self.show()
+
 
 class LayerArea(VerticalScrollArea):
+
+    changeScale = QtCore.pyqtSignal(float)
+
     def __init__(self, layerCount=200, parent=None):
         super().__init__(parent)
         self.layerCount = layerCount
@@ -923,10 +938,16 @@ class LayerArea(VerticalScrollArea):
         self.container = QtWidgets.QWidget()
         self.container.setLayout(self.layout)
         self.container.setContentsMargins(0, 0, 0, 0)
+
+        spacer = QtWidgets.QWidget()
+        spacer.setFixedHeight(32)
+        self.layout.addWidget(spacer)
+
         for i in range(self.layerCount):
             layer = LayerBar(i)
             self.layout.addWidget(layer.frame)
             self.layers.append(layer)
+            self.changeScale.connect(layer.changeScale)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setMaximumWidth(342) # TODO: calculate instead of hardcode
         self.setWidget(self.container)
@@ -954,6 +975,9 @@ class Workspace(QtWidgets.QSplitter):
         self.addWidget(self.layerWidget)
         self.addWidget(container)
         self.setHandleWidth(2)
+
+        self.noteBlockWidget.view.verticalScrollBar().valueChanged.connect(self.layerWidget.verticalScrollBar().setValue)
+        self.noteBlockWidget.view.scaleChanged.connect(self.layerWidget.changeScale)
 
     def setSingleScrollBar(self):
         """
