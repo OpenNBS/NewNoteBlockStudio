@@ -964,16 +964,8 @@ class Workspace(QtWidgets.QSplitter):
         self.layerWidget = LayerArea()
         self.noteBlockWidget = NoteBlockArea()
 
-        layout = QtWidgets.QVBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.noteBlockWidget.view)
-
-        container = QtWidgets.QWidget()
-        container.setLayout(layout)
-
         self.addWidget(self.layerWidget)
-        self.addWidget(container)
+        self.addWidget(self.noteBlockWidget.view)
         self.setHandleWidth(2)
 
         self.noteBlockWidget.view.verticalScrollBar().valueChanged.connect(self.layerWidget.verticalScrollBar().setValue)
