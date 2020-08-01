@@ -939,10 +939,7 @@ class LayerArea(VerticalScrollArea):
         self.container.setLayout(self.layout)
         self.container.setContentsMargins(0, 0, 0, 0)
 
-        spacer = QtWidgets.QWidget()
-        spacer.setFixedHeight(32)
-        self.layout.addWidget(spacer)
-
+        #self.updateLayerCount(100)
         for i in range(self.layerCount):
             layer = LayerBar(i)
             self.layout.addWidget(layer.frame)
@@ -964,7 +961,22 @@ class Workspace(QtWidgets.QSplitter):
         self.layerWidget = LayerArea()
         self.noteBlockWidget = NoteBlockArea()
 
-        self.addWidget(self.layerWidget)
+        timeBar = QtWidgets.QWidget() # placeholder for the TimeBar widget
+        timeBar.setFixedHeight(32)
+        spacer = QtWidgets.QWidget() # make up for space taken by horizontal scrollbar
+        spacer.setFixedHeight(SCROLL_BAR_SIZE)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(timeBar)
+        layout.addWidget(self.layerWidget)
+        layout.addWidget(spacer)
+
+        leftPanel = QtWidgets.QWidget()
+        leftPanel.setLayout(layout)
+
+        self.addWidget(leftPanel)
         self.addWidget(self.noteBlockWidget.view)
         self.setHandleWidth(2)
 
