@@ -957,6 +957,11 @@ class LayerArea(VerticalScrollArea):
         self.setMaximumWidth(342) # TODO: calculate instead of hardcode
         self.setWidget(self.container)
 
+    def wheelEvent(self, event):
+        # Prevent scrolling with the mouse wheel
+        if event.type() == QtCore.QEvent.Wheel:
+            event.ignore()
+
     @QtCore.pyqtSlot(int)
     def updateLayerHeight(self, height):
         self.layerHeight = height
