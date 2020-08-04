@@ -523,6 +523,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     A scrolling area that holds the note blocks in a song.
     """
 
+    sceneSizeChanged = QtCore.pyqtSignal(int, int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.view = NoteBlockView(self)
@@ -594,6 +596,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         newSize = (math.ceil((bbox.right() + viewSize.width()) / 32) * 32,
                    math.ceil((bbox.bottom() + viewSize.height()) / 32) * 32)
         self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
+        self.sceneSizeChanged.emit(*newSize)
+        print(*newSize)
 
     def getGridPos(self, point):
         """
@@ -952,6 +956,25 @@ class LayerArea(VerticalScrollArea):
         self.setMaximumWidth(342) # TODO: calculate instead of hardcode
         self.setWidget(self.container)
 
+    @QtCore.pyqtSlot(int, int)
+    def updateLayerCount(self, width, newSize):
+        count = newSize // 32
+        if self.layerCount < count:
+            while self.layerCount < count:
+                self.layerCount += 1
+                layer = LayerBar(self.layerCount, self.layerHeight)
+                print("ADDING")
+                self.layout.addWidget(layer.frame)
+                self.layers.append(layer)
+                self.changeScale.connect(layer.changeScale)
+        else:
+            while self.layerCount > count:
+                self.layerCount -= 1
+                i = self.layout.count()
+                print("REMOVING", i)
+                self.layout.itemAt(i).widget().close()
+                self.layout.takeAt(i)
+
 
 class Workspace(QtWidgets.QSplitter):
     """
@@ -985,6 +1008,7 @@ class Workspace(QtWidgets.QSplitter):
 
         self.noteBlockWidget.view.verticalScrollBar().valueChanged.connect(self.layerWidget.verticalScrollBar().setValue)
         self.noteBlockWidget.view.scaleChanged.connect(self.layerWidget.changeScale)
+        self.noteBlockWidget.sceneSizeChanged.connect(self.layerWidget.updateLayerCount)
 
     def setSingleScrollBar(self):
         """
