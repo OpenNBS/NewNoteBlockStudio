@@ -859,7 +859,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 class LayerBar(QtWidgets.QToolBar):
     """A single layer bar."""
 
-    def __init__(self, num, name="", volume=100, panning=100, locked=False, solo=False, parent=None):
+    def __init__(self, num, height, name="", volume=100, panning=100, locked=False, solo=False, parent=None):
         super().__init__(parent)
         self.num = num
         self.name = name
@@ -868,7 +868,7 @@ class LayerBar(QtWidgets.QToolBar):
         self.locked = locked
         self.solo = solo
         self.icons = self.initIcons()
-        self.initUI()
+        self.initUI(height)
 
     def initIcons(self):
         return {
@@ -884,9 +884,9 @@ class LayerBar(QtWidgets.QToolBar):
             "shift_down":       qta.icon("mdi.arrow-down-bold")
         }
 
-    def initUI(self):
+    def initUI(self, height):
         self.setIconSize(QtCore.QSize(20, 24))
-        self.setFixedHeight(30)
+        self.setFixedHeight(height - 2)
         self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
         sizePolicy = self.sizePolicy()
         sizePolicy.setRetainSizeWhenHidden(True)
@@ -936,6 +936,7 @@ class LayerArea(VerticalScrollArea):
         super().__init__(parent)
         self.layerCount = layerCount
         self.layers = []
+        self.layerHeight = 32
         self.initUI()
 
     def initUI(self):
@@ -948,13 +949,17 @@ class LayerArea(VerticalScrollArea):
 
         #self.updateLayerCount(100)
         for i in range(self.layerCount):
-            layer = LayerBar(i)
+            layer = LayerBar(i, self.layerHeight)
             self.layout.addWidget(layer.frame)
             self.layers.append(layer)
             self.changeScale.connect(layer.changeScale)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setMaximumWidth(342) # TODO: calculate instead of hardcode
         self.setWidget(self.container)
+
+    @QtCore.pyqtSlot(int)
+    def updateLayerHeight(self, height):
+        self.layerHeight = height
 
     @QtCore.pyqtSlot(int, int)
     def updateLayerCount(self, width, newSize):
@@ -1009,6 +1014,7 @@ class Workspace(QtWidgets.QSplitter):
         self.noteBlockWidget.view.verticalScrollBar().valueChanged.connect(self.layerWidget.verticalScrollBar().setValue)
         self.noteBlockWidget.view.scaleChanged.connect(self.layerWidget.changeScale)
         self.noteBlockWidget.sceneSizeChanged.connect(self.layerWidget.updateLayerCount)
+        self.noteBlockWidget.sceneSizeChanged.connect(self.layerWidget.updateLayerHeight)
 
     def setSingleScrollBar(self):
         """
