@@ -446,7 +446,7 @@ class Marker(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot(int)
     def setPos(self, pos):
-        self.pos = self.posToTick(pos)
+        self.pos = max(0, self.posToTick(pos))
         self.updatePos()
 
     @QtCore.pyqtSlot(int)
