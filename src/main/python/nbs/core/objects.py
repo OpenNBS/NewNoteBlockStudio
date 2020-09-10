@@ -2,6 +2,17 @@ from nbs.core.scripts.load import load_nbs
 from nbs.core.scripts.save import save_nbs
 
 
+class Instrument():
+    def __init__(self, name, sound="", press=False):
+        self.name = ""
+        self.sound = sound
+        self.press = press
+        self.icon = None
+
+    def load(self):
+        pass
+
+
 class Song:
     """Object which holds all the data about the song currently editing."""
     def __init__(self, filename=None):
