@@ -6,11 +6,14 @@ authors = ["Bentroen <bemcdc@gmail.com>"]
 license = "GPLv3"
 
 [tool.poetry.dependencies]
-python = "~3.7"
+python = "^3.8"
 PyQt5 = "^5.15.6"
-fbs = "^1.0.1"
+pynbs = "^1.1.0"
+QtAwesome = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
+black = "^22.3.0"
+isort = "^5.10.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
