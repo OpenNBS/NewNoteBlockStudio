@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "NewNoteBlockStudio"
+version = "0.1.0"
+description = "A modern, cross-platform version of Open Note Block Studio"
+authors = ["Bentroen <bemcdc@gmail.com>"]
+license = "GPLv3"
+
+[tool.poetry.dependencies]
+python = "~3.7"
+PyQt5 = "^5.15.6"
+fbs = "^1.0.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
