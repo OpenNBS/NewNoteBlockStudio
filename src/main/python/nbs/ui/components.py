@@ -306,6 +306,40 @@ class PianoScroll(QtWidgets.QScrollArea):
         self.mouseNearRightEdge = rightEdge.contains(mousePos)
 
 
+class SongTime(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.currentTime = 10
+
+    def paintEvent(self, event):
+        # TODO: this can probably be a QLabel
+        painter = QtGui.QPainter()
+        painter.begin(self)
+        painter.setPen(QtCore.Qt.black)
+
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        font.setBold(True)
+        painter.setFont(font)
+
+        height = self.height()
+        midpoint = height / 2
+        width = self.width()
+        rect = QtCore.QRect(0, 0, width, midpoint)
+
+        alignFlags = QtCore.Qt.AlignRight + QtCore.Qt.AlignTop
+
+        painter.drawText(rect, alignFlags, "0:00;000")
+
+        font.setPointSize(8)
+        font.setBold(False)
+        rect.translate(0, midpoint)
+
+        painter.setFont(font)
+        painter.drawText(rect, alignFlags, "/ 0:00;000")
+        painter.end()
+
+
 class TimeBar(QtWidgets.QWidget):
 
     tempoChanged = QtCore.pyqtSignal(float)
@@ -319,12 +353,15 @@ class TimeBar(QtWidgets.QWidget):
         self.initUI()
 
     def initUI(self):
-        self.layout = QtWidgets.QVBoxLayout()
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(5, 0, 0, 0)
-        self.container = QtWidgets.QWidget()
-        self.container.setLayout(self.layout)
-        self.container.setContentsMargins(0, 0, 0, 0)
+        self.layout = QtWidgets.QHBoxLayout()
+        self.setLayout(self.layout)
+        self.layout.setSpacing(10)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
+
+        # Song time
+        self.songTime = SongTime()
+        self.layout.addWidget(self.songTime)
 
         # Tempo box
         self.tempoBox = QtWidgets.QDoubleSpinBox()
@@ -334,7 +371,7 @@ class TimeBar(QtWidgets.QWidget):
         self.layout.addWidget(self.tempoBox)
 
     def changeTempo(self):
-        self.tempoChanged.emit(self.tempoBox.value)
+        self.tempoChanged.emit(self.tempoBox.value())
 
     @QtCore.pyqtSlot(float)
     def currentTimeChanged(self, newPosInTicks: float):
