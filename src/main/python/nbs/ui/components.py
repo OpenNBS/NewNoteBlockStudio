@@ -7,6 +7,7 @@ import math
 appctxt = ApplicationContext()
 
 SCROLL_BAR_SIZE = QtWidgets.qApp.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
+BLOCK_SIZE = 32
 
 
 class VerticalScrollArea(QtWidgets.QScrollArea):
@@ -329,7 +330,7 @@ class TimeRuler(QtWidgets.QWidget):
         self.resize(self.parent().width(), self.height())
         rect = self.rect()
         mid = rect.height() / 2
-        blocksize = 32 * self.scale
+        blocksize = BLOCK_SIZE * self.scale
         painter = QtGui.QPainter()
         painter.begin(self)
         fm = painter.fontMetrics()
@@ -434,11 +435,11 @@ class Marker(QtWidgets.QWidget):
         return
 
     def posToTick(self, pos):
-        return (pos / (self.scale * 32)) + (self.offset / 32)
+        return (pos / (self.scale * BLOCK_SIZE)) + (self.offset / BLOCK_SIZE)
 
     def tickToPos(self, tick):
         # TODO: Fix click position being incorrect when the view is scaled. I'm really close here.
-        return tick * self.scale * 32 - self.offset
+        return tick * self.scale * BLOCK_SIZE - self.offset
 
     def updatePos(self):
         print(self.pos, self.scale, self.offset)
@@ -471,7 +472,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.marker = Marker(parent=self)
         ########self.setStyleSheet("QGraphicsView { border-top: none; }")
         #self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
-        self.setViewportMargins(0, 32, 0, 0)
+        self.setViewportMargins(0, BLOCK_SIZE, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
@@ -559,14 +560,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         painter.setBrush(QtGui.QColor(240, 240, 240))
         painter.drawRect(rect)
         painter.setPen(QtCore.Qt.SolidLine)
-        start = int(rect.x() // 32)
-        end = int(rect.right() // 32 + 1)
+        start = int(rect.x() // BLOCK_SIZE)
+        end = int(rect.right() // BLOCK_SIZE + 1)
         for x in range(start, end):
             if x % 4 == 0:
                 painter.setPen(QtGui.QColor(181, 181, 181))
             else:
                 painter.setPen(QtGui.QColor(216, 216, 216))
-            painter.drawLine(x*32, rect.y(), x*32, rect.bottom())
+            painter.drawLine(x * BLOCK_SIZE, rect.y(), x * BLOCK_SIZE, rect.bottom())
 
     def timerEvent(self, event):
         # Auto-scroll when dragging/moving near the edges
@@ -592,8 +593,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             bbox = QtCore.QRectF(0, 0, 0, 0)
         viewSize = self.view.rect()
         scrollBarSize = SCROLL_BAR_SIZE
-        newSize = (math.ceil((bbox.right() + viewSize.width()) / 32) * 32,
-                   math.ceil((bbox.bottom() + viewSize.height()) / 32) * 32)
+        newSize = (
+            math.ceil((bbox.right() + viewSize.width()) / BLOCK_SIZE) * BLOCK_SIZE,
+            math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE) * BLOCK_SIZE,
+        )
         self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
         self.sceneSizeChanged.emit(*newSize)
         print(*newSize)
@@ -608,13 +611,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Returns:
             tuple (int, int)
         """
-        x = point.x() // 32
-        y = point.y() // 32
+        x = point.x() // BLOCK_SIZE
+        y = point.y() // BLOCK_SIZE
         return x, y
 
     def getScenePos(self, x, y):
         """Return the top left scene position of a set of grid coordinates."""
-        return QtCore.QPoint(x*32, y*32)
+        return QtCore.QPoint(x * BLOCK_SIZE, y * BLOCK_SIZE)
 
     def clear(self):
         """Clear all note blocks in the scene."""
@@ -718,8 +721,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.scrollSpeedY = max(0, 50 - abs(rect.bottom() - pos.y()))
         if self.isMovingBlocks and event.buttons() == QtCore.Qt.LeftButton:
             pos = event.scenePos()
-            x = (pos.x() // 32) * 32
-            y = (pos.y() // 32) * 32
+            x = (pos.x() // BLOCK_SIZE) * BLOCK_SIZE
+            y = (pos.y() // BLOCK_SIZE) * BLOCK_SIZE
             origx = self.movedItem.x()
             origy = self.movedItem.y()
             dx = x - origx
@@ -768,7 +771,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.setCacheMode(QtWidgets.QGraphicsItem.DeviceCoordinateCache)
 
     def boundingRect(self):
-        return QtCore.QRectF(0, 0, 32, 32)
+        return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
 
     def paint(self, painter, option, widget):
         # Geometry
@@ -920,7 +923,7 @@ class LayerBar(QtWidgets.QToolBar):
 
     @QtCore.pyqtSlot(float)
     def changeScale(self, factor):
-        self.setFixedHeight(factor * 32 - 2)
+        self.setFixedHeight(factor * BLOCK_SIZE - 2)
         if factor < 0.5:
             self.hide()
         else:
@@ -935,7 +938,7 @@ class LayerArea(VerticalScrollArea):
         super().__init__(parent)
         self.layerCount = layerCount
         self.layers = []
-        self.layerHeight = 32
+        self.layerHeight = BLOCK_SIZE
         self.initUI()
 
     def initUI(self):
@@ -967,7 +970,7 @@ class LayerArea(VerticalScrollArea):
 
     @QtCore.pyqtSlot(int, int)
     def updateLayerCount(self, width, newSize):
-        count = newSize // 32
+        count = newSize // BLOCK_SIZE
         if self.layerCount < count:
             while self.layerCount < count:
                 self.layerCount += 1
@@ -1062,7 +1065,7 @@ class CentralArea(QtWidgets.QSplitter):
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
         self.addWidget(self.piano)
-         # reserve just enough space for piano and let workspace occupy the rest
+        # reserve just enough space for piano and let workspace occupy the rest
         pianoHeight = self.piano.piano.height()
         self.setSizes([1, pianoHeight])
         self.handle(1).setEnabled(False) # make handle unmovable
@@ -1074,6 +1077,7 @@ class CentralArea(QtWidgets.QSplitter):
 
 class InstrumentButton(QtWidgets.QToolButton):
     """Buttons for the instrument selection in the toolbar"""
+
     def __init__(self, instrument, parent=None):
         super().__init__(parent)
         self.setCheckable(True)
