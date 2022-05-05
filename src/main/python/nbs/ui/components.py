@@ -306,6 +306,45 @@ class PianoScroll(QtWidgets.QScrollArea):
         self.mouseNearRightEdge = rightEdge.contains(mousePos)
 
 
+class TimeBar(QtWidgets.QWidget):
+
+    tempoChanged = QtCore.pyqtSignal(float)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(32)
+        self.currentTime = 0
+        self.totalTime = 100
+        self.tempo = 10.0
+        self.initUI()
+
+    def initUI(self):
+        self.layout = QtWidgets.QVBoxLayout()
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(5, 0, 0, 0)
+        self.container = QtWidgets.QWidget()
+        self.container.setLayout(self.layout)
+        self.container.setContentsMargins(0, 0, 0, 0)
+
+        # Tempo box
+        self.tempoBox = QtWidgets.QDoubleSpinBox()
+        self.tempoBox.setRange(0, 60)
+        self.tempoBox.setSingleStep(0.25)
+        self.tempoBox.valueChanged.connect(self.changeTempo)
+        self.layout.addWidget(self.tempoBox)
+
+    def changeTempo(self):
+        self.tempoChanged.emit(self.tempoBox.value)
+
+    @QtCore.pyqtSlot(float)
+    def currentTimeChanged(self, newPosInTicks: float):
+        self.currentTime = newPosInTicks
+
+    @QtCore.pyqtSlot(float)
+    def songLengthChanged(self, newSongLength: float):
+        self.totalTime = newSongLength
+
+
 class TimeRuler(QtWidgets.QWidget):
 
     clicked = QtCore.pyqtSignal(int)
@@ -1040,15 +1079,14 @@ class Workspace(QtWidgets.QSplitter):
         self.layerWidget = LayerArea()
         self.noteBlockWidget = NoteBlockArea()
 
-        timeBar = QtWidgets.QWidget()  # placeholder for the TimeBar widget
-        timeBar.setFixedHeight(32)
+        self.timeBar = TimeBar()  # placeholder for the TimeBar widget
         spacer = QtWidgets.QWidget()  # make up for space taken by horizontal scrollbar
         spacer.setFixedHeight(SCROLL_BAR_SIZE)
 
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        layout.addWidget(timeBar)
+        layout.addWidget(self.timeBar)
         layout.addWidget(self.layerWidget)
         layout.addWidget(spacer)
 
