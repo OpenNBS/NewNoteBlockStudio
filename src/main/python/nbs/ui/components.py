@@ -124,12 +124,10 @@ class PianoKey(QtWidgets.QWidget):
         painter.end()
 
     def eventFilter(self, obj, event):
-        """
-        Since widgets happens to grab the mouse whenever you click one,
-        in order to allow sliding the mouse over the piano, we install
-        an eventFilter on every piano key to detect when the mouse moves
-        over a certain key, then tell that key to be pressed.
-        """
+        # Since widgets happens to grab the mouse whenever you click one,
+        # in order to allow sliding the mouse over the piano, we install
+        # an eventFilter on every piano key to detect when the mouse moves
+        # over a certain key, then tell that key to be pressed.
         if event.type() == QtCore.QEvent.MouseButtonPress:
             self.pressKey()
         if event.type() == QtCore.QEvent.MouseButtonRelease:
