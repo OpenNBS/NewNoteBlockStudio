@@ -6,7 +6,9 @@ import math
 
 appctxt = ApplicationContext()
 
-SCROLL_BAR_SIZE = QtWidgets.qApp.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
+SCROLL_BAR_SIZE = QtWidgets.qApp.style().pixelMetric(
+    QtWidgets.QStyle.PM_ScrollBarExtent
+)
 BLOCK_SIZE = 32
 
 
@@ -116,7 +118,9 @@ class PianoKey(QtWidgets.QWidget):
         painter.setPen(pen)
         painter.drawRects(rect, bevel)
         painter.setPen(textColor)
-        painter.drawText(textRect, QtCore.Qt.AlignCenter + QtCore.Qt.AlignBottom, self.label)
+        painter.drawText(
+            textRect, QtCore.Qt.AlignCenter + QtCore.Qt.AlignBottom, self.label
+        )
         painter.end()
 
     def eventFilter(self, obj, event):
@@ -138,7 +142,10 @@ class PianoKey(QtWidgets.QWidget):
             self.currentKey = widget if isinstance(widget, PianoKey) else None
             if self.previousKey is not None and self.previousKey != self.currentKey:
                 self.previousKey.releaseKey()
-            if self.currentKey is not None and moveEvent.buttons() == QtCore.Qt.LeftButton:
+            if (
+                self.currentKey is not None
+                and moveEvent.buttons() == QtCore.Qt.LeftButton
+            ):
                 self.currentKey.pressKey()
             self.previousKey = self.currentKey
         return False
@@ -249,7 +256,7 @@ class PianoWidget(QtWidgets.QWidget):
             oct, key = divmod(i + offset, 5)
             pos = oct * 12 + self.blackPositions[key] - self.offset
             # Set x pos based on the position of the previous (white) key
-            xPos = self.keys[pos-1].x() + keyOffset
+            xPos = self.keys[pos - 1].x() + keyOffset
             self.blackKeys[i].resize(keyWidth, keyHeight)
             self.blackKeys[i].move(xPos, yPos)
             self.blackKeys[i].raise_()
@@ -263,6 +270,7 @@ class PianoScroll(QtWidgets.QScrollArea):
     A scrolling area containing a piano widget.
     Takes the same arguments as PianoWidget().
     """
+
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
         self.mouseNearLeftEdge = False
@@ -292,7 +300,7 @@ class PianoScroll(QtWidgets.QScrollArea):
         leftEdge = self.rect()
         leftEdge.setRight(50)
         rightEdge = self.rect()
-        rightEdge.setLeft(self.width()-50)
+        rightEdge.setLeft(self.width() - 50)
         mousePos = event.pos()
         self.mouseNearLeftEdge = leftEdge.contains(mousePos)
         self.mouseNearRightEdge = rightEdge.contains(mousePos)
@@ -320,9 +328,9 @@ class TimeRuler(QtWidgets.QWidget):
         textRect = fm.boundingRect(text)
         textRect = fm.boundingRect(textRect, 0, text)
         textRect.moveCenter(QtCore.QPoint(x, y))
-        #if textRect.left() < 0 and textRect.right() >= (textRect.width() / 2):
+        # if textRect.left() < 0 and textRect.right() >= (textRect.width() / 2):
         #    textRect.moveLeft(1)
-        #if textRect.right() > rect.width():
+        # if textRect.right() > rect.width():
         #    textRect.moveRight(textRect.width() - 1)
         return textRect
 
@@ -351,7 +359,9 @@ class TimeRuler(QtWidgets.QWidget):
             if currentTick % 4 == 0:
                 text = str(int(currentTick))
                 textRect = self.getTextRect(fm, text, round(x), y)
-                painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
+                painter.drawText(
+                    textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text
+                )
             x += blocksize
         # Top part
         # We start with the length occupied by 250ms on the song, then double it
@@ -370,7 +380,9 @@ class TimeRuler(QtWidgets.QWidget):
             text = self.timestr(time)
             y = mid / 2 - 1
             textRect = self.getTextRect(fm, text, x, y)
-            painter.drawText(textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text)
+            painter.drawText(
+                textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text
+            )
         painter.end()
 
     def mouseReleaseEvent(self, event):
@@ -409,8 +421,8 @@ class Marker(QtWidgets.QWidget):
         pen = QtGui.QPen(markerColor)
         pen.setWidth(2)
         painter.setPen(pen)
-        #pos = self.tickToPos(self.markerPos)
-        #painter.drawLine(pos, 0, pos, self.height())
+        # pos = self.tickToPos(self.markerPos)
+        # painter.drawLine(pos, 0, pos, self.height())
         painter.drawLine(8, 0, 8, self.height())
         painter.fillPath(self.getMarkerHead(), QtGui.QBrush(markerColor))
         painter.end()
@@ -471,7 +483,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler = TimeRuler(parent=self)
         self.marker = Marker(parent=self)
         ########self.setStyleSheet("QGraphicsView { border-top: none; }")
-        #self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
+        # self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
         self.setViewportMargins(0, BLOCK_SIZE, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
@@ -495,7 +507,9 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         if 0.2 < self.currentScale * factor < 4:
             # TODO: Zoom in/out anyway, capping at the max/min scale level
             # Round the factor so that multiplying it by 32 results in a whole number
-            newFactor = round(self.currentScale * factor * 32) / (self.currentScale * 32)
+            newFactor = round(self.currentScale * factor * BLOCK_SIZE) / (
+                self.currentScale * BLOCK_SIZE
+            )
             self.scale(newFactor, newFactor)
             self.currentScale *= newFactor
             self.scaleChanged.emit(self.currentScale)
@@ -674,7 +688,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.isMovingBlocks = True
                 self.movedItem = clickedItem
             else:
-                if not QtGui.QGuiApplication.keyboardModifiers() == QtCore.Qt.ControlModifier:
+                if (
+                    not QtGui.QGuiApplication.keyboardModifiers()
+                    == QtCore.Qt.ControlModifier
+                ):
                     self.clearSelection()
                 self.selection.setStyleSheet("")
         self.selection.show()
@@ -708,7 +725,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         # Auto-scroll when dragging/moving near the edges
         # TODO: Scroll speed slows down as you move the mouse outside the scene.
         # It should be capped at the max speed instead
-        if event.buttons() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.RightButton:
+        if (
+            event.buttons() == QtCore.Qt.LeftButton
+            or event.buttons() == QtCore.Qt.RightButton
+        ):
             rect = self.view.rect()
             pos = self.view.mapFromScene(event.scenePos())
             if pos.x() < rect.center().x():
@@ -735,9 +755,16 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 movey = 0
             for item in self.selectedItems():
                 item.moveBy(movex, movey)
-        elif event.buttons() == QtCore.Qt.LeftButton or event.buttons() == QtCore.Qt.RightButton:
+        elif (
+            event.buttons() == QtCore.Qt.LeftButton
+            or event.buttons() == QtCore.Qt.RightButton
+        ):
             self.isDraggingSelection = True
-            selectionRect = QtCore.QRectF(self.selectionStart, event.scenePos()).normalized().toRect()
+            selectionRect = (
+                QtCore.QRectF(self.selectionStart, event.scenePos())
+                .normalized()
+                .toRect()
+            )
             self.selection.setGeometry(selectionRect)
         else:
             # call the parent's mouseMoveEvent to allow
@@ -808,9 +835,13 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         painter.setOpacity(1)
         painter.setFont(font)
         painter.setPen(labelColor)
-        painter.drawText(labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label)
+        painter.drawText(
+            labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label
+        )
         painter.setPen(numberColor)
-        painter.drawText(numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, self.clicks)
+        painter.drawText(
+            numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, self.clicks
+        )
         if self.isSelected():
             painter.setPen(QtCore.Qt.NoPen)
             painter.setBrush(selectedColor)
@@ -861,7 +892,17 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 class LayerBar(QtWidgets.QToolBar):
     """A single layer bar."""
 
-    def __init__(self, num, height, name="", volume=100, panning=100, locked=False, solo=False, parent=None):
+    def __init__(
+        self,
+        num,
+        height,
+        name="",
+        volume=100,
+        panning=100,
+        locked=False,
+        solo=False,
+        parent=None,
+    ):
         super().__init__(parent)
         self.num = num
         self.name = name
@@ -874,16 +915,16 @@ class LayerBar(QtWidgets.QToolBar):
 
     def initIcons(self):
         return {
-            "volume":           qta.icon("mdi.volume-high"),
-            "stereo":           qta.icon("mdi.equalizer"),
-            "lock_locked":      qta.icon("mdi.lock-outline"),
-            "lock_unlocked":    qta.icon("mdi.lock-open-variant-outline"),
-            "solo":             qta.icon("mdi.exclamation-thick"),
-            "select_all":       qta.icon("mdi.select-all"),
-            "insert":           qta.icon("mdi.plus-circle-outline"),  # mdi.plus-box
-            "remove":           qta.icon("mdi.delete-outline"),  # mdi.trash-can
-            "shift_up":         qta.icon("mdi.arrow-up-bold"),
-            "shift_down":       qta.icon("mdi.arrow-down-bold")
+            "volume": qta.icon("mdi.volume-high"),
+            "stereo": qta.icon("mdi.equalizer"),
+            "lock_locked": qta.icon("mdi.lock-outline"),
+            "lock_unlocked": qta.icon("mdi.lock-open-variant-outline"),
+            "solo": qta.icon("mdi.exclamation-thick"),
+            "select_all": qta.icon("mdi.select-all"),
+            "insert": qta.icon("mdi.plus-circle-outline"),  # mdi.plus-box
+            "remove": qta.icon("mdi.delete-outline"),  # mdi.trash-can
+            "shift_up": qta.icon("mdi.arrow-up-bold"),
+            "shift_down": qta.icon("mdi.arrow-down-bold"),
         }
 
     def initUI(self, height):
@@ -909,7 +950,7 @@ class LayerBar(QtWidgets.QToolBar):
     def addContents(self):
         self.nameBox = QtWidgets.QLineEdit()
         self.nameBox.setFixedSize(76, 16)
-        self.nameBox.setPlaceholderText("Layer {}".format(self.num+1))
+        self.nameBox.setPlaceholderText("Layer {}".format(self.num + 1))
         self.addWidget(self.nameBox)
         self.addAction(self.icons["volume"], "Volume")
         self.addAction(self.icons["stereo"], "Stereo panning")
@@ -949,14 +990,14 @@ class LayerArea(VerticalScrollArea):
         self.container.setLayout(self.layout)
         self.container.setContentsMargins(0, 0, 0, 0)
 
-        #self.updateLayerCount(100)
+        # self.updateLayerCount(100)
         for i in range(self.layerCount):
             layer = LayerBar(i, self.layerHeight)
             self.layout.addWidget(layer.frame)
             self.layers.append(layer)
             self.changeScale.connect(layer.changeScale)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setMaximumWidth(342) # TODO: calculate instead of hardcode
+        self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
         self.setWidget(self.container)
 
     def wheelEvent(self, event):
@@ -999,9 +1040,9 @@ class Workspace(QtWidgets.QSplitter):
         self.layerWidget = LayerArea()
         self.noteBlockWidget = NoteBlockArea()
 
-        timeBar = QtWidgets.QWidget() # placeholder for the TimeBar widget
+        timeBar = QtWidgets.QWidget()  # placeholder for the TimeBar widget
         timeBar.setFixedHeight(32)
-        spacer = QtWidgets.QWidget() # make up for space taken by horizontal scrollbar
+        spacer = QtWidgets.QWidget()  # make up for space taken by horizontal scrollbar
         spacer.setFixedHeight(SCROLL_BAR_SIZE)
 
         layout = QtWidgets.QVBoxLayout()
@@ -1018,10 +1059,14 @@ class Workspace(QtWidgets.QSplitter):
         self.addWidget(self.noteBlockWidget.view)
         self.setHandleWidth(2)
 
-        self.noteBlockWidget.view.verticalScrollBar().valueChanged.connect(self.layerWidget.verticalScrollBar().setValue)
+        self.noteBlockWidget.view.verticalScrollBar().valueChanged.connect(
+            self.layerWidget.verticalScrollBar().setValue
+        )
         self.noteBlockWidget.view.scaleChanged.connect(self.layerWidget.changeScale)
         self.noteBlockWidget.sceneSizeChanged.connect(self.layerWidget.updateLayerCount)
-        self.noteBlockWidget.sceneSizeChanged.connect(self.layerWidget.updateLayerHeight)
+        self.noteBlockWidget.sceneSizeChanged.connect(
+            self.layerWidget.updateLayerHeight
+        )
 
     def setSingleScrollBar(self):
         """
@@ -1068,11 +1113,13 @@ class CentralArea(QtWidgets.QSplitter):
         # reserve just enough space for piano and let workspace occupy the rest
         pianoHeight = self.piano.piano.height()
         self.setSizes([1, pianoHeight])
-        self.handle(1).setEnabled(False) # make handle unmovable
-        self.setStretchFactor(0, 1) # set workspace to stretch
-        self.setStretchFactor(1, 0) # set piano to NOT stretch
+        self.handle(1).setEnabled(False)  # make handle unmovable
+        self.setStretchFactor(0, 1)  # set workspace to stretch
+        self.setStretchFactor(1, 0)  # set piano to NOT stretch
         # TODO: perhaps a QVBoxLayout is more appropriate here?
-        self.piano.piano.activeKeyChanged.connect(self.workspace.noteBlockWidget.setActiveKey)
+        self.piano.piano.activeKeyChanged.connect(
+            self.workspace.noteBlockWidget.setActiveKey
+        )
 
 
 class InstrumentButton(QtWidgets.QToolButton):
@@ -1082,7 +1129,11 @@ class InstrumentButton(QtWidgets.QToolButton):
         super().__init__(parent)
         self.setCheckable(True)
 
-        icon = QtGui.QIcon(appctxt.get_resource("images/instruments/{}.png".format(instrument)))
+        icon = QtGui.QIcon(
+            appctxt.get_resource("images/instruments/{}.png".format(instrument))
+        )
         # TODO: make icon for custom instruments
         self.setIcon(icon)
-        self.setToolTip("Change instrument to {}".format(" ".join(instrument.split("_")).title()))
+        self.setToolTip(
+            "Change instrument to {}".format(" ".join(instrument.split("_")).title())
+        )
