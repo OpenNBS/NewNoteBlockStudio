@@ -1115,7 +1115,7 @@ class Workspace(QtWidgets.QSplitter):
         Remove the call to this function to have the scrollbar
         span just the note block area.
         """
-        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         scrollBar = QtWidgets.QScrollBar()
         scrollBar.setOrientation(QtCore.Qt.Horizontal)
         scrollBar.setMinimum(0)
