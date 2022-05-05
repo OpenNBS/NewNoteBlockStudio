@@ -1078,16 +1078,17 @@ class Workspace(QtWidgets.QSplitter):
         super().__init__(parent)
         self.layerWidget = LayerArea()
         self.noteBlockWidget = NoteBlockArea()
-
-        self.timeBar = TimeBar()  # placeholder for the TimeBar widget
-        spacer = QtWidgets.QWidget()  # make up for space taken by horizontal scrollbar
-        spacer.setFixedHeight(SCROLL_BAR_SIZE)
+        self.timeBar = TimeBar()
 
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.timeBar)
         layout.addWidget(self.layerWidget)
+
+        # fill vertical space taken by horizontal scrollbar
+        spacer = QtWidgets.QWidget()
+        spacer.setFixedHeight(SCROLL_BAR_SIZE)
         layout.addWidget(spacer)
 
         leftPanel = QtWidgets.QWidget()
