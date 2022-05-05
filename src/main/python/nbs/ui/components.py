@@ -11,6 +11,8 @@ SCROLL_BAR_SIZE = QtWidgets.qApp.style().pixelMetric(
 )
 BLOCK_SIZE = 32
 
+KEY_LABELS = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+
 
 class VerticalScrollArea(QtWidgets.QScrollArea):
     def __init__(self, parent=None):
@@ -209,7 +211,7 @@ class PianoWidget(QtWidgets.QWidget):
         self.whiteKeys = []
         self.blackKeys = []
         self.blackPositions = (1, 3, 6, 8, 10)
-        labels = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+        labels = KEY_LABELS
         self.layout = QtWidgets.QHBoxLayout()
         # Bigger margin on the top to accomodate raised black keys
         self.layout.setContentsMargins(10, 15, 10, 25)
@@ -773,7 +775,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
 class NoteBlock(QtWidgets.QGraphicsItem):
 
-    labels = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+    labels = KEY_LABELS
 
     def __init__(self, xx, yy, key, ins, vel=100, pan=0, pit=0, parent=None):
         super().__init__(parent)
