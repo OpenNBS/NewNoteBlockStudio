@@ -591,8 +591,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         else:
             bbox = QtCore.QRectF(0, 0, 0, 0)
         viewSize = self.view.rect()
-        scrollBarSize = QtWidgets.qApp.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
-        # // 32 * 32, # - scrollBarSize - 32,
+        scrollBarSize = SCROLL_BAR_SIZE
         newSize = (math.ceil((bbox.right() + viewSize.width()) / 32) * 32,
                    math.ceil((bbox.bottom() + viewSize.height()) / 32) * 32)
         self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
