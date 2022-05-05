@@ -976,6 +976,7 @@ class LayerArea(VerticalScrollArea):
     changeScale = QtCore.pyqtSignal(float)
 
     def __init__(self, layerCount=200, parent=None):
+        # TODO: do we need a default layer number? Should it be 200?
         super().__init__(parent)
         self.layerCount = layerCount
         self.layers = []
@@ -1025,7 +1026,6 @@ class LayerArea(VerticalScrollArea):
                 self.layerCount -= 1
                 i = self.layout.count()
                 print("REMOVING", i)
-                self.layout.itemAt(i).widget().close()
                 self.layout.takeAt(i)
 
 
