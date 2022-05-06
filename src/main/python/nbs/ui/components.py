@@ -350,6 +350,7 @@ class TimeBar(QtWidgets.QWidget):
         self.currentTime = 0
         self.totalTime = 100
         self.tempo = 10.0
+        self.displayBpm = False
         self.initUI()
 
     def initUI(self):
@@ -369,8 +370,14 @@ class TimeBar(QtWidgets.QWidget):
         self.tempoBox.setSingleStep(0.25)
         self.tempoBox.valueChanged.connect(self.changeTempo)
 
-        self.tempoUnit = QtWidgets.QLabel()
+        self.tempoUnit = QtWidgets.QPushButton()
         self.tempoUnit.setText("t/s")
+        # self.tempoUnit.setSizePolicy(
+        #    QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
+        # )
+        self.tempoUnit.setFixedWidth(40)
+        self.tempoUnit.setFixedHeight(20)
+        self.tempoUnit.clicked.connect(self.tempoUnitButtonClicked)
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.tempoBox)
         layout.addWidget(self.tempoUnit)
@@ -391,6 +398,14 @@ class TimeBar(QtWidgets.QWidget):
     @QtCore.pyqtSlot(float)
     def songLengthChanged(self, newSongLength: float):
         self.totalTime = newSongLength
+
+    @QtCore.pyqtSlot()
+    def tempoUnitButtonClicked(self):
+        self.displayBpm = not self.displayBpm
+        if self.displayBpm:
+            self.tempoUnit.setText("BPM")
+        else:
+            self.tempoUnit.setText("t/s")
 
 
 class TimeRuler(QtWidgets.QWidget):
