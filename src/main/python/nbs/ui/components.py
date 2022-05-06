@@ -368,6 +368,7 @@ class TimeBar(QtWidgets.QWidget):
         self.tempoBox = QtWidgets.QDoubleSpinBox()
         self.tempoBox.setRange(0, 60)
         self.tempoBox.setSingleStep(0.25)
+        self.tempoBox.setValue(self.tempo)
         self.tempoBox.valueChanged.connect(self.changeTempo)
 
         self.tempoUnit = QtWidgets.QPushButton()
@@ -377,6 +378,7 @@ class TimeBar(QtWidgets.QWidget):
         # )
         self.tempoUnit.setFixedWidth(40)
         self.tempoUnit.setFixedHeight(20)
+        self.tempoUnit.setToolTip("Click to change the displayed tempo unit. This has no effect on the song.")
         self.tempoUnit.clicked.connect(self.tempoUnitButtonClicked)
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.tempoBox)
@@ -389,7 +391,12 @@ class TimeBar(QtWidgets.QWidget):
         self.layout.addWidget(container)
 
     def changeTempo(self):
-        self.tempoChanged.emit(self.tempoBox.value())
+        newValue = self.tempoBox.value()
+        if self.displayBpm:
+            self.tempo = newValue / 15
+        else:
+            self.tempo = newValue
+        self.tempoChanged.emit(self.tempo)
 
     @QtCore.pyqtSlot(float)
     def currentTimeChanged(self, newPosInTicks: float):
@@ -402,10 +409,16 @@ class TimeBar(QtWidgets.QWidget):
     @QtCore.pyqtSlot()
     def tempoUnitButtonClicked(self):
         self.displayBpm = not self.displayBpm
+
+        # TODO: move all this logic to a separate class, it's complicated enough that it needs its own widget!!
         if self.displayBpm:
             self.tempoUnit.setText("BPM")
+            self.tempoBox.setRange(0, 60 * 15)
+            self.tempoBox.setValue(self.tempoBox.value() * 15)
         else:
             self.tempoUnit.setText("t/s")
+            self.tempoBox.setValue(self.tempoBox.value() / 15)
+            self.tempoBox.setRange(0, 60)
 
 
 class TimeRuler(QtWidgets.QWidget):
