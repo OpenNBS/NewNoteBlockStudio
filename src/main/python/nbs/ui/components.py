@@ -368,7 +368,18 @@ class TimeBar(QtWidgets.QWidget):
         self.tempoBox.setRange(0, 60)
         self.tempoBox.setSingleStep(0.25)
         self.tempoBox.valueChanged.connect(self.changeTempo)
-        self.layout.addWidget(self.tempoBox)
+
+        self.tempoUnit = QtWidgets.QLabel()
+        self.tempoUnit.setText("t/s")
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(self.tempoBox)
+        layout.addWidget(self.tempoUnit)
+        layout.setContentsMargins(0, 0, 0, 0)
+        container = QtWidgets.QWidget()
+        container.setLayout(layout)
+
+        self.layout.addWidget(self.songTime)
+        self.layout.addWidget(container)
 
     def changeTempo(self):
         self.tempoChanged.emit(self.tempoBox.value())
