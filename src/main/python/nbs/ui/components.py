@@ -644,6 +644,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.scaleChanged.connect(self.marker.setScale)
         self.ruler.clicked.connect(self.scene().setMarkerPos)
         self.ruler.clicked.connect(self.marker.setPos)
+        self.ruler.clicked.connect(self.markerMovedByPos)
         self.marker.moved.connect(self.markerMoved)
 
     @QtCore.pyqtSlot()
@@ -681,6 +682,14 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         vsb.resize(QtCore.QSize(vsb.width(), self.height() - 32 - SCROLL_BAR_SIZE))
         self.ruler.update()
         self.scene().updateSceneSize()
+
+    @QtCore.pyqtSlot(int)
+    def markerMovedByPos(self, pos: int):
+        """Helper method to convert the marker 'moved' signal (which carries its pos)
+        to ticks before emitting this widget's markerMoved signal.
+        """
+        ticks = pos / BLOCK_SIZE
+        self.markerMoved.emit(ticks)
 
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
