@@ -144,3 +144,20 @@ class HelpMenu(QtWidgets.QMenu):
 
         self.changelogAction = self.addAction(Actions.changelogAction)
         self.aboutAction = self.addAction(Actions.aboutAction)
+
+
+class MenuBar(QtWidgets.QMenuBar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.initUI()
+
+    def initUI(self):
+        self.fileMenu = FileMenu()
+        self.editMenu = EditMenu(isFloat=False)
+        self.settingsMenu = SettingsMenu()
+        self.helpMenu = HelpMenu()
+
+        self.addMenu(self.fileMenu)
+        self.addMenu(self.editMenu)
+        self.addMenu(self.settingsMenu)
+        self.addMenu(self.helpMenu)

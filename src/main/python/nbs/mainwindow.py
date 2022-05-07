@@ -10,10 +10,10 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
+        self.initUI()
 
-        self.currentSong = nbs.core.data.Song()  # Initialize empty song object at the start of session
-
-        menuBar = self.drawMenuBar()
+    def initUI(self):
+        menuBar = MenuBar()
         toolBar = self.drawToolBar()
         mainArea = nbs.ui.workspace.CentralArea(self)
 
@@ -21,38 +21,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(toolBar)
         self.setCentralWidget(mainArea)
 
-    def drawMenuBar(self):
-        menuBar = QtWidgets.QMenuBar(parent=self)
-
-        # File
-        self.fileMenu = FileMenu()
-        menuBar.addMenu(self.fileMenu)
-
-        # Edit
-        self.editMenu = EditMenu(isFloat=False)
-        menuBar.addMenu(self.editMenu)
-
-        # Settings
-        settingsMenu = menuBar.addMenu("Settings")
-        instrumentsMenu = settingsMenu.addMenu("Instrument")
-        for ins in ["Harp", "Double Bass", "Bass Drum", "Snare Drum", "Click", "Guitar", "Flute", "Bell", "Chime",
-                    "Xylophone", "Iron Xylophone", "Cow Bell", "Didgeridoo", "Bit", "Banjo", "Pling"]:
-            instrumentsMenu.addAction(ins)
-        settingsMenu.addSeparator()
-        settingsMenu.addAction("Song info...")
-        settingsMenu.addAction("Song properties...")
-        settingsMenu.addAction("Song stats...")
-        settingsMenu.addSeparator()
-        settingsMenu.addAction("MIDI device manager...")
-        settingsMenu.addAction("Save options...")
-        settingsMenu.addAction("Preferences...")
-
-        # Help
-        helpMenu = menuBar.addMenu("Help")
-        helpMenu.addAction("Changelog")
-
-        return menuBar
-
+    #
+    #
+    #
+    #
+    #
     def drawToolBar(self):
         icons = {
             "new_song":         qta.icon('mdi.file-plus'),
