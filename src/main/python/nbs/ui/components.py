@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import qtawesome as qta
 import math
-
+from nbs.core.utils import *
 
 appctxt = ApplicationContext()
 
@@ -433,12 +433,6 @@ class TimeRuler(QtWidgets.QWidget):
         self.scale = 1
         self.tempo = 10.00
 
-    def timestr(self, seconds):
-        # TODO: move to utils module and decouple
-        seconds, ms = divmod(int(seconds * 1000), 1000)
-        minutes, seconds = divmod(seconds, 60)
-        return f"{minutes:02d}:{seconds:02d},{ms:03d}"
-
     def getTextRect(self, fm: QtGui.QFontMetrics, text, x=0, y=0):
         # Calling boundingRect just once returns a wrong size. See:
         # https://stackoverflow.com/a/32078341/9045426
@@ -485,7 +479,7 @@ class TimeRuler(QtWidgets.QWidget):
         # (essentially halving the number of markings) until they're far enough apart
         timeInterval = 0.25
         distance = int(self.tempo / 4 * blocksize)
-        minDistance = self.getTextRect(fm, self.timestr(0)).width() + 50
+        minDistance = self.getTextRect(fm, seconds_to_timestr(0)).width() + 50
         while distance < minDistance:
             distance *= 2
             timeInterval *= 2
@@ -494,7 +488,7 @@ class TimeRuler(QtWidgets.QWidget):
         for i, x in enumerate(range(-startPos, rect.width() + minDistance, distance)):
             painter.drawLine(x, mid - 2, x, mid)
             time = startTime + i * timeInterval
-            text = self.timestr(time)
+            text = seconds_to_timestr(time)
             y = mid / 2 - 1
             textRect = self.getTextRect(fm, text, x, y)
             painter.drawText(
