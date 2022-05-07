@@ -392,6 +392,7 @@ class TimeBar(QtWidgets.QWidget):
         self.tempoBox.setRange(0.1, 60)
         self.tempoBox.setSingleStep(0.25)
         self.tempoBox.setValue(self.tempo)
+        self.tempoBox.setAlignment(QtCore.Qt.AlignRight)
         self.tempoBox.setSuffix(" t/s")
         self.tempoBox.valueChanged.connect(self.changeTempo)
 
