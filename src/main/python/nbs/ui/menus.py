@@ -1,7 +1,9 @@
 from PyQt5 import QtWidgets
+import qtawesome as qta
 
 
 icons = {
+    # fmt: off
     "new_song":         qta.icon('mdi.file-plus'),
     "open_song":        qta.icon('mdi.folder-open'),
     "save_song":        qta.icon('mdi.content-save'),
@@ -25,6 +27,7 @@ icons = {
     "song_stats":       qta.icon('mdi.file-document-edit'),
     "midi_devices":     qta.icon('mdi.usb'),
     "settings":         qta.icon('mdi.settings')
+    # fmt: on
 }
 
 
@@ -63,24 +66,40 @@ deleteAction = QtWidgets.QAction(icons["save_song_as"], "Delete")
 selectAllAction = QtWidgets.QAction(icons["save_song_as"], "Select all")
 clearSelectionAction = QtWidgets.QAction(icons["save_song_as"], "Clear selection")
 invertSelectionAction = QtWidgets.QAction(icons["save_song_as"], "Invert selection")
-selectAllLeftAction = QtWidgets.QAction(icons["save_song_as"], "Select all to the left <-")
-selectAllRightAction = QtWidgets.QAction(icons["save_song_as"], "Select all to the right ->")
+selectAllLeftAction = QtWidgets.QAction(
+    icons["save_song_as"], "Select all to the left <-"
+)
+selectAllRightAction = QtWidgets.QAction(
+    icons["save_song_as"], "Select all to the right ->"
+)
 selectAllInstrumentAction = QtWidgets.QAction(icons["save_song_as"], "Select all {}")
-selectAllButInstrumentAction = QtWidgets.QAction(icons["save_song_as"], "Select all but {}")
+selectAllButInstrumentAction = QtWidgets.QAction(
+    icons["save_song_as"], "Select all but {}"
+)
 increaseKeyAction = QtWidgets.QAction(icons["save_song_as"], "Increase octave")
 decreaseKeyAction = QtWidgets.QAction(icons["save_song_as"], "Decrease octave")
 increaseAction = QtWidgets.QAction(icons["save_song_as"], "Increase key")
 decreaseKeyAction = QtWidgets.QAction(icons["save_song_as"], "Decrease key")
 expandSelectionAction = QtWidgets.QAction(icons["save_song_as"], "Expand selection")
 compressSelectionAction = QtWidgets.QAction(icons["save_song_as"], "Compress selection")
-transposeNotesAction = QtWidgets.QAction(icons["save_song_as"], "Transpose notes outside octave range")
+transposeNotesAction = QtWidgets.QAction(
+    icons["save_song_as"], "Transpose notes outside octave range"
+)
 
 # Edit modes
 setEditMode = QtWidgets.QActionGroup()
-setEditModeKeyAction = QtWidgets.QAction(icons["save_song_as"], "Edit note key", parent=setEditMode)
-setEditModeVelocityAction = QtWidgets.QAction(icons["save_song_as"], "Edit note velocity", parent=setEditMode)
-setEditModePanningAction = QtWidgets.QAction(icons["save_song_as"], "Edit note panning", parent=setEditMode)
-setEditModePitchAction = QtWidgets.QAction(icons["save_song_as"], "Edit note pitch", parent=setEditMode)
+setEditModeKeyAction = QtWidgets.QAction(
+    icons["save_song_as"], "Edit note key", parent=setEditMode
+)
+setEditModeVelocityAction = QtWidgets.QAction(
+    icons["save_song_as"], "Edit note velocity", parent=setEditMode
+)
+setEditModePanningAction = QtWidgets.QAction(
+    icons["save_song_as"], "Edit note panning", parent=setEditMode
+)
+setEditModePitchAction = QtWidgets.QAction(
+    icons["save_song_as"], "Edit note pitch", parent=setEditMode
+)
 
 # Settings
 songInfoAction = QtWidgets.QAction(icons["save_song_as"], "Song info...")
@@ -97,5 +116,3 @@ githubPageAction = QtWidgets.QAction(icons["save_song_as"], "GitHub...")
 changelogAction = QtWidgets.QAction(icons["save_song_as"], "Changelog...")
 donateAction = QtWidgets.QAction(icons["save_song_as"], "Donate...")
 aboutAction = QtWidgets.QAction(icons["save_song_as"], "About...")
-
-
