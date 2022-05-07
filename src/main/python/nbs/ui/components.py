@@ -308,7 +308,9 @@ class PianoScroll(QtWidgets.QScrollArea):
 class SongTime(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.tempo = 10
         self.currentTime = 10
+        self.totalTime = 100
 
     def paintEvent(self, event):
         # TODO: this can probably be a QLabel
@@ -328,20 +330,41 @@ class SongTime(QtWidgets.QWidget):
 
         alignFlags = QtCore.Qt.AlignRight + QtCore.Qt.AlignTop
 
-        painter.drawText(rect, alignFlags, "0:00;000")
+        painter.drawText(
+            rect, alignFlags, ticks_to_timestr(self.currentTime, self.tempo)
+        )
 
         font.setPointSize(8)
         font.setBold(False)
         rect.translate(0, midpoint)
 
         painter.setFont(font)
-        painter.drawText(rect, alignFlags, "/ 0:00;000")
+        painter.drawText(
+            rect, alignFlags, f"/ {ticks_to_timestr(self.totalTime, self.tempo)}"
+        )
         painter.end()
+
+    @QtCore.pyqtSlot(float)
+    def tempoChanged(self, newTempo: float):
+        self.tempo = newTempo
+        self.repaint()
+
+    @QtCore.pyqtSlot(float)
+    def currentTimeChanged(self, newTime: float):
+        self.currentTime = newTime
+        self.repaint()
+
+    @QtCore.pyqtSlot(int)
+    def totalTimeChanged(self, newTime: int):
+        self.totalTime = newTime
+        self.repaint()
 
 
 class TimeBar(QtWidgets.QWidget):
 
     tempoChanged = QtCore.pyqtSignal(float)
+    currentTimeChanged_ = QtCore.pyqtSignal(float)
+    totalTimeChanged_ = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -351,6 +374,7 @@ class TimeBar(QtWidgets.QWidget):
         self.tempo = 10.0
         self.displayBpm = False
         self.initUI()
+        self.connectSignals()
 
     def initUI(self):
         self.layout = QtWidgets.QHBoxLayout()
@@ -391,6 +415,12 @@ class TimeBar(QtWidgets.QWidget):
         self.layout.addWidget(self.songTime)
         self.layout.addWidget(container)
 
+    def connectSignals(self):
+        # Song time
+        self.tempoChanged.connect(self.songTime.tempoChanged)
+        self.currentTimeChanged_.connect(self.songTime.currentTimeChanged)
+        self.totalTimeChanged_.connect(self.songTime.totalTimeChanged)
+
     def changeTempo(self):
         newValue = self.tempoBox.value()
         if self.displayBpm:
@@ -402,10 +432,12 @@ class TimeBar(QtWidgets.QWidget):
     @QtCore.pyqtSlot(float)
     def currentTimeChanged(self, newPosInTicks: float):
         self.currentTime = newPosInTicks
+        self.currentTimeChanged_.emit(self.currentTime)
 
     @QtCore.pyqtSlot(float)
     def songLengthChanged(self, newSongLength: float):
         self.totalTime = newSongLength
+        self.totalTimeChanged_.emit(self.totalTime)
 
     @QtCore.pyqtSlot()
     def tempoUnitButtonClicked(self):
@@ -513,6 +545,9 @@ class TimeRuler(QtWidgets.QWidget):
 
 
 class Marker(QtWidgets.QWidget):
+
+    moved = QtCore.pyqtSignal(float)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.pos = 0
@@ -555,6 +590,7 @@ class Marker(QtWidgets.QWidget):
             offset = event.pos().x() - 8
             pos = self.tickToPos(self.pos) + offset
             self.setPos(pos)
+            self.moved.emit(self.pos)
         return
 
     def posToTick(self, pos):
@@ -566,6 +602,7 @@ class Marker(QtWidgets.QWidget):
 
     def updatePos(self):
         print(self.pos, self.scale, self.offset)
+        # self.moved.emit(pos) here??
         self.move(self.tickToPos(self.pos) - 8, 0)
 
     @QtCore.pyqtSlot(int)
@@ -587,6 +624,7 @@ class Marker(QtWidgets.QWidget):
 class NoteBlockView(QtWidgets.QGraphicsView):
 
     scaleChanged = QtCore.pyqtSignal(float)
+    markerMoved = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -606,6 +644,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.scaleChanged.connect(self.marker.setScale)
         self.ruler.clicked.connect(self.scene().setMarkerPos)
         self.ruler.clicked.connect(self.marker.setPos)
+        self.marker.moved.connect(self.markerMoved)
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
@@ -1171,6 +1210,7 @@ class Workspace(QtWidgets.QSplitter):
             self.layerWidget.verticalScrollBar().setValue
         )
         self.noteBlockWidget.view.scaleChanged.connect(self.layerWidget.changeScale)
+        self.noteBlockWidget.view.markerMoved.connect(self.timeBar.currentTimeChanged_)
         self.noteBlockWidget.sceneSizeChanged.connect(self.layerWidget.updateLayerCount)
         self.noteBlockWidget.sceneSizeChanged.connect(
             self.layerWidget.updateLayerHeight
