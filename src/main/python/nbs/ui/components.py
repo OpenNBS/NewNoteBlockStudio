@@ -211,7 +211,6 @@ class PianoWidget(QtWidgets.QWidget):
         self.whiteKeys = []
         self.blackKeys = []
         self.blackPositions = (1, 3, 6, 8, 10)
-        labels = KEY_LABELS
         self.layout = QtWidgets.QHBoxLayout()
         # Bigger margin on the top to accomodate raised black keys
         self.layout.setContentsMargins(10, 15, 10, 25)
@@ -221,7 +220,7 @@ class PianoWidget(QtWidgets.QWidget):
             rangeMin, rangeMax = self._validRange
             isOutOfRange = not (rangeMin <= i <= rangeMax)
             oct, key = divmod(i + self.offset, 12)
-            label = labels[key] + str(oct)
+            label = KEY_LABELS[key] + str(oct)
             isBlack = key in self.blackPositions
             key = PianoKey(i, label, isBlack, isOutOfRange, parent=self)
             if isBlack:
@@ -233,7 +232,7 @@ class PianoWidget(QtWidgets.QWidget):
             self.keys.append(key)
 
         self.setLayout(self.layout)
-        self.resize(2400, 160)
+        self.resize(2400, 160)  # TODO: hardcoded
 
     def blackKeysInRange(self, min, max):
         """Return the number of black keys in a given range."""
@@ -378,7 +377,9 @@ class TimeBar(QtWidgets.QWidget):
         # )
         self.tempoUnit.setFixedWidth(40)
         self.tempoUnit.setFixedHeight(20)
-        self.tempoUnit.setToolTip("Click to change the displayed tempo unit. This has no effect on the song.")
+        self.tempoUnit.setToolTip(
+            "Click to change the displayed tempo unit. This has no effect on the song."
+        )
         self.tempoUnit.clicked.connect(self.tempoUnitButtonClicked)
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.tempoBox)
@@ -433,6 +434,7 @@ class TimeRuler(QtWidgets.QWidget):
         self.tempo = 10.00
 
     def timestr(self, seconds):
+        # TODO: move to utils module and decouple
         seconds, ms = divmod(int(seconds * 1000), 1000)
         minutes, seconds = divmod(seconds, 60)
         return f"{minutes:02d}:{seconds:02d},{ms:03d}"
@@ -721,7 +723,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         else:
             bbox = QtCore.QRectF(0, 0, 0, 0)
         viewSize = self.view.rect()
-        scrollBarSize = SCROLL_BAR_SIZE
         newSize = (
             math.ceil((bbox.right() + viewSize.width()) / BLOCK_SIZE) * BLOCK_SIZE,
             math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE) * BLOCK_SIZE,
@@ -816,6 +817,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedY = 0
         if self.isDraggingSelection:
             selectionArea = QtCore.QRectF(self.selection.geometry())
+            # TODO: Update selection as the selection box is dragged
             if event.button() == QtCore.Qt.LeftButton:
                 self.setSelected(selectionArea, True)
             elif event.button() == QtCore.Qt.RightButton:
@@ -889,9 +891,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
-
-    labels = KEY_LABELS
-
     def __init__(self, xx, yy, key, ins, vel=100, pan=0, pit=0, parent=None):
         super().__init__(parent)
         self.xx = xx
@@ -980,8 +979,8 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         else:
             self.changeKey(-1)
 
-    def changeKey(self, value):
-        self.key += value
+    def changeKey(self, steps):
+        self.key += steps
         self.refresh()
 
     def refresh(self):
@@ -991,7 +990,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     def getLabel(self):
         octave, key = divmod(self.key + 9, 12)
-        label = self.labels[key] + str(octave)
+        label = KEY_LABELS[key] + str(octave)
         return label
 
     def getClicks(self):
