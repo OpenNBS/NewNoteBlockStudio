@@ -1,7 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import qtawesome as qta
-import nbs.ui.components
 import nbs.core.data
+from nbs.ui.menus import FileMenu
+import nbs.ui.workspace
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -14,7 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         menuBar = self.drawMenuBar()
         toolBar = self.drawToolBar()
-        mainArea = nbs.ui.components.CentralArea(self)
+        mainArea = nbs.ui.workspace.CentralArea(self)
 
         self.setMenuBar(menuBar)
         self.addToolBar(toolBar)
@@ -24,24 +25,8 @@ class MainWindow(QtWidgets.QMainWindow):
         menuBar = QtWidgets.QMenuBar(parent=self)
 
         # File
-        fileMenu = menuBar.addMenu("File")
-        fileMenu.addAction("New song", self.new_song)
-        fileMenu.addAction("Open song...", self.load_song)
-        recentSongs = fileMenu.addMenu(QtGui.QIcon(), 'Open recent')
-        recentSongs.addSection(QtGui.QIcon(), "No recent songs")
-        importMenu = fileMenu.addMenu("Import")
-        importFromSchematicAction = importMenu.addAction("From schematic")
-        importFromMidiAction = importMenu.addAction("From MIDI")
-        fileMenu.addSeparator()
-        saveSongAction = fileMenu.addAction("Save song", self.save_song)
-        fileMenu.addAction("Save song as...", self.song_save_as)
-        exportMenu = fileMenu.addMenu("Export as...")
-        exportMenu.addAction("MIDI")
-        exportMenu.addAction("Audio file")
-        exportMenu.addAction("Schematic")
-        exportMenu.addAction("Data pack")
-        fileMenu.addSeparator()
-        fileMenu.addAction("Exit")
+        self.fileMenu = FileMenu()
+        menuBar.addMenu(self.fileMenu)
 
         # Edit
         editMenu = menuBar.addMenu("Edit")
