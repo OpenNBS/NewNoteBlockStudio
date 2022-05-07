@@ -18,6 +18,7 @@ class Actions:
             "new_song":         qta.icon('mdi.file-plus'),
             "open_song":        qta.icon('mdi.folder-open'),
             "save_song":        qta.icon('mdi.content-save'),
+            "save_song_as":     qta.icon('mdi.content-save-all'),
             "rewind":           qta.icon('mdi.rewind'),
             "fast_forward":     qta.icon('mdi.fast-forward'),
             "play_pause":       qta.icon('mdi.play', active='mdi.pause'),
@@ -38,6 +39,13 @@ class Actions:
             "song_stats":       qta.icon('mdi.file-document-edit'),
             "midi_devices":     qta.icon('mdi.usb'),
             "settings":         qta.icon('mdi.cog'),
+            "website":          qta.icon('mdi.web'),
+            "github":           qta.icon('mdi.github'),
+            "discord":          qta.icon('mdi.discord'),
+            "report_bug":       qta.icon('mdi.bug'),
+            "donate":           qta.icon('mdi.heart'),
+            "changelog":        qta.icon('mdi.text-box'),
+            "about":            qta.icon('mdi.information'),
             "":                 QIcon()
             # fmt: on
         }
@@ -46,7 +54,9 @@ class Actions:
         cls.newSongAction = QAction(icons["new_song"], "New song")
         cls.openSongAction = QAction(icons["open_song"], "Open song...")
         cls.saveSongAction = QAction(icons["save_song"], "Save song")
-        cls.saveSongAsAction = QAction(icons["save_song"], "Save song as a new file...")
+        cls.saveSongAsAction = QAction(
+            icons["save_song_as"], "Save song as a new file..."
+        )
         cls.saveOptionsAction = QAction("Save options...")
         cls.importPatternAction = QAction("Import pattern...")
         cls.exportPatternAction = QAction("Export pattern...")
@@ -58,7 +68,7 @@ class Actions:
         cls.exitAction = QAction("Exit")
 
         # Playback
-        cls.playPauseAction = QPushButton(icons["play_pause"], "Play/Pause song")
+        cls.playPauseAction = QAction(icons["play_pause"], "Play/Pause song")
         cls.stopAction = QAction(icons["stop"], "Stop song")
         cls.fastForwardAction = QAction(icons["fast_forward"], "Fast-forward song")
         cls.rewindAction = QAction(icons["rewind"], "Rewind song")
@@ -107,18 +117,24 @@ class Actions:
         )
 
         # Settings
-        cls.instrumentSettingsAction = QAction(icons[""], "Instrument settings...")
-        cls.songInfoAction = QAction(icons[""], "Song info...")
-        cls.songPropertiesAction = QAction(icons[""], "Song properties...")
-        cls.songStatsAction = QAction(icons[""], "Song stats...")
-        cls.deviceManagerAction = QAction(icons[""], "MIDI device manager...")
-        cls.preferencesAction = QAction(icons[""], "Preferences...")
+        cls.instrumentSettingsAction = QAction(
+            icons["song_instruments"], "Instrument settings..."
+        )
+        cls.songInfoAction = QAction(icons["song_info"], "Song info...")
+        cls.songPropertiesAction = QAction(
+            icons["song_properties"], "Song properties..."
+        )
+        cls.songStatsAction = QAction(icons["song_stats"], "Song stats...")
+        cls.deviceManagerAction = QAction(
+            icons["midi_devices"], "MIDI device manager..."
+        )
+        cls.preferencesAction = QAction(icons["settings"], "Preferences...")
 
         # About
-        cls.websiteAction = QAction(icons[""], "Website...")
-        cls.githubAction = QAction(icons[""], "GitHub...")
-        cls.discordAction = QAction(icons[""], "Discord server...")
-        cls.reportBugAction = QAction(icons[""], "Report a bug...")
-        cls.donateAction = QAction(icons[""], "Donate...")
-        cls.changelogAction = QAction(icons[""], "Changelog...")
-        cls.aboutAction = QAction(icons[""], "About...")
+        cls.websiteAction = QAction(icons["website"], "Website...")
+        cls.githubAction = QAction(icons["github"], "GitHub...")
+        cls.discordAction = QAction(icons["discord"], "Discord server...")
+        cls.reportBugAction = QAction(icons["report_bug"], "Report a bug...")
+        cls.donateAction = QAction(icons["donate"], "Donate...")
+        cls.changelogAction = QAction(icons["changelog"], "Changelog...")
+        cls.aboutAction = QAction(icons["about"], "About...")

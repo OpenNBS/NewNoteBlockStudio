@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import qtawesome as qta
-import nbs.core.data
-from nbs.ui.menus import *
+from nbs.ui.toolbar import ToolBar
+from nbs.ui.menus import MenuBar
 import nbs.ui.workspace
 
 
@@ -14,7 +14,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initUI(self):
         menuBar = MenuBar()
-        toolBar = self.drawToolBar()
+        toolBar = ToolBar()
         mainArea = nbs.ui.workspace.CentralArea(self)
 
         self.setMenuBar(menuBar)
@@ -64,42 +64,6 @@ class MainWindow(QtWidgets.QMainWindow):
         instrument_buttons.setExclusive(True)
         for button in instrument_button_list:
             instrument_buttons.addButton(button)
-
-        toolbar = QtWidgets.QToolBar(parent=self)
-        toolbar.addAction(icons["new_song"], "New song", self.new_song)
-        toolbar.addAction(icons["open_song"], "Open song", self.load_song)
-        toolbar.addAction(icons["save_song"], "Save song", self.save_song)
-        toolbar.addSeparator()
-        toolbar.addAction(icons["rewind"], "Rewind")
-        toolbar.addAction(icons["play"], "Play")
-        toolbar.addAction(icons["stop"], "Stop")
-        toolbar.addAction(icons["fast_forward"], "Fast-forward")
-        toolbar.addAction(icons["record"], "Record key presses")
-        toolbar.addAction(icons["loop"], "Toggle looping")
-        toolbar.addSeparator()
-        for button in instrument_buttons.buttons():
-            toolbar.addWidget(button)
-        toolbar.addSeparator()
-        toolbar.addAction(icons["undo"], "Undo")
-        toolbar.addAction(icons["redo"], "Redo")
-        toolbar.addAction(icons["cut"], "Cut")
-        toolbar.addAction(icons["copy"], "Copy")
-        toolbar.addAction(icons["paste"], "Paste")
-        toolbar.addAction(icons["delete"], "Delete")
-        toolbar.addSeparator()
-        toolbar.addAction(icons["song_instruments"], "Instrument settings")
-        toolbar.addAction(icons["song_info"], "Song info")
-        toolbar.addAction(icons["song_properties"], "Song properties")
-        toolbar.addAction(icons["song_stats"], "Song stats")
-        toolbar.addAction(icons["midi_devices"], "MIDI device manager")
-        toolbar.addAction(icons["settings"], "Settings")
-
-        spacer = QtWidgets.QWidget()
-        spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        toolbar.addWidget(spacer)
-        toolbar.addAction("Compatible")
-
-        return toolbar
 
     def drawStatusBar(self):
         pass
