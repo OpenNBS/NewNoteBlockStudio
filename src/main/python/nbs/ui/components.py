@@ -389,7 +389,7 @@ class TimeBar(QtWidgets.QWidget):
 
         # Tempo box
         self.tempoBox = QtWidgets.QDoubleSpinBox()
-        self.tempoBox.setRange(0, 60)
+        self.tempoBox.setRange(0.1, 60)
         self.tempoBox.setSingleStep(0.25)
         self.tempoBox.setValue(self.tempo)
         self.tempoBox.valueChanged.connect(self.changeTempo)
@@ -446,12 +446,12 @@ class TimeBar(QtWidgets.QWidget):
         # TODO: move all this logic to a separate class, it's complicated enough that it needs its own widget!!
         if self.displayBpm:
             self.tempoUnit.setText("BPM")
-            self.tempoBox.setRange(0, 60 * 15)
+            self.tempoBox.setRange(1, 60 * 15)
             self.tempoBox.setValue(self.tempoBox.value() * 15)
         else:
             self.tempoUnit.setText("t/s")
             self.tempoBox.setValue(self.tempoBox.value() / 15)
-            self.tempoBox.setRange(0, 60)
+            self.tempoBox.setRange(0.01, 60)
 
 
 class TimeRuler(QtWidgets.QWidget):
