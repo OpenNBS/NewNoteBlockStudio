@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from nbs.mainwindow import MainWindow
 
+
 class AppContext(ApplicationContext):
     def run(self):
         os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
