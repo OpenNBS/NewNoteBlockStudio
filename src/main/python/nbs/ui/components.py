@@ -392,6 +392,7 @@ class TimeBar(QtWidgets.QWidget):
         self.tempoBox.setRange(0.1, 60)
         self.tempoBox.setSingleStep(0.25)
         self.tempoBox.setValue(self.tempo)
+        self.tempoBox.setSuffix(" t/s")
         self.tempoBox.valueChanged.connect(self.changeTempo)
 
         self.tempoUnit = QtWidgets.QPushButton()
@@ -446,10 +447,12 @@ class TimeBar(QtWidgets.QWidget):
         # TODO: move all this logic to a separate class, it's complicated enough that it needs its own widget!!
         if self.displayBpm:
             self.tempoUnit.setText("BPM")
+            self.tempoBox.setSuffix(" BPM")
             self.tempoBox.setRange(1, 60 * 15)
             self.tempoBox.setValue(self.tempoBox.value() * 15)
         else:
             self.tempoUnit.setText("t/s")
+            self.tempoBox.setSuffix(" t/s")
             self.tempoBox.setValue(self.tempoBox.value() / 15)
             self.tempoBox.setRange(0.01, 60)
 
