@@ -39,3 +39,69 @@ class FileMenu(QtWidgets.QMenu):
 
     def updateRecentSongs(self):
         pass
+
+
+class EditMenu(QtWidgets.QMenu):
+    def __init__(self, parent=None, isFloat: bool = False):
+        super().__init__(parent)
+        self.isFloat = isFloat
+        self.setTitle("Edit")
+        self.addEntries()
+
+    def addEntries(self):
+        if self.isFloat:
+            self.cutAction = self.addAction(Actions.cutAction)
+            self.copyAction = self.addAction(Actions.copyAction)
+            self.pasteAction = self.addAction(Actions.pasteAction)
+            self.deleteAction = self.addAction(Actions.deleteAction)
+        else:
+            self.undoAction = self.addAction(Actions.undoAction)
+            self.redoAction = self.addAction(Actions.redoAction)
+        self.addSeparator()
+
+        self.copyAction = self.addAction(Actions.copyAction)
+        self.cutAction = self.addAction(Actions.cutAction)
+        self.pasteAction = self.addAction(Actions.pasteAction)
+        self.deleteAction = self.addAction(Actions.deleteAction)
+        self.addSeparator()
+
+        self.selectAllAction = self.addAction(Actions.selectAllAction)
+        self.deselectAllAction = self.addAction(Actions.deselectAllAction)
+        self.invertSelectionAction = self.addAction(Actions.invertSelectionAction)
+        self.addSeparator()
+
+        if self.isFloat:
+            self.selectAllLeftAction = self.addAction(Actions.selectAllLeftAction)
+            self.selectAllRightAction = self.addAction(Actions.selectAllRightAction)
+            self.addSeparator()
+
+        self.selectAllInstrumentAction = self.addAction(
+            Actions.selectAllInstrumentAction
+        )
+        self.selectAllButInstrumentAction = self.addAction(
+            Actions.selectAllButInstrumentAction
+        )
+        self.addSeparator()
+
+        self.increaseOctaveAction = self.addAction(Actions.increaseOctaveAction)
+        self.decreaseOctaveAction = self.addAction(Actions.decreaseOctaveAction)
+        self.increaseKeyAction = self.addAction(Actions.increaseKeyAction)
+        self.decreaseKeyAction = self.addAction(Actions.decreaseKeyAction)
+        self.changeInstrumentMenu = self.addMenu("Change instrument...")
+        self.addSeparator()
+
+        self.expandSelectionAction = self.addAction(Actions.expandSelectionAction)
+        self.compressSelectionAction = self.addAction(Actions.compressSelectionAction)
+        self.addSeparator()
+
+        self.transposeNotesAction = self.addAction(Actions.transposeNotesAction)
+        self.macrosMenu = self.addMenu("Macros...")
+
+    def lockSelectionEntries(self, lock: bool):
+        pass
+
+    def addInstrumentEntry(self, instrument):
+        pass
+
+    def removeInstrumentEntry(self, index):
+        pass

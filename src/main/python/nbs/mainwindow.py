@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import qtawesome as qta
 import nbs.core.data
-from nbs.ui.menus import FileMenu
+from nbs.ui.menus import *
 import nbs.ui.workspace
 
 
@@ -29,7 +29,8 @@ class MainWindow(QtWidgets.QMainWindow):
         menuBar.addMenu(self.fileMenu)
 
         # Edit
-        editMenu = menuBar.addMenu("Edit")
+        self.editMenu = EditMenu(isFloat=False)
+        menuBar.addMenu(self.editMenu)
 
         # Settings
         settingsMenu = menuBar.addMenu("Settings")

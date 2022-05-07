@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
+from PyQt5.QtGui import QIcon
 import qtawesome as qta
 
 
@@ -9,6 +10,8 @@ class Actions:
         # qta.icon can't be on the top level of the module, so we must
         # put everything into a method and call it after QApplication
         # is created. See https://github.com/spyder-ide/qtawesome/issues/144
+
+        # TODO: There's probably a better way to do this...
 
         icons = {
             # fmt: off
@@ -35,7 +38,7 @@ class Actions:
             "song_stats":       qta.icon('mdi.file-document-edit'),
             "midi_devices":     qta.icon('mdi.usb'),
             "settings":         qta.icon('mdi.cog'),
-            "":                 qta.icon('mdi.cog')
+            "":                 QIcon()
             # fmt: on
         }
 
@@ -72,15 +75,15 @@ class Actions:
         cls.pasteAction = QAction(icons["paste"], "Paste")
         cls.deleteAction = QAction(icons["delete"], "Delete")
         cls.selectAllAction = QAction(icons["select_all"], "Select all")
-        cls.clearSelectionAction = QAction(icons[""], "Clear selection")
+        cls.deselectAllAction = QAction(icons[""], "Deselect all")
         cls.invertSelectionAction = QAction(icons[""], "Invert selection")
         cls.selectAllLeftAction = QAction(icons[""], "Select all to the left <-")
         cls.selectAllRightAction = QAction(icons[""], "Select all to the right ->")
         cls.selectAllInstrumentAction = QAction(icons[""], "Select all {}")
         cls.selectAllButInstrumentAction = QAction(icons[""], "Select all but {}")
-        cls.increaseKeyAction = QAction(icons[""], "Increase octave")
-        cls.decreaseKeyAction = QAction(icons[""], "Decrease octave")
-        cls.increaseAction = QAction(icons[""], "Increase key")
+        cls.increaseOctaveAction = QAction(icons[""], "Increase octave")
+        cls.decreaseOctaveAction = QAction(icons[""], "Decrease octave")
+        cls.increaseKeyAction = QAction(icons[""], "Increase key")
         cls.decreaseKeyAction = QAction(icons[""], "Decrease key")
         cls.expandSelectionAction = QAction(icons[""], "Expand selection")
         cls.compressSelectionAction = QAction(icons[""], "Compress selection")
