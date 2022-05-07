@@ -107,17 +107,18 @@ class Actions:
         )
 
         # Settings
+        cls.instrumentSettingsAction = QAction(icons[""], "Instrument settings...")
         cls.songInfoAction = QAction(icons[""], "Song info...")
         cls.songPropertiesAction = QAction(icons[""], "Song properties...")
-        cls.songStatsAction = QAction(icons[""], "Song properties...")
+        cls.songStatsAction = QAction(icons[""], "Song stats...")
         cls.deviceManagerAction = QAction(icons[""], "MIDI device manager...")
         cls.preferencesAction = QAction(icons[""], "Preferences...")
 
         # About
         cls.websiteAction = QAction(icons[""], "Website...")
-        cls.forumPageAction = QAction(icons[""], "Minecraft Forums page...")
-        cls.wikiPageAction = QAction(icons[""], "Minecraft Wiki page...")
-        cls.githubPageAction = QAction(icons[""], "GitHub...")
-        cls.changelogAction = QAction(icons[""], "Changelog...")
+        cls.githubAction = QAction(icons[""], "GitHub...")
+        cls.discordAction = QAction(icons[""], "Discord server...")
+        cls.reportBugAction = QAction(icons[""], "Report a bug...")
         cls.donateAction = QAction(icons[""], "Donate...")
+        cls.changelogAction = QAction(icons[""], "Changelog...")
         cls.aboutAction = QAction(icons[""], "About...")

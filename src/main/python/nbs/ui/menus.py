@@ -105,3 +105,42 @@ class EditMenu(QtWidgets.QMenu):
 
     def removeInstrumentEntry(self, index):
         pass
+
+
+class SettingsMenu(QtWidgets.QMenu):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("Settings")
+        self.addEntries()
+
+    def addEntries(self):
+        self.instrumentsMenu = self.addMenu("Instrument")
+        self.instrumentsMenu.addAction("Harp")
+        self.instrumentSettingsAction = self.addAction(Actions.instrumentSettingsAction)
+        self.addSeparator()
+
+        self.songInfoAction = self.addAction(Actions.songInfoAction)
+        self.songPropertiesAction = self.addAction(Actions.songPropertiesAction)
+        self.songStatsAction = self.addAction(Actions.songStatsAction)
+        self.addSeparator()
+
+        self.deviceManagerAction = self.addAction(Actions.deviceManagerAction)
+        self.preferencesAction = self.addAction(Actions.preferencesAction)
+
+
+class HelpMenu(QtWidgets.QMenu):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("Help")
+        self.addEntries()
+
+    def addEntries(self):
+        self.websiteAction = self.addAction(Actions.websiteAction)
+        self.githubAction = self.addAction(Actions.githubAction)
+        self.discordAction = self.addAction(Actions.discordAction)
+        self.reportBugAction = self.addAction(Actions.reportBugAction)
+        self.donateAction = self.addAction(Actions.donateAction)
+        self.addSeparator()
+
+        self.changelogAction = self.addAction(Actions.changelogAction)
+        self.aboutAction = self.addAction(Actions.aboutAction)
