@@ -1,8 +1,8 @@
-def seconds_to_ticks(ticks: float, tempo: float) -> float:
+def ticks_to_seconds(ticks: float, tempo: float) -> float:
     return ticks / tempo
 
 
-def ticks_to_seconds(seconds: float, tempo: float) -> float:
+def seconds_to_ticks(seconds: float, tempo: float) -> float:
     return seconds * tempo
 
 
