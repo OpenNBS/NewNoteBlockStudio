@@ -545,6 +545,11 @@ class TimeRuler(QtWidgets.QWidget):
         self.scale = value
         self.update()
 
+    @QtCore.pyqtSlot(float)
+    def setTempo(self, newTempo: float):
+        self.tempo = newTempo
+        self.update()
+
     def posToTicks(self, pos):
         return pos / BLOCK_SIZE / self.scale
 
@@ -1221,6 +1226,7 @@ class Workspace(QtWidgets.QSplitter):
         self.noteBlockWidget.sceneSizeChanged.connect(
             self.layerWidget.updateLayerHeight
         )
+        self.timeBar.tempoChanged.connect(self.noteBlockWidget.view.ruler.setTempo)
 
     def setSingleScrollBar(self):
         """
