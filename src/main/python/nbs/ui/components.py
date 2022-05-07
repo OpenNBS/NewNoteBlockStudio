@@ -457,6 +457,7 @@ class TimeBar(QtWidgets.QWidget):
 class TimeRuler(QtWidgets.QWidget):
 
     clicked = QtCore.pyqtSignal(int)
+    clickedInTicks = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -531,6 +532,7 @@ class TimeRuler(QtWidgets.QWidget):
     def mouseReleaseEvent(self, event):
         pos = event.pos().x()
         self.clicked.emit(pos)
+        self.clickedInTicks.emit(self.posToTicks(pos))
         self.update()
 
     @QtCore.pyqtSlot(int)
@@ -542,6 +544,9 @@ class TimeRuler(QtWidgets.QWidget):
     def setScale(self, value):
         self.scale = value
         self.update()
+
+    def posToTicks(self, pos):
+        return pos / BLOCK_SIZE / self.scale
 
 
 class Marker(QtWidgets.QWidget):
@@ -644,7 +649,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.scaleChanged.connect(self.marker.setScale)
         self.ruler.clicked.connect(self.scene().setMarkerPos)
         self.ruler.clicked.connect(self.marker.setPos)
-        self.ruler.clicked.connect(self.markerMovedByPos)
+        self.ruler.clickedInTicks.connect(self.markerMoved)
         self.marker.moved.connect(self.markerMoved)
 
     @QtCore.pyqtSlot()
@@ -682,14 +687,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         vsb.resize(QtCore.QSize(vsb.width(), self.height() - 32 - SCROLL_BAR_SIZE))
         self.ruler.update()
         self.scene().updateSceneSize()
-
-    @QtCore.pyqtSlot(int)
-    def markerMovedByPos(self, pos: int):
-        """Helper method to convert the marker 'moved' signal (which carries its pos)
-        to ticks before emitting this widget's markerMoved signal.
-        """
-        ticks = pos / BLOCK_SIZE
-        self.markerMoved.emit(ticks)
 
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
