@@ -397,10 +397,6 @@ class TempoBox(QtWidgets.QDoubleSpinBox):
                 setToTpsAction.triggered.connect(self.changeToTps)
                 setToBpmAction.triggered.connect(self.changeToBpm)
 
-                changeTempoUnitActions = QtWidgets.QActionGroup(w)
-                changeTempoUnitActions.setExclusive(True)
-                changeTempoUnitActions.addAction(setToTpsAction)
-                changeTempoUnitActions.addAction(setToBpmAction)
                 setToTpsAction.setCheckable(True)
                 setToBpmAction.setCheckable(True)
                 if not self.useBpm:
