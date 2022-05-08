@@ -64,6 +64,7 @@ class PianoKey(QtWidgets.QWidget):
     def pressKey(self):
         if not self.isPressed:
             print("Pressed key", self.label)
+            self.move(QtCore.QPoint(self.x(), self.y() + 5))
             self.keyPressed.emit(self.num)
             self.isPressed = True
             self.update()
@@ -71,6 +72,7 @@ class PianoKey(QtWidgets.QWidget):
     def releaseKey(self):
         if self.isPressed:
             print("Released key", self.label)
+            self.move(QtCore.QPoint(self.x(), self.y() - 5))
             self.keyReleased.emit(self.num)
             self.isPressed = False
             self.update()
@@ -103,8 +105,6 @@ class PianoKey(QtWidgets.QWidget):
         # Geometry
         rect = self.rect()
         rect.setSize(QtCore.QSize(rect.width() - 1, rect.height() - 1))
-        if self.isPressed:
-            rect.translate(0, 5)
         bevel = self.rect()
         bevel.setHeight(8)
         bevel.moveBottom(rect.bottom())
