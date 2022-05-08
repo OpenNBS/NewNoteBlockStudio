@@ -691,7 +691,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.marker = Marker(parent=self)
         ########self.setStyleSheet("QGraphicsView { border-top: none; }")
         # self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
-        self.setViewportMargins(0, BLOCK_SIZE, 0, 0)
+        self.setViewportMargins(0, 32, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
