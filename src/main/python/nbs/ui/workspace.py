@@ -102,10 +102,11 @@ class PianoKey(QtWidgets.QWidget):
 
         # Geometry
         rect = self.rect()
+        rect.setSize(QtCore.QSize(rect.width() - 1, rect.height() - 1))
         if self.isPressed:
-            rect.translate(0, 10)
+            rect.translate(0, 5)
         bevel = self.rect()
-        bevel.setHeight(12)
+        bevel.setHeight(8)
         bevel.moveBottom(rect.bottom())
         textRect = self.rect()
         textRect.setBottom(bevel.top() - 15)
@@ -116,7 +117,7 @@ class PianoKey(QtWidgets.QWidget):
         painter.fillRect(rect, color)
         painter.fillRect(bevel, bevelColor)
         pen = QtGui.QPen(outlineColor)
-        pen.setWidth(2)
+        pen.setWidth(1)
         painter.setPen(pen)
         painter.drawRects(rect, bevel)
         painter.setPen(textColor)
@@ -214,7 +215,7 @@ class PianoWidget(QtWidgets.QWidget):
         self.layout = QtWidgets.QHBoxLayout()
         # Bigger margin on the top to accomodate raised black keys
         self.layout.setContentsMargins(10, 15, 10, 25)
-        self.layout.setSpacing(2)
+        self.layout.setSpacing(1)
 
         for i in range(self.keyCount):
             rangeMin, rangeMax = self._validRange
@@ -232,7 +233,7 @@ class PianoWidget(QtWidgets.QWidget):
             self.keys.append(key)
 
         self.setLayout(self.layout)
-        self.resize(2400, 160)  # TODO: hardcoded
+        self.resize(40 * len(self.whiteKeys), 160)  # TODO: hardcoded
 
     def blackKeysInRange(self, min, max):
         """Return the number of black keys in a given range."""
@@ -246,10 +247,10 @@ class PianoWidget(QtWidgets.QWidget):
     def arrangeBlackKeys(self):
         """Update position of the black keys on the piano."""
         key = self.whiteKeys[0]
-        keyWidth = key.width() / 1.6
-        keyHeight = key.height() / 1.6
-        keyOffset = key.width() / 1.5
-        yPos = key.y() - 10
+        keyWidth = key.width() * 0.6
+        keyHeight = key.height() * 0.6
+        keyOffset = key.width() * 0.7
+        yPos = key.y() - 6
         offset = self.blackKeysInRange(0, self.offset)
         for i in range(len(self.blackKeys)):
             oct, key = divmod(i + offset, 5)
