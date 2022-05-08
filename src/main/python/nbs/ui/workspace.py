@@ -360,6 +360,58 @@ class SongTime(QtWidgets.QWidget):
         self.repaint()
 
 
+class TempoBox(QtWidgets.QDoubleSpinBox):
+
+    tempoChanged = QtCore.pyqtSignal(float)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tempo = 10
+        self.useBpm = False
+        self.initUI()
+
+    def initUI(self):
+        self.setRange(0.1, 60)
+        self.setSingleStep(0.25)
+        self.setValue(self.tempo)
+        self.setAlignment(QtCore.Qt.AlignRight)
+        self.setSuffix(" t/s")
+        self.valueChanged.connect(self.changeTempo)
+        self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
+
+    @QtCore.pyqtSlot(float)
+    def changeTempo(self, tempo: float):
+        if self.useBpm:
+            self.tempo = tempo / 15
+        else:
+            self.tempo = tempo
+        self.tempoChanged.emit(self.tempo)
+
+    @QtCore.pyqtSlot()
+    def changeToTps(self):
+        if self.useBpm:
+            self.useBpm = False
+            self.updateUnit()
+
+    @QtCore.pyqtSlot()
+    def changeToBpm(self):
+        if not self.useBpm:
+            self.useBpm = True
+            self.updateUnit()
+
+    def updateUnit(self):
+        if self.useBpm:
+            self.setSuffix(" BPM")
+            self.setRange(1, 60 * 15)
+            self.setValue(self.value() * 15)
+            self.setSingleStep(1)
+        else:
+            self.setSuffix(" t/s")
+            self.setValue(self.value() / 15)
+            self.setRange(0.25, 60)
+            self.setSingleStep(0.25)
+
+
 class TimeBar(QtWidgets.QWidget):
 
     tempoChanged = QtCore.pyqtSignal(float)
@@ -370,7 +422,7 @@ class TimeBar(QtWidgets.QWidget):
         super().__init__(parent)
         self.setFixedHeight(32)
         self.currentTime = 0
-        self.totalTime = 100
+        self.totalTime = 0
         self.tempo = 10.0
         self.displayBpm = False
         self.initUI()
@@ -385,31 +437,14 @@ class TimeBar(QtWidgets.QWidget):
 
         # Song time
         self.songTime = SongTime()
+        self.tempoBox = TempoBox()
         self.layout.addWidget(self.songTime)
+        self.layout.addWidget(self.tempoBox)
 
-        # Tempo box
-        self.tempoBox = QtWidgets.QDoubleSpinBox()
-        self.tempoBox.setRange(0.1, 60)
-        self.tempoBox.setSingleStep(0.25)
-        self.tempoBox.setValue(self.tempo)
-        self.tempoBox.setAlignment(QtCore.Qt.AlignRight)
-        self.tempoBox.setSuffix(" t/s")
-        self.tempoBox.valueChanged.connect(self.changeTempo)
+        self.tempoBox.tempoChanged.connect(self.tempoChanged)
 
-        self.tempoUnit = QtWidgets.QPushButton()
-        self.tempoUnit.setText("t/s")
-        # self.tempoUnit.setSizePolicy(
-        #    QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
-        # )
-        self.tempoUnit.setFixedWidth(40)
-        self.tempoUnit.setFixedHeight(20)
-        self.tempoUnit.setToolTip(
-            "Click to change the displayed tempo unit. This has no effect on the song."
-        )
-        self.tempoUnit.clicked.connect(self.tempoUnitButtonClicked)
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.tempoBox)
-        layout.addWidget(self.tempoUnit)
         layout.setContentsMargins(0, 0, 0, 0)
         container = QtWidgets.QWidget()
         container.setLayout(layout)
@@ -440,22 +475,6 @@ class TimeBar(QtWidgets.QWidget):
     def songLengthChanged(self, newSongLength: float):
         self.totalTime = newSongLength
         self.totalTimeChanged_.emit(self.totalTime)
-
-    @QtCore.pyqtSlot()
-    def tempoUnitButtonClicked(self):
-        self.displayBpm = not self.displayBpm
-
-        # TODO: move all this logic to a separate class, it's complicated enough that it needs its own widget!!
-        if self.displayBpm:
-            self.tempoUnit.setText("BPM")
-            self.tempoBox.setSuffix(" BPM")
-            self.tempoBox.setRange(1, 60 * 15)
-            self.tempoBox.setValue(self.tempoBox.value() * 15)
-        else:
-            self.tempoUnit.setText("t/s")
-            self.tempoBox.setSuffix(" t/s")
-            self.tempoBox.setValue(self.tempoBox.value() / 15)
-            self.tempoBox.setRange(0.01, 60)
 
 
 class TimeRuler(QtWidgets.QWidget):
