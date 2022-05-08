@@ -392,13 +392,21 @@ class TempoBox(QtWidgets.QDoubleSpinBox):
             if isinstance(w, QtWidgets.QMenu) and w.objectName() == "qt_edit_menu":
                 w.clear()
                 # w.addSeparator()
-                changeTempoUnitActions = QtWidgets.QActionGroup(w)
-                changeTempoUnitActions.setExclusive(True)
-                setToTpsAction = changeTempoUnitActions.addAction(w.addAction("t/s"))
-                setToBpmAction = changeTempoUnitActions.addAction(w.addAction("BPM"))
+                setToTpsAction = w.addAction("t/s")
+                setToBpmAction = w.addAction("BPM")
                 setToTpsAction.triggered.connect(self.changeToTps)
                 setToBpmAction.triggered.connect(self.changeToBpm)
-                setToTpsAction.setChecked(True)
+
+                changeTempoUnitActions = QtWidgets.QActionGroup(w)
+                changeTempoUnitActions.setExclusive(True)
+                changeTempoUnitActions.addAction(setToTpsAction)
+                changeTempoUnitActions.addAction(setToBpmAction)
+                setToTpsAction.setCheckable(True)
+                setToBpmAction.setCheckable(True)
+                if not self.useBpm:
+                    setToTpsAction.setChecked(True)
+                else:
+                    setToBpmAction.setChecked(True)
 
     @QtCore.pyqtSlot(float)
     def changeTempo(self, tempo: float):
