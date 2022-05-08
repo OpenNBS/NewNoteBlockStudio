@@ -379,6 +379,27 @@ class TempoBox(QtWidgets.QDoubleSpinBox):
         self.valueChanged.connect(self.changeTempo)
         self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
 
+    def contextMenuEvent(self, e: QtGui.QContextMenuEvent) -> None:
+        # As there's no hook to modify the items on the default QSpinBox
+        # context menu, we have to capture immediately as it appears. See:
+        # https://stackoverflow.com/a/53504994/9045426
+
+        QtCore.QTimer.singleShot(0, self.addContextMenuActions)
+        return super().contextMenuEvent(e)
+
+    def addContextMenuActions(self):
+        for w in QtWidgets.QApplication.topLevelWidgets():
+            if isinstance(w, QtWidgets.QMenu) and w.objectName() == "qt_edit_menu":
+                w.clear()
+                # w.addSeparator()
+                changeTempoUnitActions = QtWidgets.QActionGroup(w)
+                changeTempoUnitActions.setExclusive(True)
+                setToTpsAction = changeTempoUnitActions.addAction(w.addAction("t/s"))
+                setToBpmAction = changeTempoUnitActions.addAction(w.addAction("BPM"))
+                setToTpsAction.triggered.connect(self.changeToTps)
+                setToBpmAction.triggered.connect(self.changeToBpm)
+                setToTpsAction.setChecked(True)
+
     @QtCore.pyqtSlot(float)
     def changeTempo(self, tempo: float):
         if self.useBpm:
