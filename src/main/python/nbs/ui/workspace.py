@@ -698,7 +698,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.viewport().installEventFilter(self)
 
         self.horizontalScrollBar().valueChanged.connect(self.ruler.setOffset)
         self.horizontalScrollBar().valueChanged.connect(self.marker.setOffset)
@@ -715,12 +714,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         menu.aboutToHide.connect(self.onCloseMenu)
         menu.exec(event.globalPos())
         return super().contextMenuEvent(event)
-
-    # def eventFilter(self, event):
-    #    if event.type() == QtGui.QContextMenuEvent:
-    #        print(self.scene().isRemovingNote)
-    #        if self.itemAt(event.pos()) is not None and not self.scene().isRemovingNote:
-    #            pass
 
     @QtCore.pyqtSlot()
     def onCloseMenu(self):
@@ -762,17 +755,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler.update()
         self.scene().updateSceneSize()
 
-    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
-
-        # Prevent left-clicking to close the menu from triggering a click on the scene
-        if event.type() == QtCore.QEvent.MouseButtonRelease:
-            if event.buttons() == QtCore.Qt.LeftButton:
-                print(self.isClosingMenu)
-                if self.isClosingMenu:
-                    event.ignore()
-                    # self.isClosingMenu = False
-        return super().eventFilter(watched, event)
-
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
     """
@@ -798,6 +780,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def initUI(self):
         self.updateSceneSize()
+        self.installEventFilter(self)
         self.view.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
         self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
@@ -938,9 +921,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selection.show()
 
     def mouseReleaseEvent(self, event):
-        if self.view.isClosingMenu:
-            self.view.isClosingMenu = False
-            return
         self.isRemovingNote = False
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
@@ -1018,6 +998,20 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             # the scene items to detect hover events
             super().mouseMoveEvent(event)
             self.selection.hide()
+
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        # Prevent left-clicking to close the menu from triggering a click on the scene
+        if (
+            event.type() == QtCore.QEvent.GraphicsSceneMousePress
+            or event.type() == QtCore.QEvent.GraphicsSceneMouseRelease
+            or event.type() == QtCore.QEvent.GraphicsSceneMouseMove
+        ):
+            if event.button() == QtCore.Qt.LeftButton:
+                if self.view.isClosingMenu:
+                    if event.type() == QtCore.QEvent.GraphicsSceneMouseRelease:
+                        self.view.isClosingMenu = False
+                    return True
+        return False
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
