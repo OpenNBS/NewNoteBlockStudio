@@ -691,12 +691,14 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.currentScale = 1
         self.ruler = TimeRuler(parent=self)
         self.marker = Marker(parent=self)
+        self.isClosingMenu = False
         ########self.setStyleSheet("QGraphicsView { border-top: none; }")
         # self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
         self.setViewportMargins(0, 32, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.viewport().installEventFilter(self)
 
         self.horizontalScrollBar().valueChanged.connect(self.ruler.setOffset)
         self.horizontalScrollBar().valueChanged.connect(self.marker.setOffset)
@@ -708,9 +710,21 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.marker.moved.connect(self.markerMoved)
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        # print(self.scene().isRemovingNote)
         menu = EditMenu(self, isFloat=True)
+        menu.aboutToHide.connect(self.onCloseMenu)
         menu.exec(event.globalPos())
         return super().contextMenuEvent(event)
+
+    # def eventFilter(self, event):
+    #    if event.type() == QtGui.QContextMenuEvent:
+    #        print(self.scene().isRemovingNote)
+    #        if self.itemAt(event.pos()) is not None and not self.scene().isRemovingNote:
+    #            pass
+
+    @QtCore.pyqtSlot()
+    def onCloseMenu(self):
+        self.isClosingMenu = True
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
@@ -748,6 +762,17 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler.update()
         self.scene().updateSceneSize()
 
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+
+        # Prevent left-clicking to close the menu from triggering a click on the scene
+        if event.type() == QtCore.QEvent.MouseButtonRelease:
+            if event.buttons() == QtCore.Qt.LeftButton:
+                print(self.isClosingMenu)
+                if self.isClosingMenu:
+                    event.ignore()
+                    # self.isClosingMenu = False
+        return super().eventFilter(watched, event)
+
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
     """
@@ -763,6 +788,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selectionStart = None
         self.isDraggingSelection = False
         self.isClearingSelection = False
+        self.isRemovingNote = False
         self.isMovingBlocks = False
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
@@ -912,6 +938,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selection.show()
 
     def mouseReleaseEvent(self, event):
+        if self.view.isClosingMenu:
+            self.view.isClosingMenu = False
+            return
+        self.isRemovingNote = False
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         if self.isDraggingSelection:
@@ -936,6 +966,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.addBlockManual(x, y, self.activeKey, 100, 0, 0)
             elif event.button() == QtCore.Qt.RightButton:
                 self.removeBlockManual(x, y)
+                self.isRemovingNote = True
 
     def mouseMoveEvent(self, event):
         # Auto-scroll when dragging/moving near the edges
