@@ -698,6 +698,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.viewport().installEventFilter(self)
 
         self.horizontalScrollBar().valueChanged.connect(self.ruler.setOffset)
         self.horizontalScrollBar().valueChanged.connect(self.marker.setOffset)
@@ -709,7 +710,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.marker.moved.connect(self.markerMoved)
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
-        # print(self.scene().isRemovingNote)
         menu = EditMenu(self, isFloat=True)
         menu.aboutToHide.connect(self.onCloseMenu)
         menu.exec(event.globalPos())
@@ -754,6 +754,12 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         vsb.resize(QtCore.QSize(vsb.width(), self.height() - 32 - SCROLL_BAR_SIZE))
         self.ruler.update()
         self.scene().updateSceneSize()
+
+    def eventFilter(self, object: QtCore.QObject, event: QtCore.QEvent) -> None:
+        if event.type() == QtCore.QEvent.ContextMenu:
+            if self.scene().isRemovingNote:
+                return True
+        return False
 
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
@@ -945,8 +951,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.removeBlockManual(x, y)
                 self.addBlockManual(x, y, self.activeKey, 100, 0, 0)
             elif event.button() == QtCore.Qt.RightButton:
-                self.removeBlockManual(x, y)
-                self.isRemovingNote = True
+                if len(self.selectedItems()) == 0:  # Should open the menu otherwise
+                    self.removeBlockManual(x, y)
+                    self.isRemovingNote = True
 
     def mouseMoveEvent(self, event):
         # Auto-scroll when dragging/moving near the edges
