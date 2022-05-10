@@ -692,7 +692,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.currentScale = 1
         self.ruler = TimeRuler(parent=self)
         self.marker = Marker(parent=self)
-        self.isClosingMenu = False
         ########self.setStyleSheet("QGraphicsView { border-top: none; }")
         # self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
         self.setViewportMargins(0, 32, 0, 0)
@@ -709,16 +708,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler.clicked.connect(self.marker.setPos)
         self.ruler.clickedInTicks.connect(self.markerMoved)
         self.marker.moved.connect(self.markerMoved)
-
-    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
-        menu = EditMenu(self, isFloat=True)
-        menu.aboutToHide.connect(self.onCloseMenu)
-        menu.exec(event.globalPos())
-        return super().contextMenuEvent(event)
-
-    @QtCore.pyqtSlot()
-    def onCloseMenu(self):
-        self.isClosingMenu = True
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
@@ -756,12 +745,6 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler.update()
         self.scene().updateSceneSize()
 
-    def eventFilter(self, object: QtCore.QObject, event: QtCore.QEvent) -> None:
-        if event.type() == QtCore.QEvent.ContextMenu:
-            if self.scene().isRemovingNote:
-                return True
-        return False
-
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
     """
@@ -777,8 +760,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selectionStart = None
         self.isDraggingSelection = False
         self.isClearingSelection = False
-        self.isRemovingNote = False
         self.isMovingBlocks = False
+        self.isRemovingNote = False
+        self.isClosingMenu = False
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         self.activeKey = 45
@@ -810,6 +794,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             else:
                 painter.setPen(QtGui.QColor(216, 216, 216))
             painter.drawLine(x * BLOCK_SIZE, rect.y(), x * BLOCK_SIZE, rect.bottom())
+
+    ########## MENU ##########
+
+    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        menu = EditMenu(self.view, isFloat=True)
+        menu.aboutToHide.connect(self.onCloseMenu)
+        menu.exec(event.screenPos())
+        return super().contextMenuEvent(event)
+
+    @QtCore.pyqtSlot()
+    def onCloseMenu(self):
+        self.isClosingMenu = True
 
     ########## SLOTS ##########
 
@@ -1028,18 +1024,24 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             super().mouseMoveEvent(event)
             self.selection.hide()
 
-    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+    def eventFilter(self, object: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        # Prevent right-clicking to delete a note from opening the menu
+        if event.type() == QtCore.QEvent.GraphicsSceneContextMenu:
+            if self.isRemovingNote:
+                return True
+
         # Prevent left-clicking to close the menu from triggering a click on the scene
-        if (
+        elif (
             event.type() == QtCore.QEvent.GraphicsSceneMousePress
             or event.type() == QtCore.QEvent.GraphicsSceneMouseRelease
             or event.type() == QtCore.QEvent.GraphicsSceneMouseMove
         ):
             if event.button() == QtCore.Qt.LeftButton:
-                if self.view.isClosingMenu:
+                if self.isClosingMenu:
                     if event.type() == QtCore.QEvent.GraphicsSceneMouseRelease:
-                        self.view.isClosingMenu = False
+                        self.isClosingMenu = False
                     return True
+
         return False
 
 
