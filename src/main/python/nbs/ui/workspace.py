@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import qtawesome as qta
 import math
+from nbs.ui.menus import EditMenu
 from nbs.core.utils import *
 
 appctxt = ApplicationContext()
@@ -705,6 +706,11 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler.clicked.connect(self.marker.setPos)
         self.ruler.clickedInTicks.connect(self.markerMoved)
         self.marker.moved.connect(self.markerMoved)
+
+    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        menu = EditMenu(self, isFloat=True)
+        menu.exec(event.globalPos())
+        return super().contextMenuEvent(event)
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
