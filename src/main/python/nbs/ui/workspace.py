@@ -1,3 +1,4 @@
+from typing import Union
 from PyQt5 import QtCore, QtGui, QtWidgets
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 import qtawesome as qta
@@ -863,6 +864,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         """Return the top left scene position of a set of grid coordinates."""
         return QtCore.QPoint(x * BLOCK_SIZE, y * BLOCK_SIZE)
 
+    def blockAtPos(self, pos: Union[QtCore.QPoint, QtCore.QPointF]):
+        viewPos = self.view.mapFromScene(pos)
+        viewTransform = self.view.transform()
+        return self.itemAt(viewPos, viewTransform)
+
     def clear(self):
         """Clear all note blocks in the scene."""
         for item in self.noteBlocks():
@@ -955,9 +961,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.addBlockManual(x, y, self.activeKey, 100, 0, 0)
             elif event.button() == QtCore.Qt.RightButton:
                 if not self.hasSelection():  # Should open the menu otherwise
-                    viewPos = self.view.mapFromScene(event.scenePos())
-                    viewTransform = self.view.transform()
-                    if self.itemAt(viewPos, viewTransform) is not None:
+                    if self.blockAtPos(event.pos()) is not None:
                         self.removeBlockManual(x, y)
                         self.isRemovingNote = True
 
