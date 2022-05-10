@@ -896,8 +896,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             item.setSelected(value)
             item.setZValue(1 if value else 0)
 
+    def hasSelection(self):
+        return len(self.selectedItems()) > 0
+
     def clearSelection(self):
-        if len(self.selectedItems()) > 0:
+        if self.hasSelection():
             # This is done to prevent the next mouse
             # release from adding a note block
             self.isClearingSelection = True
@@ -951,9 +954,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.removeBlockManual(x, y)
                 self.addBlockManual(x, y, self.activeKey, 100, 0, 0)
             elif event.button() == QtCore.Qt.RightButton:
-                if len(self.selectedItems()) == 0:  # Should open the menu otherwise
-                    self.removeBlockManual(x, y)
-                    self.isRemovingNote = True
+                if not self.hasSelection():  # Should open the menu otherwise
+                    viewPos = self.view.mapFromScene(event.scenePos())
+                    viewTransform = self.view.transform()
+                    if self.itemAt(viewPos, viewTransform) is not None:
+                        self.removeBlockManual(x, y)
+                        self.isRemovingNote = True
 
     def mouseMoveEvent(self, event):
         # Auto-scroll when dragging/moving near the edges
