@@ -785,6 +785,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.markerPos = 0
         self.initUI()
 
+    ########## UI ##########
+
     def initUI(self):
         self.updateSceneSize()
         self.installEventFilter(self)
@@ -794,12 +796,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selectionProxy = self.addWidget(self.selection)
         self.selectionProxy.setZValue(1)
         self.startTimer(10)
-
-    def noteBlocks(self):
-        """An iterator which yields all the note blocks in the scene."""
-        for item in self.items():
-            if isinstance(item, NoteBlock):
-                yield item
 
     def drawBackground(self, painter, rect):
         painter.setPen(QtCore.Qt.NoPen)
@@ -815,12 +811,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 painter.setPen(QtGui.QColor(216, 216, 216))
             painter.drawLine(x * BLOCK_SIZE, rect.y(), x * BLOCK_SIZE, rect.bottom())
 
-    def timerEvent(self, event):
-        # Auto-scroll when dragging/moving near the edges
-        hsb = self.view.horizontalScrollBar()
-        vsb = self.view.verticalScrollBar()
-        hsb.setValue(hsb.value() + self.scrollSpeedX)
-        vsb.setValue(vsb.value() + self.scrollSpeedY)
+    ########## SLOTS ##########
 
     @QtCore.pyqtSlot(int)
     def setActiveKey(self, key):
@@ -831,6 +822,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         scenePos = self.view.mapToScene(QtCore.QPoint(pos, 0)).x()
         self.markerPos = scenePos
         self.update()
+
+    ########## COORDINATE TRANSFORMATION ##########
 
     def updateSceneSize(self):
         if len(self.items()) > 1:
@@ -869,6 +862,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         viewTransform = self.view.transform()
         return self.itemAt(viewPos, viewTransform)
 
+    ########## NOTE BLOCKS ##########
+
+    def noteBlocks(self):
+        """An iterator which yields all the note blocks in the scene."""
+        for item in self.items():
+            if isinstance(item, NoteBlock):
+                yield item
+
     def clear(self):
         """Clear all note blocks in the scene."""
         for item in self.noteBlocks():
@@ -897,6 +898,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.removeBlock(x, y)
         self.updateSceneSize()
 
+    ########## SELECTION ##########
+
     def setSelected(self, area: QtCore.QRectF, value=True):
         for item in self.items(area):
             item.setSelected(value)
@@ -916,6 +919,15 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 item.setSelected(False)
                 item.setZValue(0)
             self.updateSceneSize()
+
+    ########## EVENTS ##########
+
+    def timerEvent(self, event):
+        # Auto-scroll when dragging/moving near the edges
+        hsb = self.view.horizontalScrollBar()
+        vsb = self.view.verticalScrollBar()
+        hsb.setValue(hsb.value() + self.scrollSpeedX)
+        vsb.setValue(vsb.value() + self.scrollSpeedY)
 
     def mousePressEvent(self, event):
         self.selectionStart = event.scenePos()
