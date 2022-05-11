@@ -1,7 +1,7 @@
-from PyQt5 import QtCore, QtWidgets
 import qtawesome as qta
-from .constants import *
+from PyQt5 import QtCore, QtWidgets
 
+from .constants import *
 
 __all__ = ["LayerArea"]
 

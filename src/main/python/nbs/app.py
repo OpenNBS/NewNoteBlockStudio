@@ -1,7 +1,8 @@
 import os
-from PyQt5 import QtCore, QtWidgets
+
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from nbs.mainwindow import MainWindow
+from PyQt5 import QtCore
 
 
 class AppContext(ApplicationContext):

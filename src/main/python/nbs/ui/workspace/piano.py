@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .constants import *
 
+from .constants import *
 
 __all__ = ["PianoWidget", "PianoScroll"]
 

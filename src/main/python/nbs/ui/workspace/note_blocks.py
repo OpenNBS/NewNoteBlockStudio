@@ -1,10 +1,11 @@
-from typing import Union
-from PyQt5 import QtCore, QtGui, QtWidgets
 import math
-from nbs.ui.menus import EditMenu
-from .constants import *
-from nbs.core.utils import *
+from typing import Union
 
+from nbs.core.utils import *
+from nbs.ui.menus import EditMenu
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+from .constants import *
 
 __all__ = ["NoteBlockArea"]
 

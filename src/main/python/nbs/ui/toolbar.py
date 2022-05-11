@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
 from nbs.ui.actions import Actions
+from PyQt5 import QtWidgets
 
 
 class ToolBar(QtWidgets.QToolBar):

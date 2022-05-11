@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from PyQt5 import QtWidgets
 
 appctxt = ApplicationContext()
 

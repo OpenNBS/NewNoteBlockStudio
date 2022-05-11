@@ -1,4 +1,5 @@
 import sys
+
 from nbs.app import AppContext
 
 if __name__ == "__main__":

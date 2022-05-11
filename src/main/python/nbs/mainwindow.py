@@ -1,8 +1,7 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-import qtawesome as qta
-from nbs.ui.toolbar import ToolBar
 from nbs.ui.menus import MenuBar
+from nbs.ui.toolbar import ToolBar
 from nbs.ui.workspace import *
+from PyQt5 import QtCore, QtWidgets
 
 
 class MainWindow(QtWidgets.QMainWindow):

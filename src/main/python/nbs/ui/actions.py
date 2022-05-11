@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
-from PyQt5.QtGui import QIcon
 import qtawesome as qta
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
 
 
 class Actions:

@@ -1,5 +1,5 @@
-from PyQt5 import QtGui, QtWidgets
 from nbs.ui.actions import Actions
+from PyQt5 import QtGui, QtWidgets
 
 
 class FileMenu(QtWidgets.QMenu):

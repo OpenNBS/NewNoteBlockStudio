@@ -1,6 +1,5 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
 from nbs.core.utils import *
-
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ["TimeBar"]
 
