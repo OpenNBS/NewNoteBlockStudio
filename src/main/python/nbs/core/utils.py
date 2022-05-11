@@ -1,6 +1,3 @@
-KEY_LABELS = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-
-
 def ticks_to_seconds(ticks: float, tempo: float) -> float:
     return ticks / tempo
 
