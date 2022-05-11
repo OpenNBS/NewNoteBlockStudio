@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import math
 from typing import Union
 
 from nbs.core.utils import *
+from nbs.ui.actions import Actions
 from nbs.ui.menus import EditMenu
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -305,12 +308,19 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         menu = EditMenu(self.view, isFloat=True)
         menu.aboutToHide.connect(self.onCloseMenu)
+        self.connectMenuSignals()
         menu.exec(event.screenPos())
         return super().contextMenuEvent(event)
 
     @QtCore.pyqtSlot()
     def onCloseMenu(self):
         self.isClosingMenu = True
+
+    def connectMenuSignals(self):
+        Actions.deleteAction.triggered.connect(self.removeSelection)
+        Actions.selectAllAction.triggered.connect(self.selectAll)
+        Actions.deselectAllAction.triggered.connect(self.clearSelection)
+        Actions.invertSelectionAction.triggered.connect(self.invertSelection)
 
     ########## SLOTS ##########
 
@@ -388,15 +398,19 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.addBlock(x, y, *args, **kwargs)
         self.updateSceneSize()
 
-    def removeBlock(self, x, y):
+    def removeBlock(self, block: NoteBlock) -> None:
+        self.removeItem(block)
+        # TODO: self.blockRemoved.emit()
+
+    def removeBlockAt(self, x, y):
         """Remove the note block at the specified position."""
         pos = self.getScenePos(x, y)
         clicked = self.itemAt(pos, QtGui.QTransform())
         if isinstance(clicked, NoteBlock):
-            self.removeItem(clicked)
+            self.removeBlock(clicked)
 
     def removeBlockManual(self, x, y):
-        self.removeBlock(x, y)
+        self.removeBlockAt(x, y)
         self.updateSceneSize()
 
     ########## SELECTION ##########
@@ -409,6 +423,23 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def hasSelection(self):
         return len(self.selectedItems()) > 0
 
+    @QtCore.pyqtSlot()
+    def selectAll(self):
+        for block in self.items():
+            block.setSelected(True)
+            block.setZValue(1)
+
+    @QtCore.pyqtSlot()
+    def invertSelection(self):
+        for block in self.items():
+            if block.isSelected():
+                block.setSelected(False)
+                block.setZValue(0)
+            else:
+                block.setSelected(True)
+                block.setZValue(1)
+
+    @QtCore.pyqtSlot()
     def clearSelection(self):
         if self.hasSelection():
             # This is done to prevent the next mouse
@@ -420,6 +451,15 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 item.setSelected(False)
                 item.setZValue(0)
             self.updateSceneSize()
+
+    def moveSelection(self, x: int, y: int):
+        for block in self.selectedItems():
+            block.moveBy(x * BLOCK_SIZE, y * BLOCK_SIZE)
+
+    @QtCore.pyqtSlot()
+    def removeSelection(self):
+        for block in self.selectedItems():
+            self.removeBlock(block)
 
     ########## EVENTS ##########
 
