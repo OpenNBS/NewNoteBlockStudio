@@ -144,6 +144,30 @@ class Actions:
         Actions.pasteAction.setDisabled(not hasClipboard)
 
     @classmethod
+    def setSelectionActionsEnabled(cls, enabled: bool = True):
+        cls.cutAction.setEnabled(enabled)
+        cls.copyAction.setEnabled(enabled)
+        cls.deleteAction.setEnabled(enabled)
+        cls.deselectAllAction.setEnabled(enabled)
+        cls.increaseOctaveAction.setEnabled(enabled)
+        cls.decreaseOctaveAction.setEnabled(enabled)
+        cls.increaseKeyAction.setEnabled(enabled)
+        cls.decreaseKeyAction.setEnabled(enabled)
+        # cls.changeInstrumentActionGroup.setEnabled(enabled)
+        cls.expandSelectionAction.setEnabled(enabled)
+        cls.compressSelectionAction.setEnabled(enabled)
+        cls.transposeNotesAction.setEnabled(enabled)
+        # cls.macrosActionGroup.setEnabled(enabled)
+
+    @classmethod
+    def setFullSelectionActionsEnabled(cls, enabled: bool = False):
+        cls.selectAllAction.setEnabled(enabled)
+        cls.selectAllLeftAction.setEnabled(enabled)
+        cls.selectAllRightAction.setEnabled(enabled)
+        cls.selectAllInstrumentAction.setEnabled(enabled)
+        cls.selectAllButInstrumentAction.setEnabled(enabled)
+
+    @classmethod
     def setSelectionStatus(cls, selection: int) -> None:
         if selection == -1:
             cls.setNoneSelected()
@@ -154,21 +178,15 @@ class Actions:
 
     @classmethod
     def setAllSelected(cls):
-        cls.setSomeSelected()
-        cls.selectAllAction.setDisabled(True)
+        cls.setSelectionActionsEnabled(True)
+        cls.setFullSelectionActionsEnabled(False)
 
     @classmethod
     def setSomeSelected(cls):
-        cls.cutAction.setEnabled(True)
-        cls.copyAction.setEnabled(True)
-        cls.deleteAction.setEnabled(True)
-        cls.deselectAllAction.setEnabled(True)
-        cls.selectAllAction.setEnabled(True)
+        cls.setSelectionActionsEnabled(True)
+        cls.setFullSelectionActionsEnabled(True)
 
     @classmethod
     def setNoneSelected(cls):
-        cls.cutAction.setDisabled(True)
-        cls.copyAction.setDisabled(True)
-        cls.deleteAction.setDisabled(True)
-        cls.deselectAllAction.setDisabled(True)
-        cls.selectAllAction.setEnabled(True)
+        cls.setSelectionActionsEnabled(False)
+        cls.setFullSelectionActionsEnabled(True)
