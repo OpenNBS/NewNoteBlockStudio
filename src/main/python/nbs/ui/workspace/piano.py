@@ -2,6 +2,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .constants import *
 
 
+__all__ = ["PianoWidget", "PianoScroll"]
+
+
 class PianoKey(QtWidgets.QWidget):
     """
     A single piano key, which can be white or black.

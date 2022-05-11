@@ -6,6 +6,9 @@ from .constants import *
 from nbs.core.utils import *
 
 
+__all__ = ["NoteBlockArea"]
+
+
 class TimeRuler(QtWidgets.QWidget):
 
     clicked = QtCore.pyqtSignal(int)
