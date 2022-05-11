@@ -307,8 +307,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         selectionStatus = self.selectionStatus()
-        print(selectionStatus)
-        menu = EditMenu(self.view, isFloat=True, selection=selectionStatus)
+        Actions.setSelectionStatus(selectionStatus)
+        menu = EditMenu(self.view, isFloat=True)
         menu.aboutToHide.connect(self.onCloseMenu)
         self.connectMenuSignals()
         menu.exec(event.screenPos())
@@ -425,7 +425,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def hasSelection(self):
         return len(self.selectedItems()) > 0
 
-    def selectionStatus(self) -> int:
+    def selectionStatus(self):
         if self.hasSelection():
             print(self.items())
             if len(self.selectedItems()) == len(list(self.noteBlocks())):

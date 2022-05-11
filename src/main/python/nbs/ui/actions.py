@@ -138,3 +138,37 @@ class Actions:
         cls.donateAction = QAction(icons["donate"], "Donate...")
         cls.changelogAction = QAction(icons["changelog"], "Changelog...")
         cls.aboutAction = QAction(icons["about"], "About...")
+
+    @classmethod
+    def setClipboard(cls, hasClipboard: bool) -> None:
+        Actions.pasteAction.setDisabled(not hasClipboard)
+
+    @classmethod
+    def setSelectionStatus(cls, selection: int) -> None:
+        if selection == -1:
+            cls.setNoneSelected()
+        elif selection == 0:
+            cls.setSomeSelected()
+        elif selection == 1:
+            cls.setAllSelected()
+
+    @classmethod
+    def setAllSelected(cls):
+        cls.setSomeSelected()
+        cls.selectAllAction.setDisabled(True)
+
+    @classmethod
+    def setSomeSelected(cls):
+        cls.cutAction.setEnabled(True)
+        cls.copyAction.setEnabled(True)
+        cls.deleteAction.setEnabled(True)
+        cls.deselectAllAction.setEnabled(True)
+        cls.selectAllAction.setEnabled(True)
+
+    @classmethod
+    def setNoneSelected(cls):
+        cls.cutAction.setDisabled(True)
+        cls.copyAction.setDisabled(True)
+        cls.deleteAction.setDisabled(True)
+        cls.deselectAllAction.setDisabled(True)
+        cls.selectAllAction.setEnabled(True)

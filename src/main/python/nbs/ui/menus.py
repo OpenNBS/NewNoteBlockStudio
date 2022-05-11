@@ -54,14 +54,6 @@ class EditMenu(QtWidgets.QMenu):
         self.setTitle("Edit")
         self.addEntries()
 
-        if selection == -1:
-            self.setNoneSelected()
-        elif selection == 1:
-            self.setAllSelected()
-
-        if not clipboard:
-            self.setPasteDisabled()
-
     def addEntries(self):
         if self.isFloat:
             self.cutAction = self.addAction(Actions.cutAction)
@@ -110,18 +102,6 @@ class EditMenu(QtWidgets.QMenu):
 
         self.transposeNotesAction = self.addAction(Actions.transposeNotesAction)
         self.macrosMenu = self.addMenu("Macros...")
-
-    def setAllSelected(self):
-        Actions.selectAllAction.setDisabled(True)
-
-    def setNoneSelected(self):
-        Actions.cutAction.setDisabled(True)
-        Actions.copyAction.setDisabled(True)
-        Actions.deleteAction.setDisabled(True)
-        Actions.deselectAllAction.setDisabled(True)
-
-    def setPasteDisabled(self):
-        Actions.pasteAction.setDisabled(True)
 
     def addInstrumentEntry(self, instrument):
         pass
