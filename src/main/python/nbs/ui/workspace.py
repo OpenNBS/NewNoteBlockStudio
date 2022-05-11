@@ -1063,27 +1063,6 @@ class Workspace(QtWidgets.QSplitter):
         )
         self.timeBar.tempoChanged.connect(self.noteBlockWidget.view.ruler.setTempo)
 
-    def setSingleScrollBar(self):
-        """
-        Add the workspace and a horizontal scrollbar to a
-        vertical layout, creating a scrollbar at the bottom
-        that spans both the layer box and the note block area.
-        Remove the call to this function to have the scrollbar
-        span just the note block area.
-        """
-        self.view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        scrollBar = QtWidgets.QScrollBar()
-        scrollBar.setOrientation(QtCore.Qt.Horizontal)
-        scrollBar.setMinimum(0)
-        scrollBar.setMaximum(150)
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self)
-        layout.addWidget(scrollBar)
-        container = QtWidgets.QWidget()
-        container.setLayout(layout)
-
     def resetWorkspace(self):
         self.layerWidget.initUI()
         self.noteBlockWidget.clear()
@@ -1114,21 +1093,4 @@ class CentralArea(QtWidgets.QSplitter):
         # TODO: perhaps a QVBoxLayout is more appropriate here?
         self.piano.piano.activeKeyChanged.connect(
             self.workspace.noteBlockWidget.setActiveKey
-        )
-
-
-class InstrumentButton(QtWidgets.QToolButton):
-    """Buttons for the instrument selection in the toolbar"""
-
-    def __init__(self, instrument, parent=None):
-        super().__init__(parent)
-        self.setCheckable(True)
-
-        icon = QtGui.QIcon(
-            appctxt.get_resource("images/instruments/{}.png".format(instrument))
-        )
-        # TODO: make icon for custom instruments
-        self.setIcon(icon)
-        self.setToolTip(
-            "Change instrument to {}".format(" ".join(instrument.split("_")).title())
         )
