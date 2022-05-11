@@ -1,9 +1,12 @@
 from PyQt5 import QtCore, QtWidgets
-from nbs.ui.workspace import NoteBlockArea
-from nbs.ui.piano import PianoScroll
-from nbs.ui.layers import LayerArea
-from nbs.ui.time_bar import TimeBar
-from nbs.ui.constants import *
+from .note_blocks import NoteBlockArea
+from .piano import PianoScroll
+from .layers import LayerArea
+from .time_bar import TimeBar
+from .constants import *
+
+
+__all__ = ["CentralArea"]
 
 
 class Workspace(QtWidgets.QSplitter):

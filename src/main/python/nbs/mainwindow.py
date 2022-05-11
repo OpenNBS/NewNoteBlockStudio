@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import qtawesome as qta
 from nbs.ui.toolbar import ToolBar
 from nbs.ui.menus import MenuBar
-import nbs.ui.workspace2
+from nbs.ui.workspace import *
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -15,7 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initUI(self):
         menuBar = MenuBar()
         toolBar = ToolBar()
-        mainArea = nbs.ui.workspace2.CentralArea(self)
+        mainArea = CentralArea(self)
 
         self.setMenuBar(menuBar)
         self.addToolBar(toolBar)

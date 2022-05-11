@@ -2,7 +2,7 @@ from typing import Union
 from PyQt5 import QtCore, QtGui, QtWidgets
 import math
 from nbs.ui.menus import EditMenu
-from nbs.ui.constants import *
+from .constants import *
 from nbs.core.utils import *
 
 

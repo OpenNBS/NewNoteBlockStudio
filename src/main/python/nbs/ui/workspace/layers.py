@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 import qtawesome as qta
-from nbs.ui.constants import *
+from .constants import *
 
 
 class VerticalScrollArea(QtWidgets.QScrollArea):

@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from nbs.ui.constants import *
+from .constants import *
 
 
 class PianoKey(QtWidgets.QWidget):
