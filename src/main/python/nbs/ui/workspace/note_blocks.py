@@ -489,6 +489,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def deleteSelection(self):
         for block in self.selectedItems():
             self.removeBlock(block)
+        self.updateSelectionStatus()
 
     ########## EVENTS ##########
 
