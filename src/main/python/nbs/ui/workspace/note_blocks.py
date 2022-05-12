@@ -416,25 +416,25 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         if isinstance(clicked, NoteBlock):
             self.removeBlock(clicked)
 
-    def setNoteSelected(self, block: NoteBlock, selected: bool = True) -> None:
-        block.setSelected(selected)
-        block.setZValue(1 if selected else 0)
-        # self.selectionChanged.emit()
-
     def removeBlockManual(self, x, y):
         self.removeBlockAt(x, y)
         self.updateSceneSize()
 
     ########## SELECTION ##########
 
-    def setBlocksSelected(self, blocks: Sequence[NoteBlock], value: bool = True):
+    def setBlockSelected(self, block: NoteBlock, selected: bool = True) -> None:
+        block.setSelected(selected)
+        block.setZValue(1 if selected else 0)
+        # self.selectionChanged.emit()
+
+    def setBlocksSelected(self, blocks: Sequence[NoteBlock], selected: bool = True):
         for block in blocks:
-            self.setNoteSelected(block, value)
+            self.setBlockSelected(block, selected)
         self.updateSelectionStatus()
         self.selectionChanged.emit(self.selectionStatus)
 
-    def setAreaSelected(self, area: QtCore.QRectF, value: bool = True):
-        self.setBlocksSelected(self.items(area))
+    def setAreaSelected(self, area: QtCore.QRectF, selected: bool = True):
+        self.setBlocksSelected(self.items(area), selected)
 
     def hasSelection(self):
         return len(self.selectedItems()) > 0
