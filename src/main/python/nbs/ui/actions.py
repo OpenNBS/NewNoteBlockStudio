@@ -145,6 +145,12 @@ class Actions(QtCore.QObject):
         Actions.pasteAction.setDisabled(not hasClipboard)
 
     @classmethod
+    def setEmptyActionsEnabled(cls, enabled: bool = True):
+        # There's ought to be a better way. I shouldn't need to
+        # manually go through all actions here
+        pass
+
+    @classmethod
     def setSelectionActionsEnabled(cls, enabled: bool = True):
         cls.cutAction.setEnabled(enabled)
         cls.copyAction.setEnabled(enabled)
@@ -170,12 +176,18 @@ class Actions(QtCore.QObject):
 
     @QtCore.pyqtSlot(int)
     def setSelectionStatus(selection: int) -> None:
+        if selection == -2:
+            Actions.setEmpty()
         if selection == -1:
             Actions.setNoneSelected()
         elif selection == 0:
             Actions.setSomeSelected()
         elif selection == 1:
             Actions.setAllSelected()
+
+    @classmethod
+    def setEmpty(cls):
+        cls.setEmptyActionsEnabled(False)
 
     @classmethod
     def setAllSelected(cls):

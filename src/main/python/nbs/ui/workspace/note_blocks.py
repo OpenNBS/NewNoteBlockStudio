@@ -440,7 +440,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return len(self.selectedItems()) > 0
 
     def updateSelectionStatus(self):
-        if self.hasSelection():
+        if len(list(self.noteBlocks())) == 0:
+            self.selectionStatus = -2
+        elif self.hasSelection():
             if len(self.selectedItems()) == len(list(self.noteBlocks())):
                 self.selectionStatus = 1
             else:
