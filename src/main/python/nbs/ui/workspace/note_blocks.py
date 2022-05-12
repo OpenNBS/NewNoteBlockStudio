@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Sequence, Union
+from typing import Optional, Sequence, Union
 
 from nbs.core.utils import *
 from nbs.ui.actions import Actions
@@ -275,6 +275,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.isMovingBlocks = False
         self.isRemovingNote = False
         self.isClosingMenu = False
+        self.menuClickPos = None
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         self.activeKey = 45
@@ -316,6 +317,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.connectMenuSignals()
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        self.menuClickPos = event.scenePos()
         self.toggleSelectLeftRightActions(event.scenePos())
         self.menu.exec(event.screenPos())
         return super().contextMenuEvent(event)
@@ -329,6 +331,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Actions.selectAllAction.triggered.connect(self.selectAll)
         Actions.deselectAllAction.triggered.connect(self.deselectAll)
         Actions.invertSelectionAction.triggered.connect(self.invertSelection)
+        Actions.selectAllLeftAction.triggered.connect(self.selectAllLeft)
+        Actions.selectAllRightAction.triggered.connect(self.selectAllRight)
 
     def toggleSelectLeftRightActions(self, pos: Union[QtCore.QPoint, QtCore.QPointF]):
         bbox = self.itemsBoundingRect()
@@ -500,6 +504,27 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def moveSelection(self, x: int, y: int):
         for block in self.selectedItems():
             block.moveBy(x * BLOCK_SIZE, y * BLOCK_SIZE)
+
+    @QtCore.pyqtSlot()
+    def selectAllLeft(self, pos: Optional[Union[QtCore.QPoint, QtCore.QPointF]] = None):
+        self.deselectAll()
+        if pos is None:
+            pos = self.menuClickPos.x()
+        height = self.height()
+        area = QtCore.QRectF(0, 0, pos, height)
+        self.setAreaSelected(area)
+
+    @QtCore.pyqtSlot()
+    def selectAllRight(
+        self, pos: Optional[Union[QtCore.QPoint, QtCore.QPointF]] = None
+    ):
+        self.deselectAll()
+        if pos is None:
+            pos = self.menuClickPos.x()
+        width = self.width()
+        height = self.height()
+        area = QtCore.QRectF(pos, 0, width, height)
+        self.setAreaSelected(area)
 
     @QtCore.pyqtSlot()
     def deleteSelection(self):
