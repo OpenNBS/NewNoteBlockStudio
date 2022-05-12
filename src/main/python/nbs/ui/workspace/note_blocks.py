@@ -259,7 +259,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     A scrolling area that holds the note blocks in a song.
     """
 
+    ########## Private slots ##########
     sceneSizeChanged = QtCore.pyqtSignal(int, int)
+
+    ########## Public slots ##########
+    selectionChanged = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -306,8 +310,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     ########## MENU ##########
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
-        selectionStatus = self.selectionStatus()
-        Actions.setSelectionStatus(selectionStatus)
         menu = EditMenu(self.view, isFloat=True)
         menu.aboutToHide.connect(self.onCloseMenu)
         self.connectMenuSignals()
@@ -411,27 +413,34 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         if isinstance(clicked, NoteBlock):
             self.removeBlock(clicked)
 
+    def setNoteSelected(self, block: NoteBlock, selected: bool = True) -> None:
+        block.setSelected(selected)
+        block.setZValue(1 if selected else 0)
+        # self.selectionChanged.emit()
+
     def removeBlockManual(self, x, y):
         self.removeBlockAt(x, y)
         self.updateSceneSize()
 
     ########## SELECTION ##########
 
-    def setSelected(self, area: QtCore.QRectF, value=True):
-        for item in self.items(area):
-            item.setSelected(value)
-            item.setZValue(1 if value else 0)
+    def setSelected(self, area: QtCore.QRectF, value: bool = True):
+        for block in self.items(area):
+            self.setNoteSelected(block)
+        self.updateSelectionStatus()
+        self.selectionChanged.emit(self.selectionStatus)
 
     def hasSelection(self):
         return len(self.selectedItems()) > 0
 
-    def selectionStatus(self):
+    def updateSelectionStatus(self):
         if self.hasSelection():
-            print(self.items())
             if len(self.selectedItems()) == len(list(self.noteBlocks())):
-                return 1
-            return 0
-        return -1
+                self.selectionStatus = 1
+            else:
+                self.selectionStatus = 0
+        else:
+            self.selectionStatus = -1
 
     @QtCore.pyqtSlot()
     def selectAll(self):

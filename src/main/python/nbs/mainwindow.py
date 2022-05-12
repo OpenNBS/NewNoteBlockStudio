@@ -1,3 +1,4 @@
+from nbs.ui.actions import Actions
 from nbs.ui.menus import MenuBar
 from nbs.ui.toolbar import ToolBar
 from nbs.ui.workspace import *
@@ -19,6 +20,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(menuBar)
         self.addToolBar(toolBar)
         self.setCentralWidget(mainArea)
+
+        mainArea.workspace.noteBlockWidget.selectionChanged.connect(
+            Actions.setSelectionStatus
+        )
 
     #
     #

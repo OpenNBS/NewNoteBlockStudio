@@ -1,9 +1,10 @@
 import qtawesome as qta
+from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
 
 
-class Actions:
+class Actions(QtCore.QObject):
     @classmethod
     def initActions(cls):
 
@@ -167,14 +168,14 @@ class Actions:
         cls.selectAllInstrumentAction.setEnabled(enabled)
         cls.selectAllButInstrumentAction.setEnabled(enabled)
 
-    @classmethod
-    def setSelectionStatus(cls, selection: int) -> None:
+    @QtCore.pyqtSlot(int)
+    def setSelectionStatus(selection: int) -> None:
         if selection == -1:
-            cls.setNoneSelected()
+            Actions.setNoneSelected()
         elif selection == 0:
-            cls.setSomeSelected()
+            Actions.setSomeSelected()
         elif selection == 1:
-            cls.setAllSelected()
+            Actions.setAllSelected()
 
     @classmethod
     def setAllSelected(cls):
