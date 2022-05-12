@@ -316,6 +316,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.connectMenuSignals()
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        self.toggleSelectLeftRightActions(event.scenePos())
         self.menu.exec(event.screenPos())
         return super().contextMenuEvent(event)
 
@@ -328,6 +329,19 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Actions.selectAllAction.triggered.connect(self.selectAll)
         Actions.deselectAllAction.triggered.connect(self.deselectAll)
         Actions.invertSelectionAction.triggered.connect(self.invertSelection)
+
+    def toggleSelectLeftRightActions(self, pos: Union[QtCore.QPoint, QtCore.QPointF]):
+        bbox = self.itemsBoundingRect()
+
+        if pos.x() < bbox.left():
+            Actions.selectAllLeftAction.setEnabled(False)
+        else:
+            Actions.selectAllLeftAction.setEnabled(True)
+
+        if pos.x() > bbox.right():
+            Actions.selectAllRightAction.setEnabled(False)
+        else:
+            Actions.selectAllRightAction.setEnabled(True)
 
     ########## SLOTS ##########
 
