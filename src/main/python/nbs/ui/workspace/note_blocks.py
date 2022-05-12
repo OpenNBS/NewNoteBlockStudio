@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Union
+from typing import Sequence, Union
 
 from nbs.core.utils import *
 from nbs.ui.actions import Actions
@@ -321,9 +321,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.isClosingMenu = True
 
     def connectMenuSignals(self):
-        Actions.deleteAction.triggered.connect(self.removeSelection)
+        Actions.deleteAction.triggered.connect(self.deleteSelection)
         Actions.selectAllAction.triggered.connect(self.selectAll)
-        Actions.deselectAllAction.triggered.connect(self.clearSelection)
+        Actions.deselectAllAction.triggered.connect(self.deselectAll)
         Actions.invertSelectionAction.triggered.connect(self.invertSelection)
 
     ########## SLOTS ##########
@@ -424,11 +424,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## SELECTION ##########
 
-    def setSelected(self, area: QtCore.QRectF, value: bool = True):
-        for block in self.items(area):
-            self.setNoteSelected(block)
+    def setBlocksSelected(self, blocks: Sequence[NoteBlock], value: bool = True):
+        for block in blocks:
+            self.setNoteSelected(block, value)
         self.updateSelectionStatus()
         self.selectionChanged.emit(self.selectionStatus)
+
+    def setAreaSelected(self, area: QtCore.QRectF, value: bool = True):
+        self.setBlocksSelected(self.items(area))
 
     def hasSelection(self):
         return len(self.selectedItems()) > 0
@@ -444,39 +447,43 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot()
     def selectAll(self):
-        for block in self.items():
-            block.setSelected(True)
-            block.setZValue(1)
+        self.setBlocksSelected(self.items(), True)
 
     @QtCore.pyqtSlot()
-    def invertSelection(self):
-        for block in self.items():
-            if block.isSelected():
-                block.setSelected(False)
-                block.setZValue(0)
-            else:
-                block.setSelected(True)
-                block.setZValue(1)
+    def deselectAll(self):  # clearSelection/placeSelection
+        if self.hasSelection():
+            self._clearBlocksUnderSelection()
+            self.setBlocksSelected(self.items(), False)
+            self.updateSceneSize()
 
     @QtCore.pyqtSlot()
-    def clearSelection(self):
+    def deselectAllManual(self):
         if self.hasSelection():
             # This is done to prevent the next mouse
             # release from adding a note block
             self.isClearingSelection = True
-            for item in self.selectedItems():
-                for i in item.collidingItems():
-                    self.removeItem(i)
-                item.setSelected(False)
-                item.setZValue(0)
-            self.updateSceneSize()
+            self.deselectAll()
+
+    def _clearBlocksUnderSelection(self):
+        for item in self.selectedItems():
+            for i in item.collidingItems():
+                self.removeBlock(i)
+
+    @QtCore.pyqtSlot()
+    def invertSelection(self):
+        unselected = []
+        for block in self.items():
+            if not block.isSelected():
+                unselected.append(block)
+        self.deselectAll()
+        self.setBlocksSelected(unselected, True)
 
     def moveSelection(self, x: int, y: int):
         for block in self.selectedItems():
             block.moveBy(x * BLOCK_SIZE, y * BLOCK_SIZE)
 
     @QtCore.pyqtSlot()
-    def removeSelection(self):
+    def deleteSelection(self):
         for block in self.selectedItems():
             self.removeBlock(block)
 
@@ -503,7 +510,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                     not QtGui.QGuiApplication.keyboardModifiers()
                     == QtCore.Qt.ControlModifier
                 ):
-                    self.clearSelection()
+                    self.deselectAllManual()
                 self.selection.setStyleSheet("")
         self.selection.show()
 
@@ -515,9 +522,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             selectionArea = QtCore.QRectF(self.selection.geometry())
             # TODO: Update selection as the selection box is dragged
             if event.button() == QtCore.Qt.LeftButton:
-                self.setSelected(selectionArea, True)
+                self.setAreaSelected(selectionArea, True)
             elif event.button() == QtCore.Qt.RightButton:
-                self.setSelected(selectionArea, False)
+                self.setAreaSelected(selectionArea, False)
             self.selection.hide()
             self.selection.setGeometry(QtCore.QRect(0, 0, 0, 0))
             self.isDraggingSelection = False
