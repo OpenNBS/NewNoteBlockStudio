@@ -334,6 +334,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Actions.selectAllLeftAction.triggered.connect(self.selectAllLeft)
         Actions.selectAllRightAction.triggered.connect(self.selectAllRight)
         Actions.expandSelectionAction.triggered.connect(self.expandSelection)
+        Actions.compressSelectionAction.triggered.connect(self.compressSelection)
 
     def toggleSelectLeftRightActions(self, pos: Union[QtCore.QPoint, QtCore.QPointF]):
         bbox = self.itemsBoundingRect()
@@ -536,9 +537,23 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def expandSelection(self):
         bbox = self.selectionBoundingRect()
         origin = bbox.topLeft()
+        
         for block in self.selectedItems():
             relativePosX = block.x() - origin.x()
             block.moveBy(relativePosX, 0)
+
+    def compressSelection(self):
+        bbox = self.selectionBoundingRect()
+        origin = bbox.topLeft()
+
+        for block in self.selectedItems():
+            relativePosX = block.x() - origin.x()
+            distance = (-relativePosX / 2) // BLOCK_SIZE * BLOCK_SIZE
+            block.moveBy(distance, 0)
+
+        for block in self.selectedItems():
+            while block.collidingItems():
+                block.moveBy(0, BLOCK_SIZE)
 
     @QtCore.pyqtSlot()
     def deleteSelection(self):
