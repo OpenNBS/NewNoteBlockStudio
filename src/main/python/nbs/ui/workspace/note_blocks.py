@@ -333,6 +333,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Actions.invertSelectionAction.triggered.connect(self.invertSelection)
         Actions.selectAllLeftAction.triggered.connect(self.selectAllLeft)
         Actions.selectAllRightAction.triggered.connect(self.selectAllRight)
+        Actions.expandSelectionAction.triggered.connect(self.expandSelection)
 
     def toggleSelectLeftRightActions(self, pos: Union[QtCore.QPoint, QtCore.QPointF]):
         bbox = self.itemsBoundingRect()
@@ -468,6 +469,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         else:
             self.selectionStatus = -1
 
+    def selectionBoundingRect(self) -> QtCore.QRectF:
+        rect = QtCore.QRectF()
+        for selectedItem in self.selectedItems():
+            rect = rect.united(selectedItem.sceneBoundingRect())
+        return rect
+
     @QtCore.pyqtSlot()
     def selectAll(self):
         self.setBlocksSelected(self.items(), True)
@@ -525,6 +532,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         height = self.height()
         area = QtCore.QRectF(pos, 0, width, height)
         self.setAreaSelected(area)
+
+    def expandSelection(self):
+        bbox = self.selectionBoundingRect()
+        origin = bbox.topLeft()
+        for block in self.selectedItems():
+            relativePosX = block.x() - origin.x()
+            block.moveBy(relativePosX, 0)
 
     @QtCore.pyqtSlot()
     def deleteSelection(self):
