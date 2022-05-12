@@ -286,6 +286,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def initUI(self):
         self.updateSceneSize()
         self.installEventFilter(self)
+        self.initMenu()
         self.view.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
         self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
@@ -309,11 +310,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## MENU ##########
 
-    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
-        menu = EditMenu(self.view, isFloat=True)
-        menu.aboutToHide.connect(self.onCloseMenu)
+    def initMenu(self):
+        self.menu = EditMenu(self.view, isFloat=True)
+        self.menu.aboutToHide.connect(self.onCloseMenu)
         self.connectMenuSignals()
-        menu.exec(event.screenPos())
+
+    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        self.menu.exec(event.screenPos())
         return super().contextMenuEvent(event)
 
     @QtCore.pyqtSlot()
