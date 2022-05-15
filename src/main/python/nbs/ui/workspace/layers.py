@@ -26,9 +26,19 @@ class VerticalScrollArea(QtWidgets.QScrollArea):
 class LayerBar(QtWidgets.QToolBar):
     """A single layer bar."""
 
+    volumeChanged = QtCore.pyqtSignal(int, int)
+    panningChanged = QtCore.pyqtSignal(int, int)
+    lockChanged = QtCore.pyqtSignal(int, bool)
+    soloChanged = QtCore.pyqtSignal(int, bool)
+    selectAllClicked = QtCore.pyqtSignal(int)
+    addClicked = QtCore.pyqtSignal(int)
+    removeClicked = QtCore.pyqtSignal(int)
+    shiftUpClicked = QtCore.pyqtSignal(int)
+    shiftDownClicked = QtCore.pyqtSignal(int)
+
     def __init__(
         self,
-        num,
+        id,
         height,
         name="",
         volume=100,
@@ -38,7 +48,7 @@ class LayerBar(QtWidgets.QToolBar):
         parent=None,
     ):
         super().__init__(parent)
-        self.num = num
+        self.id = id
         self.name = name
         self.volume = volume
         self.panning = panning
@@ -51,9 +61,10 @@ class LayerBar(QtWidgets.QToolBar):
         return {
             "volume": qta.icon("mdi.volume-high"),
             "stereo": qta.icon("mdi.equalizer"),
-            "lock_locked": qta.icon("mdi.lock-outline"),
-            "lock_unlocked": qta.icon("mdi.lock-open-variant-outline"),
-            "solo": qta.icon("mdi.exclamation-thick"),
+            "lock": qta.icon(
+                "mdi.lock-outline", selected="mdi.lock-open-variant-outline"
+            ),
+            "solo": qta.icon("mdi.exclamation", selected="mdi.exclamation-thick"),
             "select_all": qta.icon("mdi.select-all"),
             "insert": qta.icon("mdi.plus-circle-outline"),  # mdi.plus-box
             "remove": qta.icon("mdi.delete-outline"),  # mdi.trash-can
@@ -84,7 +95,7 @@ class LayerBar(QtWidgets.QToolBar):
     def addContents(self):
         self.nameBox = QtWidgets.QLineEdit()
         self.nameBox.setFixedSize(76, 16)
-        self.nameBox.setPlaceholderText("Layer {}".format(self.num + 1))
+        self.nameBox.setPlaceholderText("Layer {}".format(self.id + 1))
         self.addWidget(self.nameBox)
 
         self.volumeDial = QtWidgets.QDial()
@@ -110,13 +121,47 @@ class LayerBar(QtWidgets.QToolBar):
 
         # self.addAction(self.icons["volume"], "Volume")
         # self.addAction(self.icons["stereo"], "Stereo panning")
-        self.addAction(self.icons["lock_unlocked"], "Lock this layer")
-        self.addAction(self.icons["solo"], "Solo this layer")
-        self.addAction(self.icons["select_all"], "Select all note blocks in this layer")
-        self.addAction(self.icons["insert"], "Add empty layer here")
-        self.addAction(self.icons["remove"], "Remove this layer")
-        self.addAction(self.icons["shift_up"], "Shift layer up")
-        self.addAction(self.icons["shift_down"], "Shift layer down")
+        lockAction = self.addAction(self.icons["lock"], "Lock this layer")
+        lockAction.setCheckable(True)
+        lockAction.triggered.connect(
+            lambda checked: self.lockChanged.emit(self.id, checked)
+        )
+
+        soloAction = self.addAction(
+            self.icons["solo"],
+            "Solo this layer",
+        )
+        soloAction.setCheckable(True)
+        soloAction.setCheckable(True)
+        soloAction.triggered.connect(
+            lambda checked: self.lockChanged.emit(self.id, checked)
+        )
+
+        selectAllAction = self.addAction(
+            self.icons["select_all"],
+            "Select all note blocks in this layer",
+            lambda: self.selectAllClicked.emit(self.id),
+        )
+        addAction = self.addAction(
+            self.icons["insert"],
+            "Add empty layer here",
+            lambda: self.addClicked.emit(self.id),
+        )
+        removeAction = self.addAction(
+            self.icons["remove"],
+            "Remove this layer",
+            lambda: self.removeClicked.emit(self.id),
+        )
+        shiftUpAction = self.addAction(
+            self.icons["shift_up"],
+            "Shift layer up",
+            lambda: self.shiftUpClicked.emit(self.id),
+        )
+        shiftDownAction = self.addAction(
+            self.icons["shift_down"],
+            "Shift layer down",
+            lambda: self.shiftDownClicked.emit(self.id),
+        )
 
     @QtCore.pyqtSlot(float)
     def changeScale(self, factor):
@@ -128,6 +173,15 @@ class LayerBar(QtWidgets.QToolBar):
 
 
 class LayerArea(VerticalScrollArea):
+
+    layerVolumeChanged = QtCore.pyqtSignal(int, int)
+    layerPanningChanged = QtCore.pyqtSignal(int, int)
+    layerLockChanged = QtCore.pyqtSignal(int, bool)
+    layerSoloChanged = QtCore.pyqtSignal(int, bool)
+    layerSelected = QtCore.pyqtSignal(int)
+    layerAdded = QtCore.pyqtSignal(int)
+    layerRemoved = QtCore.pyqtSignal(int)
+    layersSwapped = QtCore.pyqtSignal(int, int)
 
     changeScale = QtCore.pyqtSignal(float)
 
@@ -153,6 +207,17 @@ class LayerArea(VerticalScrollArea):
             self.layout.addWidget(layer.frame)
             self.layers.append(layer)
             self.changeScale.connect(layer.changeScale)
+
+            layer.volumeChanged.connect(self.changeLayerVolume)
+            layer.panningChanged.connect(self.changeLayerPanning)
+            layer.lockChanged.connect(self.changeLayerLock)
+            layer.soloChanged.connect(self.changeLayerSolo)
+            layer.selectAllClicked.connect(self.layerSelected)
+            layer.addClicked.connect(self.addLayer)
+            layer.removeClicked.connect(self.removeLayer)
+            layer.shiftUpClicked.connect(self.shiftLayerUp)
+            layer.shiftDownClicked.connect(self.shiftLayerDown)
+
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
         self.setWidget(self.container)
@@ -167,7 +232,7 @@ class LayerArea(VerticalScrollArea):
         self.layerHeight = height
 
     @QtCore.pyqtSlot(int, int)
-    def updateLayerCount(self, width, newSize):
+    def updateLayerCount(self, newSize):
         count = newSize // BLOCK_SIZE
         if self.layerCount < count:
             while self.layerCount < count:
@@ -183,3 +248,56 @@ class LayerArea(VerticalScrollArea):
                 i = self.layout.count()
                 print("REMOVING", i)
                 self.layout.takeAt(i)
+
+    ######## FEATURES ########
+
+    @QtCore.pyqtSlot(int, int)
+    def changeLayerVolume(self, id: int, volume: int):
+        self.layers[id].setVolume(volume)
+        self.layerVolumeChanged.emit(id, volume)
+
+    @QtCore.pyqtSlot(int, int)
+    def changeLayerPanning(self, id: int, panning: int):
+        self.layers[id].setPanning(panning)
+        self.layerPanningChanged.emit(id, panning)
+
+    @QtCore.pyqtSlot(int, bool)
+    def changeLayerLock(self, id: int, lock: bool):
+        self.layers[id].setLock(lock)
+        self.layerLockChanged.emit(id, lock)
+
+    @QtCore.pyqtSlot(int, bool)
+    def changeLayerSolo(self, id: int, solo: bool):
+        self.layers[id].setSolo(solo)
+        self.layerSoloChanged.emit(id, solo)
+
+    @QtCore.pyqtSlot(int)
+    def addLayer(self, pos: int):
+        newLayer = LayerBar(pos, BLOCK_SIZE)
+        self.layers.insert(pos, newLayer)
+        self.layerAdded.emit(pos)
+
+    @QtCore.pyqtSlot(int)
+    def removeLayer(self, pos: int):
+        self.layers.pop(pos)
+        self.layerRemoved.emit(pos)
+
+    def swapLayers(self, id1, id2):
+        temp = self.layers[id1]
+        self.layers[id1] = self.layers[id2]
+        self.layers[id2] = temp
+        self.layersSwapped.emit(id1, id2)
+
+    QtCore.pyqtSlot(int)
+
+    def shiftLayerUp(self, id):
+        if id == 0:
+            return
+        self.swapLayers(id, id - 1)
+
+    QtCore.pyqtSlot(int)
+
+    def shiftLayerDown(self, id):
+        if id == len(self.layers) - 1:
+            return
+        self.swapLayers(id, id + 1)

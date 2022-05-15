@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import math
-from typing import Optional, Sequence, Union
+from dataclasses import dataclass
+from typing import List, Optional, Sequence, Union
 
 from nbs.core.utils import *
 from nbs.ui.actions import Actions
@@ -190,6 +191,16 @@ class Marker(QtWidgets.QWidget):
         self.updatePos()
 
 
+@dataclass
+class Layer:
+    """Represents a layer in the note block area."""
+
+    lock: bool = True
+    solo: bool = True
+    vol: int = 100
+    pan: int = 0
+
+
 class NoteBlockView(QtWidgets.QGraphicsView):
 
     scaleChanged = QtCore.pyqtSignal(float)
@@ -268,6 +279,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.view = NoteBlockView(self)
+        self.layers = []
         self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
         self.selectionStart = None
         self.isDraggingSelection = False
@@ -374,6 +386,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE) * BLOCK_SIZE,
         )
         self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
+        self.updateLayerCount()
         self.sceneSizeChanged.emit(*newSize)
         print(*newSize)
 
@@ -560,6 +573,92 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for block in self.selectedItems():
             self.removeBlock(block)
         self.updateSelectionStatus()
+    ########## LAYERS ##########
+
+    def updateLayerCount(self):
+        layerCount = self.height() // BLOCK_SIZE
+        while len(self.layers) < layerCount:
+            self.layers.append(Layer())
+        while len(self.layers) > layerCount:
+            self.layers.pop()
+        print("New layer count:", len(self.layers))
+        print(self.layers)
+
+    def getLayerRegion(self, id: int) -> QtCore.QRectF:
+        y1 = id * BLOCK_SIZE
+        y2 = y1 + BLOCK_SIZE
+        region = QtCore.QRectF(0, y1, self.width(), y2)
+        print(0, y1, self.width(), y2)
+        return region
+
+    def getRegionBelowLayer(self, id: int) -> QtCore.QRectF:
+        yy = id * BLOCK_SIZE
+        region = QtCore.QRectF(0, yy, self.width(), self.height())
+        return region
+
+    def getBlocksInLayer(self, id: int) -> List[NoteBlock]:
+        layerRegion = self.getLayerRegion(id)
+        blocks = self.items(layerRegion)
+        return blocks
+
+    def getBlocksBelowLayer(self, id: int) -> List[NoteBlock]:
+        region = self.getRegionBelowLayer(id)
+        blocks = self.items(region)
+        return blocks
+
+    def setLayerVolume(self, id: int, volume: int):
+        self.layers[id].volune = volume
+
+    def setLayerPanning(self, id: int, panning: int):
+        self.layers[id].panning = panning
+
+    def setLayerLock(self, id: int, lock: bool):
+        self.layers[id].lock = lock
+
+    def setLayerSolo(self, id: int, solo: bool):
+        self.layers[id].lock = solo
+
+    def addLayer(self, id: int):
+        blocksToShift = self.getBlocksBelowLayer(id)
+        for block in blocksToShift:
+            block.moveBy(0, BLOCK_SIZE)
+
+        self.layers.insert(id, Layer())
+
+        self.updateSceneSize()
+
+    def removeLayer(self, id: int):
+        for block in self.getBlocksInLayer(id):
+            self.removeBlock(block)
+        blocksToShift = self.getBlocksBelowLayer(id)
+        for block in blocksToShift:
+            block.moveBy(0, -BLOCK_SIZE)
+
+        self.layers.pop(id)
+
+        self.updateSceneSize()
+
+    def selectAllInLayer(self, id: int, clearPrevious: bool = False):
+        if clearPrevious:
+            self.deselectAll()
+        self.setBlocksSelected(self.getBlocksInLayer(id))
+
+    def shiftLayers(self, id1: int, id2: int):
+        blocks1 = self.getBlocksInLayer(id1)
+        blocks2 = self.getBlocksInLayer(id2)
+
+        origin1 = self.getLayerRegion(id1).topLeft().y()
+        origin2 = self.getLayerRegion(id2).topLeft().y()
+        distance = abs(origin2 - origin1)
+
+        for block in blocks1:
+            block.moveBy(0, distance)
+        for block in blocks2:
+            block.moveBy(0, -distance)
+
+        tempLayer = self.layers[id1]
+        self.layers[id1] = self.layers[id2]
+        self.layers[id2] = tempLayer
 
     ########## EVENTS ##########
 

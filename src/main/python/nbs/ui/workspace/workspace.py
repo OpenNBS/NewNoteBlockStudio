@@ -50,6 +50,18 @@ class Workspace(QtWidgets.QSplitter):
         )
         self.timeBar.tempoChanged.connect(self.noteBlockWidget.view.ruler.setTempo)
 
+        # Layer signals
+        self.layerWidget.layerVolumeChanged.connect(self.noteBlockWidget.setLayerVolume)
+        self.layerWidget.layerPanningChanged.connect(
+            self.noteBlockWidget.setLayerPanning
+        )
+        self.layerWidget.layerLockChanged.connect(self.noteBlockWidget.setLayerLock)
+        self.layerWidget.layerSoloChanged.connect(self.noteBlockWidget.setLayerSolo)
+        self.layerWidget.layerSelected.connect(self.noteBlockWidget.selectAllInLayer)
+        self.layerWidget.layerAdded.connect(self.noteBlockWidget.addLayer)
+        self.layerWidget.layerRemoved.connect(self.noteBlockWidget.removeLayer)
+        self.layerWidget.layersSwapped.connect(self.noteBlockWidget.shiftLayers)
+
     def resetWorkspace(self):
         self.layerWidget.initUI()
         self.noteBlockWidget.clear()
