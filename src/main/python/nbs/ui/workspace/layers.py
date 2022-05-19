@@ -171,6 +171,11 @@ class LayerBar(QtWidgets.QToolBar):
         else:
             self.show()
 
+    def setId(self, newId: int):
+        print(newId)
+        self.id = newId
+        self.nameBox.setPlaceholderText("Layer {}".format(self.id + 1))
+
 
 class LayerArea(VerticalScrollArea):
 
@@ -181,7 +186,7 @@ class LayerArea(VerticalScrollArea):
     layerSelected = QtCore.pyqtSignal(int)
     layerAdded = QtCore.pyqtSignal(int)
     layerRemoved = QtCore.pyqtSignal(int)
-    layersSwapped = QtCore.pyqtSignal(int, int)
+    layerMoved = QtCore.pyqtSignal(int, int)
 
     changeScale = QtCore.pyqtSignal(float)
 
@@ -208,10 +213,10 @@ class LayerArea(VerticalScrollArea):
             self.layers.append(layer)
             self.changeScale.connect(layer.changeScale)
 
-            layer.volumeChanged.connect(self.changeLayerVolume)
-            layer.panningChanged.connect(self.changeLayerPanning)
-            layer.lockChanged.connect(self.changeLayerLock)
-            layer.soloChanged.connect(self.changeLayerSolo)
+            layer.volumeChanged.connect(self.layerVolumeChanged)
+            layer.panningChanged.connect(self.layerPanningChanged)
+            layer.lockChanged.connect(self.layerLockChanged)
+            layer.soloChanged.connect(self.layerSoloChanged)
             layer.selectAllClicked.connect(self.layerSelected)
             layer.addClicked.connect(self.addLayer)
             layer.removeClicked.connect(self.removeLayer)
@@ -251,53 +256,45 @@ class LayerArea(VerticalScrollArea):
 
     ######## FEATURES ########
 
-    @QtCore.pyqtSlot(int, int)
-    def changeLayerVolume(self, id: int, volume: int):
-        self.layers[id].setVolume(volume)
-        self.layerVolumeChanged.emit(id, volume)
-
-    @QtCore.pyqtSlot(int, int)
-    def changeLayerPanning(self, id: int, panning: int):
-        self.layers[id].setPanning(panning)
-        self.layerPanningChanged.emit(id, panning)
-
-    @QtCore.pyqtSlot(int, bool)
-    def changeLayerLock(self, id: int, lock: bool):
-        self.layers[id].setLock(lock)
-        self.layerLockChanged.emit(id, lock)
-
-    @QtCore.pyqtSlot(int, bool)
-    def changeLayerSolo(self, id: int, solo: bool):
-        self.layers[id].setSolo(solo)
-        self.layerSoloChanged.emit(id, solo)
-
     @QtCore.pyqtSlot(int)
     def addLayer(self, pos: int):
+        # TODO: use this function on initialization
         newLayer = LayerBar(pos, BLOCK_SIZE)
+        self.layout.insertWidget(pos, newLayer.frame)
         self.layers.insert(pos, newLayer)
         self.layerAdded.emit(pos)
 
     @QtCore.pyqtSlot(int)
     def removeLayer(self, pos: int):
-        self.layers.pop(pos)
+        removedLayer = self.layers.pop(pos)
+        self.layout.removeWidget(removedLayer.frame)
         self.layerRemoved.emit(pos)
 
-    def swapLayers(self, id1, id2):
-        temp = self.layers[id1]
-        self.layers[id1] = self.layers[id2]
-        self.layers[id2] = temp
-        self.layersSwapped.emit(id1, id2)
+    def moveLayer(self, id, newPos):
+        layer = self.layers.pop(id)
 
-    QtCore.pyqtSlot(int)
+        self.layout.removeWidget(layer.frame)
+        self.layout.insertWidget(newPos, layer.frame)
 
+        self.layers.insert(newPos, layer)
+
+        self.updateIds()
+        self.layerMoved.emit(id, newPos)
+
+    @QtCore.pyqtSlot(int)
     def shiftLayerUp(self, id):
         if id == 0:
             return
-        self.swapLayers(id, id - 1)
+        self.moveLayer(id, id - 1)
 
-    QtCore.pyqtSlot(int)
-
+    @QtCore.pyqtSlot(int)
     def shiftLayerDown(self, id):
         if id == len(self.layers) - 1:
             return
-        self.swapLayers(id, id + 1)
+        self.moveLayer(id, id + 1)
+
+    def updateIds(self):
+        # TODO: change to signal and connect on layer creation
+        for i, layer in enumerate(self.layers):
+            print(layer.id)
+            layer.setId(i)

@@ -60,7 +60,7 @@ class Workspace(QtWidgets.QSplitter):
         self.layerWidget.layerSelected.connect(self.noteBlockWidget.selectAllInLayer)
         self.layerWidget.layerAdded.connect(self.noteBlockWidget.addLayer)
         self.layerWidget.layerRemoved.connect(self.noteBlockWidget.removeLayer)
-        self.layerWidget.layersSwapped.connect(self.noteBlockWidget.shiftLayers)
+        self.layerWidget.layerMoved.connect(self.noteBlockWidget.shiftLayers)
 
     def resetWorkspace(self):
         self.layerWidget.initUI()
