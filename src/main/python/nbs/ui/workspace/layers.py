@@ -194,7 +194,6 @@ class LayerArea(VerticalScrollArea):
         # TODO: do we need a default layer number? Should it be 200?
         super().__init__(parent)
         self.layerCount = layerCount
-        self.layers = []
         self.layerHeight = BLOCK_SIZE
         self.initUI()
 
@@ -210,7 +209,6 @@ class LayerArea(VerticalScrollArea):
         for i in range(self.layerCount):
             layer = LayerBar(i, self.layerHeight)
             self.layout.addWidget(layer.frame)
-            self.layers.append(layer)
             self.changeScale.connect(layer.changeScale)
 
             layer.volumeChanged.connect(self.layerVolumeChanged)
@@ -245,7 +243,6 @@ class LayerArea(VerticalScrollArea):
                 layer = LayerBar(self.layerCount, self.layerHeight)
                 print("ADDING")
                 self.layout.addWidget(layer.frame)
-                self.layers.append(layer)
                 self.changeScale.connect(layer.changeScale)
         else:
             while self.layerCount > count:
@@ -254,6 +251,11 @@ class LayerArea(VerticalScrollArea):
                 print("REMOVING", i)
                 self.layout.takeAt(i)
 
+    @property
+    def layers(self):
+        print(self.layout.findChildren(QtCore.QObject))
+        return self.layout.findChildren(QtCore.QObject)
+
     ######## FEATURES ########
 
     @QtCore.pyqtSlot(int)
@@ -261,22 +263,19 @@ class LayerArea(VerticalScrollArea):
         # TODO: use this function on initialization
         newLayer = LayerBar(pos, BLOCK_SIZE)
         self.layout.insertWidget(pos, newLayer.frame)
-        self.layers.insert(pos, newLayer)
         self.layerAdded.emit(pos)
 
     @QtCore.pyqtSlot(int)
     def removeLayer(self, pos: int):
-        removedLayer = self.layers.pop(pos)
+        removedLayer = self.layers[id]
         self.layout.removeWidget(removedLayer.frame)
         self.layerRemoved.emit(pos)
 
     def moveLayer(self, id, newPos):
-        layer = self.layers.pop(id)
+        layer = self.layers[id]
 
         self.layout.removeWidget(layer.frame)
         self.layout.insertWidget(newPos, layer.frame)
-
-        self.layers.insert(newPos, layer)
 
         self.updateIds()
         self.layerMoved.emit(id, newPos)
@@ -296,5 +295,4 @@ class LayerArea(VerticalScrollArea):
     def updateIds(self):
         # TODO: change to signal and connect on layer creation
         for i, layer in enumerate(self.layers):
-            print(layer.id)
             layer.setId(i)
