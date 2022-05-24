@@ -304,7 +304,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
         self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
         self.selectionProxy = self.addWidget(self.selection)
-        self.selectionProxy.setZValue(1)
+        self.selectionProxy.setZValue(100)
         self.startTimer(10)
 
     def drawBackground(self, painter, rect):
