@@ -77,7 +77,7 @@ class LayerBar(QtWidgets.QFrame):
         self.setFrameStyle(QtWidgets.QFrame.Panel)
         self.setFrameShadow(QtWidgets.QFrame.Raised)
         self.setLineWidth(1)
-        self.setFixedHeight(height - 2)
+        self.setFixedHeight(height)
 
         self.toolbar = QtWidgets.QToolBar()
         self.toolbar.setIconSize(QtCore.QSize(16, 24))
@@ -159,7 +159,7 @@ class LayerBar(QtWidgets.QFrame):
 
     @QtCore.pyqtSlot(float)
     def changeScale(self, factor):
-        self.setFixedHeight(factor * BLOCK_SIZE - 2)
+        self.setFixedHeight(factor * BLOCK_SIZE)
         if factor < 0.5:
             self.toolbar.hide()
         else:
