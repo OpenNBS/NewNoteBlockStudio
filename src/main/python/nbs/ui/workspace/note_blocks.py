@@ -195,8 +195,8 @@ class Marker(QtWidgets.QWidget):
 class Layer:
     """Represents a layer in the note block area."""
 
-    lock: bool = True
-    solo: bool = True
+    lock: bool = False
+    solo: bool = False
     vol: int = 100
     pan: int = 0
 
@@ -320,6 +320,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             else:
                 painter.setPen(QtGui.QColor(216, 216, 216))
             painter.drawLine(x * BLOCK_SIZE, rect.y(), x * BLOCK_SIZE, rect.bottom())
+
+    def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(QtCore.Qt.black)
+        painter.setOpacity(0.25)
+        for id, layer in enumerate(self.layers):
+            if layer.lock:
+                painter.drawRect(self.getLayerRegion(id))
 
     ########## MENU ##########
 
@@ -616,10 +624,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     @QtCore.pyqtSlot(int, bool)
     def setLayerLock(self, id: int, lock: bool):
         self.layers[id].lock = lock
+        self.update()
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool):
-        self.layers[id].lock = solo
+        self.layers[id].solo = solo
+        self.update()
 
     @QtCore.pyqtSlot(int)
     def addLayer(self, id: int):
