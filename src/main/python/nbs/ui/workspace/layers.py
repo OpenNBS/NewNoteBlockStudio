@@ -130,7 +130,6 @@ class LayerBar(QtWidgets.QFrame):
             "Solo this layer",
         )
         soloAction.setCheckable(True)
-        soloAction.setCheckable(True)
         soloAction.triggered.connect(
             lambda checked: self.lockChanged.emit(self.id, checked)
         )
