@@ -585,14 +585,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def getLayerRegion(self, id: int) -> QtCore.QRectF:
         y1 = id * BLOCK_SIZE
-        y2 = y1 + BLOCK_SIZE
+        y2 = BLOCK_SIZE
         region = QtCore.QRectF(0, y1, self.width(), y2)
         print(0, y1, self.width(), y2)
         return region
 
     def getRegionBelowLayer(self, id: int) -> QtCore.QRectF:
         yy = id * BLOCK_SIZE
-        region = QtCore.QRectF(0, yy, self.width(), self.height())
+        region = QtCore.QRectF(QtCore.QPointF(0, yy), self.sceneRect().bottomRight())
         return region
 
     def getBlocksInLayer(self, id: int) -> List[NoteBlock]:
