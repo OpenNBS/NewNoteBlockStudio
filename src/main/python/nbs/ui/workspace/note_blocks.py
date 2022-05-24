@@ -457,7 +457,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def setBlockSelected(self, block: NoteBlock, selected: bool = True) -> None:
         block.setSelected(selected)
-        block.setZValue(1 if selected else 0)
         # self.selectionChanged.emit()
 
     def setBlocksSelected(self, blocks: Sequence[NoteBlock], selected: bool = True):
