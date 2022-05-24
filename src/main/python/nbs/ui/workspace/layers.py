@@ -160,10 +160,10 @@ class LayerBar(QtWidgets.QFrame):
         )
 
     @QtCore.pyqtSlot(float)
-    def changeScale(self, factor):
-        self.setFixedHeight(factor * BLOCK_SIZE)
-        self.toolbar.setFixedHeight(factor * BLOCK_SIZE - 2)
-        if factor < 0.5:
+    def changeScale(self, newHeight):
+        self.setFixedHeight(newHeight)
+        self.toolbar.setFixedHeight(newHeight)
+        if newHeight < BLOCK_SIZE // 2:
             self.toolbar.hide()
         else:
             self.toolbar.show()
