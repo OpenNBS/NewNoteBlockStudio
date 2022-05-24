@@ -23,7 +23,7 @@ class VerticalScrollArea(QtWidgets.QScrollArea):
         return super().eventFilter(obj, event)
 
 
-class LayerBar(QtWidgets.QToolBar):
+class LayerBar(QtWidgets.QFrame):
     """A single layer bar."""
 
     volumeChanged = QtCore.pyqtSignal(int, int)
@@ -73,30 +73,28 @@ class LayerBar(QtWidgets.QToolBar):
         }
 
     def initUI(self, height):
-        self.setIconSize(QtCore.QSize(20, 24))
+
+        self.setFrameStyle(QtWidgets.QFrame.Panel)
+        self.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.setLineWidth(1)
         self.setFixedHeight(height - 2)
-        self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
-        sizePolicy = self.sizePolicy()
-        sizePolicy.setRetainSizeWhenHidden(True)
-        self.setSizePolicy(sizePolicy)
-        self.addFrame()
-        self.addContents()
 
-    def addFrame(self):
-        self.layout = QtWidgets.QHBoxLayout()
-        self.layout.setContentsMargins(5, 0, 5, 0)
-        self.layout.addWidget(self)
-        self.frame = QtWidgets.QFrame()
-        self.frame.setFrameStyle(QtWidgets.QFrame.Panel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setLineWidth(1)
-        self.frame.setLayout(self.layout)
+        toolbar = QtWidgets.QToolBar()
+        toolbar.setIconSize(QtCore.QSize(20, 24))
+        # sizePolicy = self.sizePolicy()
+        # sizePolicy.setRetainSizeWhenHidden(True)
+        # toolbar.setSizePolicy(sizePolicy)
+        # toolbar.setMaximumWidth(342)  # TODO: calculate instead of hardcode
 
-    def addContents(self):
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 0)
+        layout.addWidget(toolbar)
+        self.setLayout(layout)
+
         self.nameBox = QtWidgets.QLineEdit()
         self.nameBox.setFixedSize(76, 16)
         self.nameBox.setPlaceholderText("Layer {}".format(self.id + 1))
-        self.addWidget(self.nameBox)
+        toolbar.addWidget(self.nameBox)
 
         self.volumeDial = QtWidgets.QDial()
         self.volumeDial.setNotchesVisible(True)
@@ -107,7 +105,7 @@ class LayerBar(QtWidgets.QToolBar):
         self.volumeDial.setNotchesVisible(True)
         self.volumeDial.setContentsMargins(0, 0, 0, 0)
         self.volumeDial.setMaximumWidth(32)
-        self.addWidget(self.volumeDial)
+        toolbar.addWidget(self.volumeDial)
 
         self.panningDial = QtWidgets.QDial()
         self.panningDial.setNotchesVisible(True)
@@ -117,17 +115,17 @@ class LayerBar(QtWidgets.QToolBar):
         self.panningDial.setValue(0)
         self.panningDial.setContentsMargins(0, 0, 0, 0)
         self.panningDial.setMaximumWidth(32)
-        self.addWidget(self.panningDial)
+        toolbar.addWidget(self.panningDial)
 
         # self.addAction(self.icons["volume"], "Volume")
         # self.addAction(self.icons["stereo"], "Stereo panning")
-        lockAction = self.addAction(self.icons["lock"], "Lock this layer")
+        lockAction = toolbar.addAction(self.icons["lock"], "Lock this layer")
         lockAction.setCheckable(True)
         lockAction.triggered.connect(
             lambda checked: self.lockChanged.emit(self.id, checked)
         )
 
-        soloAction = self.addAction(
+        soloAction = toolbar.addAction(
             self.icons["solo"],
             "Solo this layer",
         )
@@ -137,27 +135,27 @@ class LayerBar(QtWidgets.QToolBar):
             lambda checked: self.lockChanged.emit(self.id, checked)
         )
 
-        selectAllAction = self.addAction(
+        selectAllAction = toolbar.addAction(
             self.icons["select_all"],
             "Select all note blocks in this layer",
             lambda: self.selectAllClicked.emit(self.id),
         )
-        addAction = self.addAction(
+        addAction = toolbar.addAction(
             self.icons["insert"],
             "Add empty layer here",
             lambda: self.addClicked.emit(self.id),
         )
-        removeAction = self.addAction(
+        removeAction = toolbar.addAction(
             self.icons["remove"],
             "Remove this layer",
             lambda: self.removeClicked.emit(self.id),
         )
-        shiftUpAction = self.addAction(
+        shiftUpAction = toolbar.addAction(
             self.icons["shift_up"],
             "Shift layer up",
             lambda: self.shiftUpClicked.emit(self.id),
         )
-        shiftDownAction = self.addAction(
+        shiftDownAction = toolbar.addAction(
             self.icons["shift_down"],
             "Shift layer down",
             lambda: self.shiftDownClicked.emit(self.id),
@@ -208,7 +206,7 @@ class LayerArea(VerticalScrollArea):
         # self.updateLayerCount(100)
         for i in range(self.layerCount):
             layer = LayerBar(i, self.layerHeight)
-            self.layout.addWidget(layer.frame)
+            self.layout.addWidget(layer)
             self.changeScale.connect(layer.changeScale)
 
             layer.volumeChanged.connect(self.layerVolumeChanged)
@@ -242,7 +240,7 @@ class LayerArea(VerticalScrollArea):
                 self.layerCount += 1
                 layer = LayerBar(self.layerCount, self.layerHeight)
                 print("ADDING")
-                self.layout.addWidget(layer.frame)
+                self.layout.addWidget(layer)
                 self.changeScale.connect(layer.changeScale)
         else:
             while self.layerCount > count:
@@ -262,20 +260,20 @@ class LayerArea(VerticalScrollArea):
     def addLayer(self, pos: int):
         # TODO: use this function on initialization
         newLayer = LayerBar(pos, BLOCK_SIZE)
-        self.layout.insertWidget(pos, newLayer.frame)
+        self.layout.insertWidget(pos, newLayer)
         self.layerAdded.emit(pos)
 
     @QtCore.pyqtSlot(int)
     def removeLayer(self, pos: int):
         removedLayer = self.layers[id]
-        self.layout.removeWidget(removedLayer.frame)
+        self.layout.removeWidget(removedLayer)
         self.layerRemoved.emit(pos)
 
     def moveLayer(self, id, newPos):
         layer = self.layers[id]
 
-        self.layout.removeWidget(layer.frame)
-        self.layout.insertWidget(newPos, layer.frame)
+        self.layout.removeWidget(layer)
+        self.layout.insertWidget(newPos, layer)
 
         self.updateIds()
         self.layerMoved.emit(id, newPos)
