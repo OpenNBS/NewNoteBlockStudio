@@ -33,6 +33,7 @@ class Workspace(QtWidgets.QSplitter):
         layout.addWidget(spacer)
 
         leftPanel = QtWidgets.QWidget()
+        leftPanel.setMaximumWidth(self.layerWidget.maximumWidth())
         leftPanel.setLayout(layout)
 
         self.addWidget(leftPanel)
