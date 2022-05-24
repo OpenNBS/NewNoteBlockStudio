@@ -43,11 +43,12 @@ class Workspace(QtWidgets.QSplitter):
         self.noteBlockWidget.view.verticalScrollBar().valueChanged.connect(
             self.layerWidget.verticalScrollBar().setValue
         )
-        self.noteBlockWidget.view.scaleChanged.connect(self.layerWidget.changeScale)
-        self.noteBlockWidget.view.markerMoved.connect(self.timeBar.currentTimeChanged_)
-        self.noteBlockWidget.sceneSizeChanged.connect(self.layerWidget.updateLayerCount)
-        self.noteBlockWidget.sceneSizeChanged.connect(
+        self.noteBlockWidget.view.scaleChanged.connect(
             self.layerWidget.updateLayerHeight
+        )
+        self.noteBlockWidget.view.markerMoved.connect(self.timeBar.currentTimeChanged_)
+        self.noteBlockWidget.sceneSizeChanged.connect(
+            lambda _, height: self.layerWidget.updateLayerCount(height // BLOCK_SIZE)
         )
         self.timeBar.tempoChanged.connect(self.noteBlockWidget.view.ruler.setTempo)
 

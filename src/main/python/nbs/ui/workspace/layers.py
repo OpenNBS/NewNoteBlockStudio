@@ -1,3 +1,5 @@
+from typing import Optional
+
 import qtawesome as qta
 from PyQt5 import QtCore, QtWidgets
 
@@ -160,6 +162,7 @@ class LayerBar(QtWidgets.QFrame):
     @QtCore.pyqtSlot(float)
     def changeScale(self, factor):
         self.setFixedHeight(factor * BLOCK_SIZE)
+        self.toolbar.setFixedHeight(factor * BLOCK_SIZE - 2)
         if factor < 0.5:
             self.toolbar.hide()
         else:
@@ -182,39 +185,22 @@ class LayerArea(VerticalScrollArea):
     layerRemoved = QtCore.pyqtSignal(int)
     layerMoved = QtCore.pyqtSignal(int, int)
 
-    changeScale = QtCore.pyqtSignal(float)
+    scaleChanged = QtCore.pyqtSignal(float)
 
     def __init__(self, layerCount=200, parent=None):
         # TODO: do we need a default layer number? Should it be 200?
         super().__init__(parent)
-        self.layerCount = layerCount
         self.layerHeight = BLOCK_SIZE
-        self.initUI()
+        self.initUI(layerCount)
 
-    def initUI(self):
+    def initUI(self, layerCount):
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(5, 0, 0, 0)
         self.container = QtWidgets.QWidget()
         self.container.setLayout(self.layout)
         self.container.setContentsMargins(0, 0, 0, 0)
-
-        # self.updateLayerCount(100)
-        for i in range(self.layerCount):
-            layer = LayerBar(i, self.layerHeight)
-            self.layout.addWidget(layer)
-            self.changeScale.connect(layer.changeScale)
-
-            layer.volumeChanged.connect(self.layerVolumeChanged)
-            layer.panningChanged.connect(self.layerPanningChanged)
-            layer.lockChanged.connect(self.layerLockChanged)
-            layer.soloChanged.connect(self.layerSoloChanged)
-            layer.selectAllClicked.connect(self.layerSelected)
-            layer.addClicked.connect(self.addLayer)
-            layer.removeClicked.connect(self.removeLayer)
-            layer.shiftUpClicked.connect(self.shiftLayerUp)
-            layer.shiftDownClicked.connect(self.shiftLayerDown)
-
+        self.updateLayerCount(layerCount)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setMaximumWidth(324)  # TODO: calculate instead of hardcode
         self.setWidget(self.container)
@@ -224,46 +210,85 @@ class LayerArea(VerticalScrollArea):
         if event.type() == QtCore.QEvent.Wheel:
             event.ignore()
 
-    @QtCore.pyqtSlot(int)
-    def updateLayerHeight(self, height):
-        self.layerHeight = height
+    @QtCore.pyqtSlot(float)
+    def updateLayerHeight(self, newHeight):
+        self.layerHeight = newHeight
+        self.scaleChanged.emit(newHeight)
 
-    @QtCore.pyqtSlot(int, int)
-    def updateLayerCount(self, newSize):
-        count = newSize // BLOCK_SIZE
-        if self.layerCount < count:
-            while self.layerCount < count:
-                self.layerCount += 1
-                layer = LayerBar(self.layerCount, self.layerHeight)
+    @QtCore.pyqtSlot(int)
+    def updateLayerCount(self, newCount):
+        print("Count:", newCount)
+        if self.layerCount < newCount:
+            while self.layerCount < newCount:
+                self.createLayer()
                 print("ADDING")
-                self.layout.addWidget(layer)
-                self.changeScale.connect(layer.changeScale)
         else:
-            while self.layerCount > count:
-                self.layerCount -= 1
-                i = self.layout.count()
-                print("REMOVING", i)
-                self.layout.takeAt(i)
+            pass
+            # We never need to delete layers after they're created,
+            # because syncing it to the note block view scrollbar should suffice
+            # (it should never be able to scroll farther than the intended amount of layers).
+            # Additionally, "hidden" layers should keep information about panning and
+            # pitch even if the song height "shrinks" due to deleting notes
+
+            # while self.layerCount > newCount:
+            #    i = self.layerCount - 1
+            #    print("REMOVING", i)
+            #    self.deleteLayer(i, refill=False)
 
     @property
     def layers(self):
-        print(self.layout.findChildren(QtCore.QObject))
-        return self.layout.findChildren(QtCore.QObject)
+        layers = []
+        for i in range(self.layout.count()):
+            layers.append(self.layout.itemAt(i).widget())
+        return layers
+
+    @property
+    def layerCount(self):
+        return self.layout.count()
+
+    def createLayer(self, pos: Optional[int] = None):
+        """
+        Create a new layer. If `pos` is given, the layer will be added at that position;
+        otherwise it will be appended.
+        """
+        pos = pos if pos is not None else self.layerCount
+        layer = LayerBar(pos, self.layerHeight)
+        self.layout.insertWidget(pos, layer)
+
+        self.scaleChanged.connect(layer.changeScale)
+        layer.volumeChanged.connect(self.layerVolumeChanged)
+        layer.panningChanged.connect(self.layerPanningChanged)
+        layer.lockChanged.connect(self.layerLockChanged)
+        layer.soloChanged.connect(self.layerSoloChanged)
+        layer.selectAllClicked.connect(self.layerSelected)
+        layer.addClicked.connect(self.addLayer)
+        layer.removeClicked.connect(self.removeLayer)
+        layer.shiftUpClicked.connect(self.shiftLayerUp)
+        layer.shiftDownClicked.connect(self.shiftLayerDown)
+
+    def deleteLayer(self, pos: int, refill: Optional[bool] = True):
+        """
+        Delete the layer at position `pos`. If `refill` is `True`, a new empty
+        layer is added at the end, so the layer count remains unchanged.
+        """
+        removedLayer = self.layout.takeAt(pos).widget()
+        self.layout.removeWidget(removedLayer)
+        removedLayer.deleteLater()
+        if refill:
+            self.createLayer()
 
     ######## FEATURES ########
 
     @QtCore.pyqtSlot(int)
     def addLayer(self, pos: int):
-        # TODO: use this function on initialization
-        newLayer = LayerBar(pos, BLOCK_SIZE)
-        self.layout.insertWidget(pos, newLayer)
+        self.createLayer(pos)
         self.layerAdded.emit(pos)
 
     @QtCore.pyqtSlot(int)
-    def removeLayer(self, pos: int):
-        removedLayer = self.layers[id]
-        self.layout.removeWidget(removedLayer)
-        self.layerRemoved.emit(pos)
+    def removeLayer(self, id: int):
+        self.deleteLayer(id)
+        self.layerRemoved.emit(id)
+        self.updateIds()
 
     def moveLayer(self, id, newPos):
         layer = self.layers[id]
