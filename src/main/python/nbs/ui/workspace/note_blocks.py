@@ -605,18 +605,23 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         blocks = self.items(region)
         return blocks
 
+    @QtCore.pyqtSlot(int, int)
     def setLayerVolume(self, id: int, volume: int):
         self.layers[id].volume = volume
 
+    @QtCore.pyqtSlot(int, int)
     def setLayerPanning(self, id: int, panning: int):
         self.layers[id].panning = panning
 
+    @QtCore.pyqtSlot(int, bool)
     def setLayerLock(self, id: int, lock: bool):
         self.layers[id].lock = lock
 
+    @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool):
         self.layers[id].lock = solo
 
+    @QtCore.pyqtSlot(int)
     def addLayer(self, id: int):
         blocksToShift = self.getBlocksBelowLayer(id)
         for block in blocksToShift:
@@ -626,6 +631,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
         self.updateSceneSize()
 
+    @QtCore.pyqtSlot(int)
     def removeLayer(self, id: int):
         for block in self.getBlocksInLayer(id):
             self.removeBlock(block)
@@ -637,6 +643,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
         self.updateSceneSize()
 
+    @QtCore.pyqtSlot(int)
     def selectAllInLayer(self, id: int, clearPrevious: bool = False):
         if clearPrevious:
             self.deselectAll()
