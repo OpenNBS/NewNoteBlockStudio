@@ -606,7 +606,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return blocks
 
     def setLayerVolume(self, id: int, volume: int):
-        self.layers[id].volune = volume
+        self.layers[id].volume = volume
 
     def setLayerPanning(self, id: int, panning: int):
         self.layers[id].panning = panning
