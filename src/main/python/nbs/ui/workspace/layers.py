@@ -80,11 +80,7 @@ class LayerBar(QtWidgets.QFrame):
         self.setFixedHeight(height - 2)
 
         toolbar = QtWidgets.QToolBar()
-        toolbar.setIconSize(QtCore.QSize(20, 24))
-        # sizePolicy = self.sizePolicy()
-        # sizePolicy.setRetainSizeWhenHidden(True)
-        # toolbar.setSizePolicy(sizePolicy)
-        # toolbar.setMaximumWidth(342)  # TODO: calculate instead of hardcode
+        toolbar.setIconSize(QtCore.QSize(16, 24))
 
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(5, 0, 5, 0)
@@ -219,7 +215,7 @@ class LayerArea(VerticalScrollArea):
             layer.shiftDownClicked.connect(self.shiftLayerDown)
 
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setMaximumWidth(342)  # TODO: calculate instead of hardcode
+        self.setMaximumWidth(324)  # TODO: calculate instead of hardcode
         self.setWidget(self.container)
 
     def wheelEvent(self, event):
