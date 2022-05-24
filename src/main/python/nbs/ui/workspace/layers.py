@@ -79,18 +79,19 @@ class LayerBar(QtWidgets.QFrame):
         self.setLineWidth(1)
         self.setFixedHeight(height - 2)
 
-        toolbar = QtWidgets.QToolBar()
-        toolbar.setIconSize(QtCore.QSize(16, 24))
+        self.toolbar = QtWidgets.QToolBar()
+        self.toolbar.setIconSize(QtCore.QSize(16, 24))
+        self.toolbar.setFixedHeight(height)
 
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(5, 0, 5, 0)
-        layout.addWidget(toolbar)
+        layout.addWidget(self.toolbar)
         self.setLayout(layout)
 
         self.nameBox = QtWidgets.QLineEdit()
         self.nameBox.setFixedSize(76, 16)
         self.nameBox.setPlaceholderText("Layer {}".format(self.id + 1))
-        toolbar.addWidget(self.nameBox)
+        self.toolbar.addWidget(self.nameBox)
 
         self.volumeDial = QtWidgets.QDial()
         self.volumeDial.setNotchesVisible(True)
@@ -101,7 +102,7 @@ class LayerBar(QtWidgets.QFrame):
         self.volumeDial.setNotchesVisible(True)
         self.volumeDial.setContentsMargins(0, 0, 0, 0)
         self.volumeDial.setMaximumWidth(32)
-        toolbar.addWidget(self.volumeDial)
+        self.toolbar.addWidget(self.volumeDial)
 
         self.panningDial = QtWidgets.QDial()
         self.panningDial.setNotchesVisible(True)
@@ -111,17 +112,17 @@ class LayerBar(QtWidgets.QFrame):
         self.panningDial.setValue(0)
         self.panningDial.setContentsMargins(0, 0, 0, 0)
         self.panningDial.setMaximumWidth(32)
-        toolbar.addWidget(self.panningDial)
+        self.toolbar.addWidget(self.panningDial)
 
         # self.addAction(self.icons["volume"], "Volume")
         # self.addAction(self.icons["stereo"], "Stereo panning")
-        lockAction = toolbar.addAction(self.icons["lock"], "Lock this layer")
+        lockAction = self.toolbar.addAction(self.icons["lock"], "Lock this layer")
         lockAction.setCheckable(True)
         lockAction.triggered.connect(
             lambda checked: self.lockChanged.emit(self.id, checked)
         )
 
-        soloAction = toolbar.addAction(
+        soloAction = self.toolbar.addAction(
             self.icons["solo"],
             "Solo this layer",
         )
@@ -130,27 +131,27 @@ class LayerBar(QtWidgets.QFrame):
             lambda checked: self.lockChanged.emit(self.id, checked)
         )
 
-        selectAllAction = toolbar.addAction(
+        selectAllAction = self.toolbar.addAction(
             self.icons["select_all"],
             "Select all note blocks in this layer",
             lambda: self.selectAllClicked.emit(self.id),
         )
-        addAction = toolbar.addAction(
+        addAction = self.toolbar.addAction(
             self.icons["insert"],
             "Add empty layer here",
             lambda: self.addClicked.emit(self.id),
         )
-        removeAction = toolbar.addAction(
+        removeAction = self.toolbar.addAction(
             self.icons["remove"],
             "Remove this layer",
             lambda: self.removeClicked.emit(self.id),
         )
-        shiftUpAction = toolbar.addAction(
+        shiftUpAction = self.toolbar.addAction(
             self.icons["shift_up"],
             "Shift layer up",
             lambda: self.shiftUpClicked.emit(self.id),
         )
-        shiftDownAction = toolbar.addAction(
+        shiftDownAction = self.toolbar.addAction(
             self.icons["shift_down"],
             "Shift layer down",
             lambda: self.shiftDownClicked.emit(self.id),
@@ -160,9 +161,9 @@ class LayerBar(QtWidgets.QFrame):
     def changeScale(self, factor):
         self.setFixedHeight(factor * BLOCK_SIZE - 2)
         if factor < 0.5:
-            self.hide()
+            self.toolbar.hide()
         else:
-            self.show()
+            self.toolbar.show()
 
     def setId(self, newId: int):
         print(newId)
