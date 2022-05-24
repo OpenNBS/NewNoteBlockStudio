@@ -169,7 +169,6 @@ class LayerBar(QtWidgets.QFrame):
             self.toolbar.show()
 
     def setId(self, newId: int):
-        print(newId)
         self.id = newId
         self.nameBox.setPlaceholderText("Layer {}".format(self.id + 1))
 
@@ -277,18 +276,25 @@ class LayerArea(VerticalScrollArea):
         if refill:
             self.createLayer()
 
+    def updateLayerIds(self):
+        # Would've been better as a signal connected to all layers,
+        # but we couldn't easily pass their ID to each one
+        for i, layer in enumerate(self.layers):
+            layer.setId(i)
+
     ######## FEATURES ########
 
     @QtCore.pyqtSlot(int)
     def addLayer(self, pos: int):
         self.createLayer(pos)
+        self.updateLayerIds()
         self.layerAdded.emit(pos)
 
     @QtCore.pyqtSlot(int)
     def removeLayer(self, id: int):
         self.deleteLayer(id)
         self.layerRemoved.emit(id)
-        self.updateIds()
+        self.updateLayerIds()
 
     def moveLayer(self, id, newPos):
         layer = self.layers[id]
@@ -296,7 +302,7 @@ class LayerArea(VerticalScrollArea):
         self.layout.removeWidget(layer)
         self.layout.insertWidget(newPos, layer)
 
-        self.updateIds()
+        self.updateLayerIds()
         self.layerMoved.emit(id, newPos)
 
     @QtCore.pyqtSlot(int)
@@ -310,8 +316,3 @@ class LayerArea(VerticalScrollArea):
         if id == len(self.layers) - 1:
             return
         self.moveLayer(id, id + 1)
-
-    def updateIds(self):
-        # TODO: change to signal and connect on layer creation
-        for i, layer in enumerate(self.layers):
-            layer.setId(i)
