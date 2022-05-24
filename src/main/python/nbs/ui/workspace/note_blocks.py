@@ -640,7 +640,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def selectAllInLayer(self, id: int, clearPrevious: bool = False):
         if clearPrevious:
             self.deselectAll()
-        self.setBlocksSelected(self.getBlocksInLayer(id))
+        self.setAreaSelected(self.getLayerRegion(id))
 
     def shiftLayers(self, id1: int, id2: int):
         blocks1 = self.getBlocksInLayer(id1)
