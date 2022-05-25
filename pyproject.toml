@@ -10,6 +10,7 @@ python = "^3.8"
 PyQt5 = "^5.15.6"
 pynbs = "^1.1.0"
 QtAwesome = "^1.1.1"
+pydub = "^0.25.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

@@ -1,7 +1,12 @@
+from pathlib import Path
+
+from nbs.core.audio import AudioEngine
+from nbs.core.data import default_instruments
 from nbs.ui.actions import Actions
 from nbs.ui.menus import MenuBar
 from nbs.ui.toolbar import ToolBar
 from nbs.ui.workspace import *
+from nbs.ui.workspace.constants import appctxt  # TODO: move this somewhere else
 from PyQt5 import QtCore, QtWidgets
 
 
@@ -10,6 +15,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
+        self.initAudio()
         self.initUI()
 
     def initUI(self):
@@ -24,6 +30,17 @@ class MainWindow(QtWidgets.QMainWindow):
         mainArea.workspace.noteBlockWidget.selectionChanged.connect(
             Actions.setSelectionStatus
         )
+
+
+        mainArea.workspace.noteBlockWidget.blockAdded.connect(
+            lambda: self.audioEngine.play_sound(0, 100, 1, 0)
+        )
+
+    def initAudio(self):
+        self.audioEngine = AudioEngine(self)
+        for ins in default_instruments:
+            sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
+            self.audioEngine.loadSound(sound_path)
 
     #
     #
