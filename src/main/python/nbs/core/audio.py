@@ -1,45 +1,138 @@
+import math
 import os
-import tempfile
-from typing import Union
+import time
+from dataclasses import dataclass
+from typing import List, Union
 
+import numpy as np
+import sounddevice as sd
 from pydub import AudioSegment
-from PyQt5 import QtCore, QtMultimedia
+from PyQt5 import QtCore
+
+PathLike = Union[str, bytes, os.PathLike]
 
 
-class AudioEngine(QtMultimedia.QMediaPlayer):
-    def __init__(self, parent=None):
+def vol_to_gain(vol: float) -> float:
+    return math.log(max(vol, 0.0001), 10) * 20
+
+
+sd.default.samplerate = 44100
+sd.default.blocksize = 0
+sd.default.channels = 2
+sd.default.dtype = "float32"
+sd.default.latency = 0.1
+
+
+@dataclass
+class SoundInstance:
+    samples: np.ndarray
+    current_frame: int = 0
+
+
+class SoundQueue:
+    def __init__(self, sample_rate, channels) -> None:
+        self.active_sounds = []
+        self.sample_rate = sample_rate
+        self.channels = channels
+
+    def push_sound(self, samples: np.ndarray) -> None:
+        start_time = time.time()
+        end_time = start_time + len(samples) / (self.sample_rate * self.channels)
+        sound = SoundInstance(samples)
+        self.active_sounds.append(sound)
+
+    def get_active_sounds(self) -> List[SoundInstance]:
+        for sound in self.active_sounds:
+            if sound.current_frame > len(sound.samples):
+                self.active_sounds.remove(sound)
+        return self.active_sounds
+
+
+class AudioOutputHandler:
+    def __init__(self, sample_rate, channels) -> None:
+        self.sample_rate = sample_rate
+        self.channels = channels
+        self.queue = SoundQueue(sample_rate, channels)
+        self.stream = sd.OutputStream(callback=lambda *args: self.callback(*args))
+
+    def play(self, samples: np.ndarray) -> None:
+        self.queue.push_sound(samples)
+
+    def start(self) -> None:
+        self.stream.start()
+
+    def stop(self) -> None:
+        self.stream.stop()
+
+    def close(self) -> None:
+        self.stream.close()
+
+    def __enter__(self) -> None:
+        self.start()
+        return self
+
+    def __exit__(self, *args) -> None:
+        self.stop()
+        self.close()
+
+    def callback(self, outdata: np.ndarray, frames: int, time, status) -> None:
+        if status:
+            print(status)
+        sounds = self.queue.get_active_sounds()
+        outdata.fill(0)
+        for sound in sounds:
+            start = sound.current_frame
+            length = sound.samples.shape[0]
+            end = min(start + frames, length)
+
+            print("Current:", sound.current_frame, start + frames, length, end)
+
+            outdata[: end - start] += sound.samples[start:end]
+            sound.current_frame += frames
+
+
+class AudioEngine(QtCore.QObject):
+    def __init__(self, parent=None, sample_rate=44100, channels=2):
         super().__init__(parent)
-        self.playlist = QtMultimedia.QMediaPlaylist()
-        self.setPlaylist(self.playlist)
+        self.sample_rate = sample_rate
+        self.channels = channels
+        self.sounds = []
 
-    def loadSound(self, path: Union[str, bytes, os.PathLike]):
+        self.handler = AudioOutputHandler(sample_rate, channels)
+        self.handler.start()
+
+    def loadSound(self, path: PathLike):
         sound = AudioSegment.from_file(path)
 
-        sound.export(path + "_temp.wav", format="wav")
-        url = QtCore.QUrl.fromLocalFile(path + "_temp.wav")
-        print(str(path))
-        media = QtMultimedia.QMediaContent(url)
-        self.playlist.addMedia(media)
+        sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
 
-        with tempfile.NamedTemporaryFile() as tmp:
-            print(tmp.name)
+        if sound.channels == 1:
+            sound = AudioSegment.from_mono_audiosegments(sound, sound)
+
+        self.sounds.append(sound)
 
     @QtCore.pyqtSlot(int, int, float, float)
-    def play_sound(self, index: int, volume: int, pitch: float, panning: float):
-        self.playlist.setCurrentIndex(index)
+    def playSound(self, index: int, volume: int, pitch: float, panning: float):
 
-        self.setVolume(volume)
-        self.setPlaybackRate(pitch)
-        self.play()
+        sound = self.sounds[index]
+
+        new_sound = sound._spawn(
+            sound.raw_data,
+            overrides={"frame_rate": round(sound.frame_rate * pitch)},
+        )
+        new_sound = new_sound.set_frame_rate(sound.frame_rate)
+
+        new_sound.export(f"temp_{index}.wav", format="wav")
+
+        samples = np.array(new_sound.get_array_of_samples(), dtype="int16")
+        samples = samples.astype(np.float32, order="C") / 32768.0
+        samples = np.reshape(
+            samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
+        )
+        self.handler.play(samples)
 
         print(index, volume, pitch, "Sound played")
-        # instantiate a QSoundEffect instead?
-        # https://doc.qt.io/qt-5/qsoundeffect.html
-        # https://doc.qt.io/qt-5/audiooverview.html
-        # https://forum.qt.io/topic/7506/real-time-audio-processing-with-qt/5
 
-    def changeOutputDevice(self):
-        pass
 
 
 class AudioMonitor(QtMultimedia.QAudioProbe):
