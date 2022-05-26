@@ -84,7 +84,11 @@ class AudioOutputHandler:
 
             # print("Current:", sound.current_frame, start + frames, length, end)
 
-            outdata[: end - start] += sound.samples[start:end]
+            samples = sound.samples[start:end]
+            if samples.shape[0] == 0:
+                print("AUDIO: No samples left")
+                continue
+            outdata[: end - start] += samples
             sound.current_frame += frames
 
 
