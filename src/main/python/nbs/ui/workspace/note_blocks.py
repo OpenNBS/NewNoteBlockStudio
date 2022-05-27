@@ -17,7 +17,6 @@ __all__ = ["NoteBlockArea"]
 class TimeRuler(QtWidgets.QWidget):
 
     clicked = QtCore.pyqtSignal(int)
-    clickedInTicks = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -92,7 +91,6 @@ class TimeRuler(QtWidgets.QWidget):
     def mouseReleaseEvent(self, event):
         pos = event.pos().x()
         self.clicked.emit(pos)
-        self.clickedInTicks.emit(self.posToTicks(pos))
         self.update()
 
     @QtCore.pyqtSlot(int)
@@ -110,9 +108,6 @@ class TimeRuler(QtWidgets.QWidget):
         self.tempo = newTempo
         self.update()
 
-    def posToTicks(self, pos):
-        return pos / BLOCK_SIZE / self.scale
-
 
 class Marker(QtWidgets.QWidget):
 
@@ -128,7 +123,6 @@ class Marker(QtWidgets.QWidget):
         self.setFixedHeight(800)
         self.setFixedWidth(16)
         self.raise_()
-        self.move(25, 0)
 
     def paintEvent(self, event):
         painter = QtGui.QPainter()
@@ -160,7 +154,6 @@ class Marker(QtWidgets.QWidget):
             offset = event.pos().x() - 8
             pos = self.tickToPos(self.pos) + offset
             self.setPos(pos)
-            self.moved.emit(self.pos)
         return
 
     def posToTick(self, pos):
@@ -172,8 +165,8 @@ class Marker(QtWidgets.QWidget):
 
     def updatePos(self):
         print(self.pos, self.scale, self.offset)
-        # self.moved.emit(pos) here??
         self.move(self.tickToPos(self.pos) - 8, 0)
+        self.moved.emit(self.pos)
 
     @QtCore.pyqtSlot(int)
     def setPos(self, pos):
@@ -223,9 +216,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.horizontalScrollBar().valueChanged.connect(self.marker.setOffset)
         self.scaleChanged.connect(self.ruler.setScale)
         self.scaleChanged.connect(self.marker.setScale)
-        self.ruler.clicked.connect(self.scene().setMarkerPos)
         self.ruler.clicked.connect(self.marker.setPos)
-        self.ruler.clickedInTicks.connect(self.markerMoved)
         self.marker.moved.connect(self.markerMoved)
 
     @QtCore.pyqtSlot()
