@@ -157,10 +157,9 @@ class Marker(QtWidgets.QWidget):
         return
 
     def posToTick(self, pos):
-        return (pos / (self.scale * BLOCK_SIZE)) + (self.offset / BLOCK_SIZE)
+        return (pos + self.offset) / (self.scale * BLOCK_SIZE)
 
     def tickToPos(self, tick):
-        # TODO: Fix click position being incorrect when the view is scaled. I'm really close here.
         return tick * self.scale * BLOCK_SIZE - self.offset
 
     def updatePos(self):
