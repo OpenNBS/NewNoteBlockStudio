@@ -22,7 +22,7 @@ class Actions(QtCore.QObject):
             "save_song_as":     qta.icon('mdi.content-save-all'),
             "rewind":           qta.icon('mdi.rewind'),
             "fast_forward":     qta.icon('mdi.fast-forward'),
-            "play_pause":       qta.icon('mdi.play', active='mdi.pause'),
+            "play_pause":       qta.icon('mdi.play', checked='mdi.pause'),
             "stop":             qta.icon('mdi.stop'),
             "record":           qta.icon('mdi.record'),
             "loop":             qta.icon('mdi.repeat'),
@@ -70,6 +70,7 @@ class Actions(QtCore.QObject):
 
         # Playback
         cls.playPauseAction = QAction(icons["play_pause"], "Play/Pause song")
+        cls.playPauseAction.setCheckable(True)
         cls.stopAction = QAction(icons["stop"], "Stop song")
         cls.fastForwardAction = QAction(icons["fast_forward"], "Fast-forward song")
         cls.rewindAction = QAction(icons["rewind"], "Rewind song")

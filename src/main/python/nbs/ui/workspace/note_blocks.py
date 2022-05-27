@@ -163,7 +163,6 @@ class Marker(QtWidgets.QWidget):
         return tick * self.scale * BLOCK_SIZE - self.offset
 
     def updatePos(self):
-        print(self.pos, self.scale, self.offset)
         self.move(self.tickToPos(self.pos) - 8, 0)
         self.moved.emit(self.pos)
 
@@ -189,8 +188,8 @@ class Layer:
 
     lock: bool = False
     solo: bool = False
-    vol: int = 100
-    pan: int = 0
+    volume: int = 100
+    panning: int = 0
 
 
 class NoteBlockView(QtWidgets.QGraphicsView):
@@ -217,6 +216,9 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.scaleChanged.connect(self.marker.setScale)
         self.ruler.clicked.connect(self.marker.setPos)
         self.marker.moved.connect(self.markerMoved)
+
+        self.marker.moved.connect(self.scene().doPlayback)
+        # self.scene().playbackPositionChanged.connect(self.marker.setPos)
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
@@ -262,9 +264,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## Private slots ##########
     sceneSizeChanged = QtCore.pyqtSignal(int, int)
+    playbackPositionChanged = QtCore.pyqtSignal(int)
 
     ########## Public slots ##########
     selectionChanged = QtCore.pyqtSignal(int)
+    blockAdded = QtCore.pyqtSignal()
+    blockPlayed = QtCore.pyqtSignal(int, int, int, int, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -281,8 +286,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         self.activeKey = 45
-        self.markerPos = 0
         self.initUI()
+        self.initPlayback()
 
     ########## UI ##########
 
@@ -296,6 +301,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selectionProxy = self.addWidget(self.selection)
         self.selectionProxy.setZValue(100)
         self.startTimer(10)
+
+    def initPlayback(self):
+        self.tempo = 10.0
+        self.previousPlaybackPosition = 0
+        self.playbackTimer = QtCore.QTimer()
+        self.playbackTimer.setInterval(1)
+        self.playbackTimer.timeout.connect(self.tickPlayback)
 
     def drawBackground(self, painter, rect):
         painter.setPen(QtCore.Qt.NoPen)
@@ -365,11 +377,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def setActiveKey(self, key):
         self.activeKey = key
 
-    @QtCore.pyqtSlot(int)
-    def setMarkerPos(self, pos):
-        scenePos = self.view.mapToScene(QtCore.QPoint(pos, 0)).x()
-        self.markerPos = scenePos
-        self.update()
+    @QtCore.pyqtSlot(float)
+    def setTempo(self, tempo):
+        self.tempo = tempo
 
     ########## COORDINATE TRANSFORMATION ##########
 
@@ -665,6 +675,68 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         tempLayer = self.layers[id1]
         self.layers[id1] = self.layers[id2]
         self.layers[id2] = tempLayer
+
+    ########## PLAYBACK ##########
+
+    @QtCore.pyqtSlot()
+    def play(self):
+        self.playbackTimer.start()
+
+    @QtCore.pyqtSlot()
+    def pause(self):
+        self.playbackTimer.stop()
+
+    @QtCore.pyqtSlot()
+    def stop(self):
+        self.playbackTimer.stop()
+        self.view.marker.setPos(0)
+        # self.playbackPositionChanged.emit(0)
+
+    @QtCore.pyqtSlot()
+    def setPlaying(self, playing: bool) -> None:
+        if playing:
+            self.play()
+        else:
+            self.pause()
+
+    @QtCore.pyqtSlot()
+    def tickPlayback(self):
+        offset = self.tempo / 1000
+        self.view.marker.movePos(offset)
+        # self.playbackPositionChanged.emit(offset)
+
+    @QtCore.pyqtSlot(float)
+    def doPlayback(self, currentPlaybackPosition: float):
+        if math.floor(self.previousPlaybackPosition) != math.floor(
+            currentPlaybackPosition
+        ):
+            self.playTick(math.floor(currentPlaybackPosition))
+        self.previousPlaybackPosition = currentPlaybackPosition
+
+    def getTickRegion(self, tick: int) -> QtCore.QRectF:
+        x1 = tick * BLOCK_SIZE
+        x2 = BLOCK_SIZE
+        region = QtCore.QRectF(x1, 0, x2, self.sceneRect().height())
+        return region
+
+    def getBlocksInTick(self, tick: int) -> List[NoteBlock]:
+        region = self.getTickRegion(tick)
+        blocks = self.items(region)
+        return blocks
+
+    def playBlock(self, block: NoteBlock) -> None:
+        layer = self.layers[int(block.y() // BLOCK_SIZE)]
+        instrument = block.ins
+        key = block.key
+        volume = block.vel * layer.volume
+        panning = (block.pan * layer.panning) / 2
+        pitch = block.pit
+        self.blockPlayed.emit(instrument, key, volume, panning, pitch)
+        print("Played")
+
+    def playTick(self, tick: int) -> None:
+        for block in self.getBlocksInTick(tick):
+            self.playBlock(block)
 
     ########## EVENTS ##########
 

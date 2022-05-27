@@ -39,6 +39,15 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda key: self.audioEngine.playSound(15, 0.5, 2 ** ((key - 45) / 12), 0)
         )
 
+        Actions.playPauseAction.triggered.connect(
+            lambda checked: mainArea.workspace.noteBlockWidget.setPlaying(checked)
+        )
+        Actions.stopAction.triggered.connect(mainArea.workspace.noteBlockWidget.stop)
+
+        mainArea.workspace.noteBlockWidget.blockPlayed.connect(
+            lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
+        )
+
     def initAudio(self):
         self.audioEngine = AudioEngine(self)
         for ins in default_instruments:
