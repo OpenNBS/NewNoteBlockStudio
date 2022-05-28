@@ -22,6 +22,25 @@ sd.default.dtype = "float32"
 sd.default.latency = "low"
 
 
+def get_system_audio_devices():
+    return sd.query_devices()
+
+
+def query_device_info(id):
+    return sd.query_devices(id)
+
+
+def query_all_devices():
+    return [
+        query_device_info(device_id) for device_id in range(len(sd.query_devices()))
+    ]
+
+
+def query_default_output_device():
+    input_device_id, output_device_id = sd.default.device
+    return sd.query_devices(output_device_id)
+
+
 @dataclass
 class SoundInstance:
     samples: np.ndarray
