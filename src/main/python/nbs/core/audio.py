@@ -40,7 +40,7 @@ class SoundQueue:
 
     def get_active_sounds(self) -> List[SoundInstance]:
         for sound in self.active_sounds:
-            if sound.current_frame > len(sound.samples):
+            if sound.current_frame >= len(sound.samples):
                 self.active_sounds.remove(sound)
         return self.active_sounds
 
