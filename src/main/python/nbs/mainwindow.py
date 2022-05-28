@@ -52,6 +52,16 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
         )
 
+        Actions.cutAction.triggered.connect(
+            mainArea.workspace.noteBlockWidget.cutSelection
+        )
+        Actions.copyAction.triggered.connect(
+            mainArea.workspace.noteBlockWidget.copySelection
+        )
+        Actions.pasteAction.triggered.connect(
+            mainArea.workspace.noteBlockWidget.pasteClipboard
+        )
+
     def initAudio(self):
         self.audioEngine = AudioEngine(self)
         for ins in default_instruments:

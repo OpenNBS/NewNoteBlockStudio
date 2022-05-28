@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import math
+import pickle
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Sequence, Union
+from typing import Generator, List, Optional, Sequence, Tuple, Union
 
 from nbs.core.utils import *
 from nbs.ui.actions import Actions
@@ -344,6 +345,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.activeKey = 45
         self.previousPlaybackPosition = 0
         self.initUI()
+        self.initClipboard()
 
     ########## UI ##########
 
@@ -584,6 +586,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for block in self.selectedItems():
             block.moveBy(x * BLOCK_SIZE, y * BLOCK_SIZE)
 
+    def setSelectionTopLeft(self, point: Union[QtCore.QPoint, QtCore.QPointF]):
+        tl = self.selectionBoundingRect().topLeft()
+        offsetX = (point.x() - tl.x()) // BLOCK_SIZE
+        offsetY = (point.y() - tl.y()) // BLOCK_SIZE
+        self.moveSelection(offsetX, offsetY)
+
     @QtCore.pyqtSlot()
     def selectAllLeft(self, pos: Optional[Union[QtCore.QPoint, QtCore.QPointF]] = None):
         self.deselectAll()
@@ -632,6 +640,79 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.removeBlock(block)
         self.updateSelectionStatus()
         self.updateSceneSize()
+
+    ########## CLIPBOARD ##########
+
+    def getSelectionData(self) -> Generator[Tuple[int, ...], None, None]:
+        origin = self.selectionBoundingRect().topLeft()
+        for block in self.selectedItems():
+            if isinstance(block, NoteBlock):
+                x = (block.x() - origin.x()) // BLOCK_SIZE
+                y = (block.y() - origin.y()) // BLOCK_SIZE
+                data = (x, y, *block.getData())
+                yield data
+
+    def getSelectionDataAsList(self) -> List[Tuple[int, ...]]:
+        return list(self.getSelectionData())
+
+    def getSelectionMimeData(self) -> QtCore.QMimeData:
+        mimeData = QtCore.QMimeData()
+        mimeData.setData(
+            "application/nbs-noteblock-selection",
+            QtCore.QByteArray(pickle.dumps(self.getSelectionDataAsList())),
+        )
+        return mimeData
+
+    def loadSelectionMimeData(self, mimeData: QtCore.QMimeData):
+        if mimeData.hasFormat("application/nbs-noteblock-selection"):
+            data = pickle.loads(mimeData.data("application/nbs-noteblock-selection"))
+            for x, y, *data in data:
+                block = self.addBlock(x, y, *data)
+                block.setSelected(True)
+            self.updateSelectionStatus()
+            self.selectionChanged.emit(self.selectionStatus)
+
+    def initClipboard(self):
+        self.clipboard = QtWidgets.QApplication.clipboard()
+        # self.clipboard.dataChanged.connect(self.onClipboardDataChanged)
+
+    @QtCore.pyqtSlot()
+    def copySelection(self):
+        self.clipboard.setMimeData(self.getSelectionMimeData())
+
+    @QtCore.pyqtSlot()
+    def cutSelection(self):
+        self.copySelection()
+        self.deleteSelection()
+
+    @QtCore.pyqtSlot()
+    def pasteClipboard(self):
+        self.deselectAll()
+        self.loadSelectionMimeData(self.clipboard.mimeData())
+        self.retrieveSelection()
+
+    def retrieveSelection(self):
+        # If the mouse cursor is over the scene, move the selection to the cursor.
+        # Otherwise, move the selection to the top left corner of the view.
+        cursorPosition = self.view.mapFromGlobal(QtGui.QCursor.pos())
+        if self.isClosingMenu:
+            self.pasteAtMenuClick()
+            self.isClosingMenu = False
+        elif self.view.viewport().geometry().contains(cursorPosition):
+            self.pasteAtCursor()
+        else:
+            self.pasteAtTopLeft()
+
+    def pasteAtCursor(self):
+        cursorPosition = self.view.mapFromGlobal(QtGui.QCursor.pos())
+        self.setSelectionTopLeft(cursorPosition)
+
+    def pasteAtTopLeft(self):
+        viewTopLeftCorner = self.view.mapToScene(BLOCK_SIZE - 1, BLOCK_SIZE - 1)
+        self.setSelectionTopLeft(viewTopLeftCorner)
+
+    def pasteAtMenuClick(self):
+        self.setSelectionTopLeft(self.menuClickPos)
 
     ########## LAYERS ##########
 
@@ -1104,3 +1185,12 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.glow = 1
         self.glowTimer.start()
         self.update()
+
+    def getData(self):
+        return (
+            self.key,
+            self.ins,
+            self.vel,
+            self.pan,
+            self.pit,
+        )
