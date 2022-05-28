@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import Enum
 from typing import List, Optional, Sequence, Union
 
 from nbs.core.utils import *
@@ -194,6 +195,14 @@ class Layer:
     panning: int = 0
 
 
+class ScrollMode(Enum):
+    """Enum for the different scroll modes for `NoteBlockView`."""
+
+    NONE = 0
+    PAGE_BY_PAGE = 1
+    TICK_BY_TICK = 2
+
+
 class NoteBlockView(QtWidgets.QGraphicsView):
 
     scaleChanged = QtCore.pyqtSignal(float)
@@ -203,6 +212,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.currentScale = 1
+        self.scrollMode = ScrollMode.PAGE_BY_PAGE
         self.ruler = TimeRuler(parent=self)
         self.marker = Marker(parent=self)
         self.playbackManager = PlaybackManager()
@@ -223,6 +233,9 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.playbackManager.playbackPositionChanged.connect(self.marker.setPos)
         self.playbackManager.playbackPositionChanged.connect(
             self.scene().doPlayback, QtCore.Qt.ConnectionType.DirectConnection
+        )
+        self.playbackManager.playbackPositionChanged.connect(
+            lambda tick: self.updateScroll(int(tick * BLOCK_SIZE))
         )
 
         self.tempoChanged.connect(self.playbackManager.setTempo)
@@ -263,6 +276,41 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         vsb.resize(QtCore.QSize(vsb.width(), self.height() - 32 - SCROLL_BAR_SIZE))
         self.ruler.update()
         self.scene().updateSceneSize()
+
+    ########## Auto-scroll ##########
+
+    @QtCore.pyqtSlot(int)
+    def setScrollMode(self, mode: int) -> None:
+        self.scrollMode = mode
+
+    @QtCore.pyqtSlot(int)
+    def updateScroll(self, newPos: int) -> None:
+        """
+        Update the view's horizontal scroll position to match `newPos`, in pixels,
+        according to the view's scroll mode.
+        """
+
+        viewport = self.viewport()
+        viewYCenter = (
+            self.mapToScene(viewport.rect().center()).y() + 1
+        )  # The +1 is to avoid rounding errors
+
+        if newPos == 0:
+            return  # Don't scroll when stopping playback
+
+        if self.scrollMode == ScrollMode.NONE:
+            return
+
+        elif self.scrollMode == ScrollMode.PAGE_BY_PAGE:
+            point = QtCore.QPoint(newPos, viewYCenter)
+            if not self.mapToScene(viewport.rect()).containsPoint(point, 0):
+                viewWidth = viewport.width()
+                self.ensureVisible(
+                    newPos, viewYCenter, viewWidth, 0, xMargin=0, yMargin=0
+                )
+
+        elif self.scrollMode == ScrollMode.TICK_BY_TICK:
+            self.centerOn(newPos, viewYCenter)
 
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
