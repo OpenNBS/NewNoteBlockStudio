@@ -172,6 +172,11 @@ class Marker(QtWidgets.QWidget):
         self.updatePos()
 
     @QtCore.pyqtSlot(int)
+    def movePos(self, offset):
+        self.pos += offset
+        self.updatePos()
+
+    @QtCore.pyqtSlot(int)
     def setOffset(self, value):
         self.offset = value
         self.updatePos()
@@ -217,7 +222,9 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler.clicked.connect(self.marker.setPos)
         self.marker.moved.connect(self.markerMoved)
 
-        self.marker.moved.connect(self.scene().doPlayback)
+        self.marker.moved.connect(
+            self.scene().doPlayback, QtCore.Qt.ConnectionType.DirectConnection
+        )
         # self.scene().playbackPositionChanged.connect(self.marker.setPos)
 
     @QtCore.pyqtSlot()
@@ -306,7 +313,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.tempo = 10.0
         self.previousPlaybackPosition = 0
         self.playbackTimer = QtCore.QTimer()
-        self.playbackTimer.setInterval(1)
+        self.playbackTimer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
+        self.playbackTimer.setInterval(5)
         self.playbackTimer.timeout.connect(self.tickPlayback)
 
     def drawBackground(self, painter, rect):
@@ -703,7 +711,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot()
     def tickPlayback(self):
-        offset = self.tempo / 1000
+        offset = self.tempo / 200
         self.view.marker.movePos(offset)
         # self.playbackPositionChanged.emit(offset)
 
@@ -735,7 +743,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         pitch = block.pit
         block.play()
         self.blockPlayed.emit(instrument, key, volume, panning, pitch)
-        print("Played")
 
     def playTick(self, tick: int) -> None:
         for block in self.getBlocksInTick(tick):
