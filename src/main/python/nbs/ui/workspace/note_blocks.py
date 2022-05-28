@@ -439,11 +439,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         blockPos = self.getScenePos(x, y)
         block = NoteBlock(x, y, *args, **kwargs)
         block.setPos(blockPos)
-        block.mouseOver = True
         self.addItem(block)
+        return block
 
     def addBlockManual(self, x, y, *args, **kwargs):
-        self.addBlock(x, y, *args, **kwargs)
+        block = self.addBlock(x, y, *args, **kwargs)
+        block.mouseOver = True
         self.updateSceneSize()
 
     def removeBlock(self, block: NoteBlock) -> None:
