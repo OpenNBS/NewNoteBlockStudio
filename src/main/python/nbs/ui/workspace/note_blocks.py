@@ -589,6 +589,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for block in self.selectedItems():
             self.removeBlock(block)
         self.updateSelectionStatus()
+        self.updateSceneSize()
+
     ########## LAYERS ##########
 
     def updateLayerCount(self):
