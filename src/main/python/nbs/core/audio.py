@@ -27,6 +27,9 @@ class SoundInstance:
     samples: np.ndarray
     current_frame: int = 0
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} ({self.current_frame}/{len(self.samples)})>"
+
 
 class SoundQueue:
     def __init__(self, sample_rate, channels) -> None:
