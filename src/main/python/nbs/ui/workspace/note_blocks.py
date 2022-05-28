@@ -625,6 +625,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     @QtCore.pyqtSlot(int, bool)
     def setLayerLock(self, id: int, lock: bool):
         self.layers[id].lock = lock
+            )
         self.update()
 
     @QtCore.pyqtSlot(int, bool)
@@ -732,6 +733,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         volume = block.vel * layer.volume
         panning = (block.pan * layer.panning) / 2
         pitch = block.pit
+        block.play()
         self.blockPlayed.emit(instrument, key, volume, panning, pitch)
         print("Played")
 
@@ -878,6 +880,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.vel = vel
         self.pan = pan
         self.pit = pit
+        self.glow = 0
         self.label = self.getLabel()
         self.clicks = self.getClicks()
         self.isOutOfRange = False
@@ -888,6 +891,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         # TODO: experiment with other caching mores such as ItemCoordinateCache,
         # optimize drawing code by reducing detail when zoomed out far etc.
         self.setCacheMode(QtWidgets.QGraphicsItem.DeviceCoordinateCache)
+        self.glowTimer = QtCore.QTimer()
+        self.glowTimer.setInterval(10)
+        self.glowTimer.timeout.connect(
+            self.updateGlow, QtCore.Qt.ConnectionType.DirectConnection
+        )
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
@@ -915,7 +923,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         if self.mouseOver:
             painter.setOpacity(1)
         else:
-            painter.setOpacity(0.75)
+            painter.setOpacity(0.5 + 0.5 * self.glow)
 
         pixmap = QtGui.QPixmap(appctxt.get_resource("images/note_block_grayscale.png"))
         painter.drawPixmap(rect, pixmap)
@@ -957,6 +965,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         else:
             self.changeKey(-1)
 
+    def setSelectable(self, selectable: Optional[bool] = True) -> None:
+        self.setFlag(
+            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, selectable
+        )
+
     def changeKey(self, steps):
         self.key += steps
         self.refresh()
@@ -979,3 +992,16 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             return ">"
         else:
             return str(self.key - 33)
+
+    def updateGlow(self):
+        if self.glow > 0:
+            self.glow -= 0.01
+        else:
+            self.glowTimer.stop()
+        print(self.glowTimer.isActive())
+        self.update()
+
+    def play(self):
+        self.glow = 1
+        self.glowTimer.start()
+        self.update()
