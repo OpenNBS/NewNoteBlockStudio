@@ -567,6 +567,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         bbox = self.selectionBoundingRect()
         origin = bbox.topLeft()
         
+
         for block in self.selectedItems():
             relativePosX = block.x() - origin.x()
             block.moveBy(relativePosX, 0)
@@ -598,7 +599,26 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         while len(self.layers) > layerCount:
             self.layers.pop()
         print("New layer count:", len(self.layers))
-        print(self.layers)
+
+    def updateBlocksSelectableStatus(
+        self, blocks: Optional[Sequence[NoteBlock]] = None
+    ) -> None:
+        """
+        Update the selectable status of all note blocks in the scene according to
+        their layer's lock status. If `blocks` is given and not empty, only those
+        blocks will be updated.
+        """
+        # TODO: This might become a costly operation with a lot of note blocks on the scene.
+        # Perhaps update it on addBlock, deselectAll etc. (only where new blocks may be placed under a locked layer)
+        if not blocks:
+            blocks = self.items()
+
+        for block in blocks:
+            layer = block.y() // BLOCK_SIZE
+            if self.layers[layer].lock:
+                block.setSelectable(True)
+            else:
+                block.setSelectable(False)
 
     def getLayerRegion(self, id: int) -> QtCore.QRectF:
         y1 = id * BLOCK_SIZE
@@ -633,6 +653,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     @QtCore.pyqtSlot(int, bool)
     def setLayerLock(self, id: int, lock: bool):
         self.layers[id].lock = lock
+        for block in self.getBlocksInLayer(id):
+            block.setFlag(
+                QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, not lock
             )
         self.update()
 
