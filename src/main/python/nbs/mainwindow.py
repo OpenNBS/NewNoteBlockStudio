@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
             mainArea.workspace.noteBlockWidget.copySelection
         )
         Actions.pasteAction.triggered.connect(
-            mainArea.workspace.noteBlockWidget.pasteClipboard
+            mainArea.workspace.noteBlockWidget.pasteSelection
         )
 
     def initAudio(self):

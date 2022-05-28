@@ -682,7 +682,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.deleteSelection()
 
     @QtCore.pyqtSlot()
-    def pasteClipboard(self):
+    def pasteSelection(self):
         self.deselectAll()
         self.loadSelectionMimeData(self.clipboard.mimeData())
         self.retrieveSelection()
@@ -691,24 +691,17 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         # If the mouse cursor is over the scene, move the selection to the cursor.
         # Otherwise, move the selection to the top left corner of the view.
         cursorPosition = self.view.mapFromGlobal(QtGui.QCursor.pos())
+
         if self.isClosingMenu:
-            self.pasteAtMenuClick()
+            selectionPos = self.menuClickPos
             self.isClosingMenu = False
         elif self.view.viewport().geometry().contains(cursorPosition):
-            self.pasteAtCursor()
+            selectionPos = cursorPosition
         else:
-            self.pasteAtTopLeft()
+            viewTopLeftCorner = self.view.mapToScene(BLOCK_SIZE - 1, BLOCK_SIZE - 1)
+            selectionPos = viewTopLeftCorner
 
-    def pasteAtCursor(self):
-        cursorPosition = self.view.mapFromGlobal(QtGui.QCursor.pos())
-        self.setSelectionTopLeft(cursorPosition)
-
-    def pasteAtTopLeft(self):
-        viewTopLeftCorner = self.view.mapToScene(BLOCK_SIZE - 1, BLOCK_SIZE - 1)
-        self.setSelectionTopLeft(viewTopLeftCorner)
-
-    def pasteAtMenuClick(self):
-        self.setSelectionTopLeft(self.menuClickPos)
+        self.setSelectionTopLeft(selectionPos)
 
     ########## LAYERS ##########
 
