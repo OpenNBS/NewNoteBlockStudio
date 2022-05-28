@@ -207,8 +207,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.currentScale = 1
         self.ruler = TimeRuler(parent=self)
         self.marker = Marker(parent=self)
-        ########self.setStyleSheet("QGraphicsView { border-top: none; }")
-        # self.horizontalScrollBar().setStyle(QtWidgets.qApp.style())
+
         self.setViewportMargins(0, 32, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
@@ -567,7 +566,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def expandSelection(self):
         bbox = self.selectionBoundingRect()
         origin = bbox.topLeft()
-        
 
         for block in self.selectedItems():
             relativePosX = block.x() - origin.x()
