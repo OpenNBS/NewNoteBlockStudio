@@ -19,7 +19,7 @@ sd.default.samplerate = 44100
 sd.default.blocksize = 0
 sd.default.channels = 2
 sd.default.dtype = "float32"
-sd.default.latency = 0.1
+sd.default.latency = "low"
 
 
 @dataclass
