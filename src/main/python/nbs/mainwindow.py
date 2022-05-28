@@ -35,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
         mainArea.workspace.noteBlockWidget.blockAdded.connect(
             lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
         )
-        mainArea.piano.piano.activeKeyChanged.connect(
+        mainArea.piano.activeKeyChanged.connect(
             lambda key: self.audioEngine.playSound(15, 0.5, 2 ** ((key - 45) / 12), 0)
         )
 

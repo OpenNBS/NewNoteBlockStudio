@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .constants import *
 
-__all__ = ["PianoWidget", "PianoScroll"]
+__all__ = ["PianoWidget", "HorizontalAutoScrollArea"]
 
 
 class PianoKey(QtWidgets.QWidget):
@@ -239,19 +239,17 @@ class PianoWidget(QtWidgets.QWidget):
         self.arrangeBlackKeys()
 
 
-class PianoScroll(QtWidgets.QScrollArea):
+class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
     """
-    A scrolling area containing a piano widget.
-    Takes the same arguments as PianoWidget().
+    A scrolling area with automatic scrolling when
+    the mouse cursor is near the left or right edges.
     """
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
-        self.piano = PianoWidget(*args, **kwargs)
         self.initUI()
 
     def initUI(self):
-        self.setWidget(self.piano)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.startTimer(10)

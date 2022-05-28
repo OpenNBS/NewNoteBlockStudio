@@ -3,7 +3,7 @@ from PyQt5 import QtCore, QtWidgets
 from .constants import *
 from .layers import LayerArea
 from .note_blocks import NoteBlockArea
-from .piano import PianoScroll
+from .piano import HorizontalAutoScrollArea, PianoWidget
 from .time_bar import TimeBar
 
 __all__ = ["CentralArea"]
@@ -79,21 +79,23 @@ class CentralArea(QtWidgets.QSplitter):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.workspace = Workspace()
-        self.piano = PianoScroll(keyCount=88, offset=9, validRange=(33, 57))
+
+        self.piano = PianoWidget(keyCount=88, offset=9, validRange=(33, 57))
+        self.pianoScroll = HorizontalAutoScrollArea(parent=self)
+        self.pianoScroll.setWidget(self.piano)
+
         self.initUI()
 
     def initUI(self):
         self.setOrientation(QtCore.Qt.Vertical)
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
-        self.addWidget(self.piano)
+        self.addWidget(self.pianoScroll)
         # reserve just enough space for piano and let workspace occupy the rest
-        pianoHeight = self.piano.piano.height()
+        pianoHeight = self.piano.height()
         self.setSizes([1, pianoHeight])
         self.handle(1).setEnabled(False)  # make handle unmovable
         self.setStretchFactor(0, 1)  # set workspace to stretch
         self.setStretchFactor(1, 0)  # set piano to NOT stretch
         # TODO: perhaps a QVBoxLayout is more appropriate here?
-        self.piano.piano.activeKeyChanged.connect(
-            self.workspace.noteBlockWidget.setActiveKey
-        )
+        self.piano.activeKeyChanged.connect(self.workspace.noteBlockWidget.setActiveKey)
