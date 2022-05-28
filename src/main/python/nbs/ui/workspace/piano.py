@@ -247,8 +247,6 @@ class PianoScroll(QtWidgets.QScrollArea):
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
-        self.mouseNearLeftEdge = False
-        self.mouseNearRightEdge = False
         self.piano = PianoWidget(*args, **kwargs)
         self.initUI()
 
@@ -256,25 +254,16 @@ class PianoScroll(QtWidgets.QScrollArea):
         self.setWidget(self.piano)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setMouseTracking(True)
         self.startTimer(10)
 
     def timerEvent(self, event):
         self.checkAutoScroll()
 
     def checkAutoScroll(self):
+        cursorPosition = self.mapFromGlobal(QtGui.QCursor.pos()).x()
         sb = self.horizontalScrollBar()
-        if self.mouseNearLeftEdge:
-            sb.setValue(sb.value() - 5)
-        elif self.mouseNearRightEdge:
-            sb.setValue(sb.value() + 5)
 
-    def mouseMoveEvent(self, event):
-        """Allow scrolling the piano by placing the mouse near the edges."""
-        leftEdge = self.rect()
-        leftEdge.setRight(50)
-        rightEdge = self.rect()
-        rightEdge.setLeft(self.width() - 50)
-        mousePos = event.pos()
-        self.mouseNearLeftEdge = leftEdge.contains(mousePos)
-        self.mouseNearRightEdge = rightEdge.contains(mousePos)
+        if cursorPosition < 50:
+            sb.setValue(sb.value() - 3)
+        elif cursorPosition > self.width() - 50:
+            sb.setValue(sb.value() + 3)
