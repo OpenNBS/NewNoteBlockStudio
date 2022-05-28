@@ -40,9 +40,13 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         Actions.playPauseAction.triggered.connect(
-            lambda checked: mainArea.workspace.noteBlockWidget.setPlaying(checked)
+            lambda checked: mainArea.workspace.noteBlockWidget.view.playbackManager.setPlaying(
+                checked
+            )
         )
-        Actions.stopAction.triggered.connect(mainArea.workspace.noteBlockWidget.stop)
+        Actions.stopAction.triggered.connect(
+            mainArea.workspace.noteBlockWidget.view.playbackManager.stop
+        )
 
         mainArea.workspace.noteBlockWidget.blockPlayed.connect(
             lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)

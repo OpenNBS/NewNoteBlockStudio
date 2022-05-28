@@ -16,7 +16,7 @@ __all__ = ["NoteBlockArea"]
 
 class TimeRuler(QtWidgets.QWidget):
 
-    clicked = QtCore.pyqtSignal(int)
+    clicked = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -90,7 +90,8 @@ class TimeRuler(QtWidgets.QWidget):
 
     def mouseReleaseEvent(self, event):
         pos = event.pos().x()
-        self.clicked.emit(pos)
+        tick = (pos + self.offset) / (self.scale * BLOCK_SIZE)
+        self.clicked.emit(tick)
         self.update()
 
     @QtCore.pyqtSlot(int)
@@ -152,8 +153,9 @@ class Marker(QtWidgets.QWidget):
         # how much it should move based on how far from the center the mouse moved
         if event.buttons() == QtCore.Qt.LeftButton:
             offset = event.pos().x() - 8
-            pos = self.tickToPos(self.pos) + offset
+            pos = self.posToTick(self.tickToPos(self.pos) + offset)
             self.setPos(pos)
+            self.moved.emit(pos)
         return
 
     def posToTick(self, pos):
@@ -164,16 +166,11 @@ class Marker(QtWidgets.QWidget):
 
     def updatePos(self):
         self.move(self.tickToPos(self.pos) - 8, 0)
-        self.moved.emit(self.pos)
 
-    @QtCore.pyqtSlot(int)
-    def setPos(self, pos):
-        self.pos = max(0, self.posToTick(pos))
-        self.updatePos()
-
-    @QtCore.pyqtSlot(int)
-    def movePos(self, offset):
-        self.pos += offset
+    @QtCore.pyqtSlot(float)
+    def setPos(self, pos: float):
+        """Set the position of the marker, in ticks."""
+        self.pos = max(0, pos)
         self.updatePos()
 
     @QtCore.pyqtSlot(int)
@@ -201,12 +198,14 @@ class NoteBlockView(QtWidgets.QGraphicsView):
 
     scaleChanged = QtCore.pyqtSignal(float)
     markerMoved = QtCore.pyqtSignal(float)
+    tempoChanged = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.currentScale = 1
         self.ruler = TimeRuler(parent=self)
         self.marker = Marker(parent=self)
+        self.playbackManager = PlaybackManager()
 
         self.setViewportMargins(0, 32, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
@@ -218,13 +217,16 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.horizontalScrollBar().valueChanged.connect(self.marker.setOffset)
         self.scaleChanged.connect(self.ruler.setScale)
         self.scaleChanged.connect(self.marker.setScale)
-        self.ruler.clicked.connect(self.marker.setPos)
-        self.marker.moved.connect(self.markerMoved)
 
-        self.marker.moved.connect(
+        self.ruler.clicked.connect(self.playbackManager.setPlaybackPosition)
+        self.marker.moved.connect(self.playbackManager.setPlaybackPosition)
+        self.playbackManager.playbackPositionChanged.connect(self.marker.setPos)
+        self.playbackManager.playbackPositionChanged.connect(
             self.scene().doPlayback, QtCore.Qt.ConnectionType.DirectConnection
         )
-        # self.scene().playbackPositionChanged.connect(self.marker.setPos)
+
+        self.tempoChanged.connect(self.playbackManager.setTempo)
+        self.tempoChanged.connect(self.ruler.setTempo)
 
     @QtCore.pyqtSlot()
     def setScale(self, value):
@@ -292,8 +294,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         self.activeKey = 45
+        self.previousPlaybackPosition = 0
         self.initUI()
-        self.initPlayback()
 
     ########## UI ##########
 
@@ -307,14 +309,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selectionProxy = self.addWidget(self.selection)
         self.selectionProxy.setZValue(100)
         self.startTimer(10)
-
-    def initPlayback(self):
-        self.tempo = 10.0
-        self.previousPlaybackPosition = 0
-        self.playbackTimer = QtCore.QTimer()
-        self.playbackTimer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
-        self.playbackTimer.setInterval(5)
-        self.playbackTimer.timeout.connect(self.tickPlayback)
 
     def drawBackground(self, painter, rect):
         painter.setPen(QtCore.Qt.NoPen)
@@ -712,33 +706,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## PLAYBACK ##########
 
-    @QtCore.pyqtSlot()
-    def play(self):
-        self.playbackTimer.start()
-
-    @QtCore.pyqtSlot()
-    def pause(self):
-        self.playbackTimer.stop()
-
-    @QtCore.pyqtSlot()
-    def stop(self):
-        self.playbackTimer.stop()
-        self.view.marker.setPos(0)
-        # self.playbackPositionChanged.emit(0)
-
-    @QtCore.pyqtSlot()
-    def setPlaying(self, playing: bool) -> None:
-        if playing:
-            self.play()
-        else:
-            self.pause()
-
-    @QtCore.pyqtSlot()
-    def tickPlayback(self):
-        offset = self.tempo / 200
-        self.view.marker.movePos(offset)
-        # self.playbackPositionChanged.emit(offset)
-
     @QtCore.pyqtSlot(float)
     def doPlayback(self, currentPlaybackPosition: float):
         if math.floor(self.previousPlaybackPosition) != math.floor(
@@ -899,6 +866,59 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                     return True
 
         return False
+
+
+class PlaybackManager(QtCore.QObject):
+
+    playbackPositionChanged = QtCore.pyqtSignal(float)
+
+    def __init__(self, parent: QtCore.QObject = None):
+        super().__init__(parent)
+        self.tempo = 10.00
+        self.currentTick = 0
+
+        self.timer = QtCore.QTimer()
+        self.timer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
+        self.timer.setInterval(5)
+        self.timer.timeout.connect(
+            self.tickPlayback, QtCore.Qt.ConnectionType.DirectConnection
+        )
+
+    @QtCore.pyqtSlot()
+    def play(self):
+        self.timer.start()
+
+    @QtCore.pyqtSlot()
+    def pause(self):
+        self.timer.stop()
+
+    @QtCore.pyqtSlot()
+    def stop(self):
+        self.timer.stop()
+        self.currentTick = 0
+        self.playbackPositionChanged.emit(self.currentTick)
+
+    @QtCore.pyqtSlot()
+    def setPlaying(self, playing: bool) -> None:
+        if playing:
+            self.play()
+        else:
+            self.pause()
+
+    @QtCore.pyqtSlot(float)
+    def setPlaybackPosition(self, tick: float):
+        self.currentTick = max(0, tick)
+        self.playbackPositionChanged.emit(self.currentTick)
+
+    @QtCore.pyqtSlot()
+    def tickPlayback(self):
+        offset = self.tempo / 200
+        self.currentTick += offset
+        self.playbackPositionChanged.emit(self.currentTick)
+
+    @QtCore.pyqtSlot(float)
+    def setTempo(self, tempo: float):
+        self.tempo = tempo
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
