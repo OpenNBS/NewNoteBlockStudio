@@ -1,5 +1,6 @@
+from nbs.core.data import Instrument
 from nbs.ui.actions import Actions
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class FileMenu(QtWidgets.QMenu):
@@ -39,6 +40,60 @@ class FileMenu(QtWidgets.QMenu):
 
     def updateRecentSongs(self):
         pass
+
+
+class InstrumentSubMenu(QtWidgets.QMenu):
+    def __init__(self, parent=None, title=None):
+        super().__init__(parent)
+        if title:
+            self.setTitle(title)
+
+    def addInstrumentEntry(self, instrument: Instrument):
+        raise NotImplementedError()
+
+    def removeInstrumentEntry(self, index: int):
+        raise NotImplementedError()
+
+    def changeCurrentInstrument(self, index: int):
+        raise NotImplementedError()
+
+
+class InstrumentEditSubMenu(InstrumentSubMenu):
+    def __init__(self, parent=None, title=None):
+        super().__init__(parent, title)
+
+    @QtCore.pyqtSlot(str)
+    def addInstrumentEntry(self, instrument: Instrument):
+        self.addAction(f"...to {instrument.name}")
+
+    @QtCore.pyqtSlot(int)
+    def removeInstrumentEntry(self, index: int):
+        self.removeAction(self.actions()[index])
+
+    @QtCore.pyqtSlot(str)
+    def changeCurrentInstrument(self, index: int):
+        pass
+
+
+class InstrumentSettingsSubMenu(InstrumentSubMenu):
+    def __init__(self, parent=None, title=None):
+        super().__init__(parent, title)
+        self.actionGroup = QtWidgets.QActionGroup(self)
+        self.actionGroup.setExclusive(True)
+        self.currentInstrument = 0
+
+    @QtCore.pyqtSlot(str)
+    def addInstrumentEntry(self, instrument: Instrument):
+        self.actionGroup.addAction(self.addAction(instrument.name))
+
+    @QtCore.pyqtSlot(str)
+    def removeInstrumentEntry(self, index: Instrument):
+        self.actionGroup.removeAction(self.actionGroup.actions()[index])
+
+    @QtCore.pyqtSlot(str)
+    def changeCurrentInstrument(self, index: int):
+        self.currentInstrument = index
+        self.actionGroup.actions()[index].setChecked(True)
 
 
 class EditMenu(QtWidgets.QMenu):
@@ -93,7 +148,8 @@ class EditMenu(QtWidgets.QMenu):
         self.decreaseOctaveAction = self.addAction(Actions.decreaseOctaveAction)
         self.increaseKeyAction = self.addAction(Actions.increaseKeyAction)
         self.decreaseKeyAction = self.addAction(Actions.decreaseKeyAction)
-        self.changeInstrumentMenu = self.addMenu("Change instrument...")
+        self.changeInstrumentMenu = InstrumentEditSubMenu(self, "Change instrument...")
+        self.addMenu(self.changeInstrumentMenu)
         self.addSeparator()
 
         self.expandSelectionAction = self.addAction(Actions.expandSelectionAction)
@@ -103,11 +159,13 @@ class EditMenu(QtWidgets.QMenu):
         self.transposeNotesAction = self.addAction(Actions.transposeNotesAction)
         self.macrosMenu = self.addMenu("Macros...")
 
-    def addInstrumentEntry(self, instrument):
-        pass
-
-    def removeInstrumentEntry(self, index):
-        pass
+    @QtCore.pyqtSlot(str)
+    def changeCurrentInstrument(self, instrument: Instrument):
+        Actions.selectAllInstrumentAction.setText(f"Select all {instrument.name}")
+        Actions.selectAllButInstrumentAction.setText(
+            f"Select all but {instrument.name}"
+        )
+        self.changeInstrumentMenu.changeCurrentInstrument(0)
 
 
 class SettingsMenu(QtWidgets.QMenu):
@@ -117,8 +175,8 @@ class SettingsMenu(QtWidgets.QMenu):
         self.addEntries()
 
     def addEntries(self):
-        self.instrumentsMenu = self.addMenu("Instrument")
-        self.instrumentsMenu.addAction("Harp")
+        self.instrumentMenu = InstrumentSettingsSubMenu(self, "Instrument")
+        self.addMenu(self.instrumentMenu)
         self.instrumentSettingsAction = self.addAction(Actions.instrumentSettingsAction)
         self.addSeparator()
 

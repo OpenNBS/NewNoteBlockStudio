@@ -17,6 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMinimumSize(854, 480)
         self.initAudio()
         self.initUI()
+        self.initInstruments()
 
     def initUI(self):
         menuBar = MenuBar()
@@ -64,9 +65,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initAudio(self):
         self.audioEngine = AudioEngine(self)
+
+    def initInstruments(self):
         for ins in default_instruments:
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
             self.audioEngine.loadSound(sound_path)
+
+            self.menuBar().editMenu.changeInstrumentMenu.addInstrumentEntry(ins)
+            self.menuBar().settingsMenu.instrumentMenu.addInstrumentEntry(ins)
+            self.centralWidget().workspace.noteBlockWidget.menu.changeInstrumentMenu.addInstrumentEntry(
+                ins
+            )
+
+        self.menuBar().editMenu.changeCurrentInstrument(ins)
 
     #
     #
