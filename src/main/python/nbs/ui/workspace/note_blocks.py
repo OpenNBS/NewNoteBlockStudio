@@ -527,7 +527,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for block in blocks:
             block.setSelected(selected)
         self.updateSelectionStatus()
-        self.selectionChanged.emit(self.selectionStatus)
 
     def setAreaSelected(self, area: QtCore.QRectF, selected: bool = True):
         self.setBlocksSelected(self.items(area), selected)
@@ -545,6 +544,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.selectionStatus = 0
         else:
             self.selectionStatus = -1
+        self.selectionChanged.emit(self.selectionStatus)
 
     def selectionBoundingRect(self) -> QtCore.QRectF:
         rect = QtCore.QRectF()
