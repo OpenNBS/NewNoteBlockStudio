@@ -143,7 +143,7 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setClipboard(cls, hasClipboard: bool) -> None:
-        Actions.pasteAction.setDisabled(not hasClipboard)
+        cls.pasteAction.setEnabled(hasClipboard)
 
     @classmethod
     def setEmptyActionsEnabled(cls, enabled: bool = True):

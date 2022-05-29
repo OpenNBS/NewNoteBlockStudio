@@ -325,6 +325,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## Public slots ##########
     selectionChanged = QtCore.pyqtSignal(int)
+    clipboardChanged = QtCore.pyqtSignal()
     blockAdded = QtCore.pyqtSignal()
     blockPlayed = QtCore.pyqtSignal(int, int, int, int, int)
 
@@ -670,7 +671,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def initClipboard(self):
         self.clipboard = QtWidgets.QApplication.clipboard()
-        # self.clipboard.dataChanged.connect(self.onClipboardDataChanged)
+        self.clipboard.dataChanged.connect(self.clipboardChanged)
 
     @QtCore.pyqtSlot()
     def copySelection(self):

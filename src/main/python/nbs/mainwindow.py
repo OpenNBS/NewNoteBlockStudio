@@ -31,6 +31,9 @@ class MainWindow(QtWidgets.QMainWindow):
         mainArea.workspace.noteBlockWidget.selectionChanged.connect(
             Actions.setSelectionStatus
         )
+        mainArea.workspace.noteBlockWidget.selectionChanged.connect(
+            lambda: Actions.setClipboard(True)
+        )
 
 
         mainArea.workspace.noteBlockWidget.blockAdded.connect(
