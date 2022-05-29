@@ -147,10 +147,12 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setClipboard(cls, hasClipboard: bool) -> None:
+        """Set actions that should only be enabled when there is something in the clipboard."""
         cls.pasteAction.setEnabled(hasClipboard)
 
     @classmethod
     def setEmptyActionsEnabled(cls, enabled: bool = True):
+        """Set actions that should only be enabled when at least one note block exists."""
         cls.saveSongAction.setEnabled(enabled)
         cls.saveSongAsAction.setEnabled(enabled)
         cls.saveOptionsAction.setEnabled(enabled)
@@ -162,6 +164,7 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setSelectionActionsEnabled(cls, enabled: bool = True):
+        """Set actions that should only be enabled when there is a selection."""
         cls.cutAction.setEnabled(enabled)
         cls.copyAction.setEnabled(enabled)
         cls.deleteAction.setEnabled(enabled)
@@ -178,6 +181,7 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setFullSelectionActionsEnabled(cls, enabled: bool = False):
+        """Set actions that should be disabled when all note blocks are selected."""
         cls.selectAllAction.setEnabled(enabled)
         cls.selectAllLeftAction.setEnabled(enabled)
         cls.selectAllRightAction.setEnabled(enabled)
@@ -186,6 +190,7 @@ class Actions(QtCore.QObject):
 
     @QtCore.pyqtSlot(int)
     def setSelectionStatus(selection: int) -> None:
+        """Enable or disable the necessary actions according to the given selection status."""
         if selection == -1:
             Actions.setNoneSelected()
         elif selection == 0:
@@ -202,6 +207,7 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setEmpty(cls):
+        """Call this when no note blocks exist."""
         cls.setEmptyActionsEnabled(False)
         cls.setSelectionActionsEnabled(False)
         cls.setFullSelectionActionsEnabled(False)
@@ -209,15 +215,18 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setAllSelected(cls):
+        """Call this when all note blocks are selected."""
         cls.setSelectionActionsEnabled(True)
         cls.setFullSelectionActionsEnabled(False)
 
     @classmethod
     def setSomeSelected(cls):
+        """Call this when some note blocks are selected."""
         cls.setSelectionActionsEnabled(True)
         cls.setFullSelectionActionsEnabled(True)
 
     @classmethod
     def setNoneSelected(cls):
+        """Call this when no note blocks are selected."""
         cls.setSelectionActionsEnabled(False)
         cls.setFullSelectionActionsEnabled(True)
