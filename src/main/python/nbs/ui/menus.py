@@ -11,8 +11,8 @@ class FileMenu(QtWidgets.QMenu):
         self.addEntries()
 
     def addEntries(self):
-        self.newSongAction = self.addAction(Actions.newSongAction)
-        self.openSongAction = self.addAction(Actions.openSongAction)
+        self.addAction(Actions.newSongAction)
+        self.addAction(Actions.openSongAction)
 
         # Recent songs
         self.recentSongs = self.addMenu(QtGui.QIcon(), "Open recent")
@@ -20,12 +20,12 @@ class FileMenu(QtWidgets.QMenu):
 
         # Import
         self.importMenu = self.addMenu("Import")
-        self.importFromMidiAction = self.importMenu.addAction(Actions.importMidiAction)
+        self.importMenu.addAction(Actions.importMidiAction)
 
         self.addSeparator()
 
-        self.saveSongAction = self.addAction(Actions.saveSongAction)
-        self.saveSongAsAction = self.addAction(Actions.saveSongAsAction)
+        self.addAction(Actions.saveSongAction)
+        self.addAction(Actions.saveSongAsAction)
 
         # Export
         self.exportMenu = self.addMenu("Export as...")
@@ -36,7 +36,7 @@ class FileMenu(QtWidgets.QMenu):
 
         self.addSeparator()
 
-        self.exitAction = self.addAction(Actions.exitAction)
+        self.addAction(Actions.exitAction)
 
     def updateRecentSongs(self):
         pass
@@ -111,52 +111,48 @@ class EditMenu(QtWidgets.QMenu):
 
     def addEntries(self):
         if self.isFloat:
-            self.cutAction = self.addAction(Actions.cutAction)
-            self.copyAction = self.addAction(Actions.copyAction)
-            self.pasteAction = self.addAction(Actions.pasteAction)
-            self.deleteAction = self.addAction(Actions.deleteAction)
+            self.addAction(Actions.cutAction)
+            self.addAction(Actions.copyAction)
+            self.addAction(Actions.pasteAction)
+            self.addAction(Actions.deleteAction)
         else:
-            self.undoAction = self.addAction(Actions.undoAction)
-            self.redoAction = self.addAction(Actions.redoAction)
+            self.addAction(Actions.undoAction)
+            self.addAction(Actions.redoAction)
         self.addSeparator()
 
-        self.copyAction = self.addAction(Actions.copyAction)
-        self.cutAction = self.addAction(Actions.cutAction)
-        self.pasteAction = self.addAction(Actions.pasteAction)
-        self.deleteAction = self.addAction(Actions.deleteAction)
+        self.addAction(Actions.copyAction)
+        self.addAction(Actions.cutAction)
+        self.addAction(Actions.pasteAction)
+        self.addAction(Actions.deleteAction)
         self.addSeparator()
 
-        self.selectAllAction = self.addAction(Actions.selectAllAction)
-        self.deselectAllAction = self.addAction(Actions.deselectAllAction)
-        self.invertSelectionAction = self.addAction(Actions.invertSelectionAction)
+        self.addAction(Actions.selectAllAction)
+        self.addAction(Actions.deselectAllAction)
+        self.addAction(Actions.invertSelectionAction)
         self.addSeparator()
 
         if self.isFloat:
-            self.selectAllLeftAction = self.addAction(Actions.selectAllLeftAction)
-            self.selectAllRightAction = self.addAction(Actions.selectAllRightAction)
+            self.addAction(Actions.selectAllLeftAction)
+            self.addAction(Actions.selectAllRightAction)
             self.addSeparator()
 
-        self.selectAllInstrumentAction = self.addAction(
-            Actions.selectAllInstrumentAction
-        )
-        self.selectAllButInstrumentAction = self.addAction(
-            Actions.selectAllButInstrumentAction
-        )
+        self.addAction(Actions.selectAllInstrumentAction)
+        self.addAction(Actions.selectAllButInstrumentAction)
         self.addSeparator()
 
-        self.increaseOctaveAction = self.addAction(Actions.increaseOctaveAction)
-        self.decreaseOctaveAction = self.addAction(Actions.decreaseOctaveAction)
-        self.increaseKeyAction = self.addAction(Actions.increaseKeyAction)
-        self.decreaseKeyAction = self.addAction(Actions.decreaseKeyAction)
+        self.addAction(Actions.increaseOctaveAction)
+        self.addAction(Actions.decreaseOctaveAction)
+        self.addAction(Actions.increaseKeyAction)
+        self.addAction(Actions.decreaseKeyAction)
         self.changeInstrumentMenu = InstrumentEditSubMenu(self, "Change instrument...")
         self.addMenu(self.changeInstrumentMenu)
         self.addSeparator()
 
-        self.expandSelectionAction = self.addAction(Actions.expandSelectionAction)
-        self.compressSelectionAction = self.addAction(Actions.compressSelectionAction)
+        self.addAction(Actions.expandSelectionAction)
+        self.addAction(Actions.compressSelectionAction)
         self.addSeparator()
 
-        self.transposeNotesAction = self.addAction(Actions.transposeNotesAction)
+        self.addAction(Actions.transposeNotesAction)
         self.macrosMenu = self.addMenu("Macros...")
 
     @QtCore.pyqtSlot(str)
@@ -177,16 +173,16 @@ class SettingsMenu(QtWidgets.QMenu):
     def addEntries(self):
         self.instrumentMenu = InstrumentSettingsSubMenu(self, "Instrument")
         self.addMenu(self.instrumentMenu)
-        self.instrumentSettingsAction = self.addAction(Actions.instrumentSettingsAction)
+        self.addAction(Actions.instrumentSettingsAction)
         self.addSeparator()
 
-        self.songInfoAction = self.addAction(Actions.songInfoAction)
-        self.songPropertiesAction = self.addAction(Actions.songPropertiesAction)
-        self.songStatsAction = self.addAction(Actions.songStatsAction)
+        self.addAction(Actions.songInfoAction)
+        self.addAction(Actions.songPropertiesAction)
+        self.addAction(Actions.songStatsAction)
         self.addSeparator()
 
-        self.deviceManagerAction = self.addAction(Actions.deviceManagerAction)
-        self.preferencesAction = self.addAction(Actions.preferencesAction)
+        self.addAction(Actions.deviceManagerAction)
+        self.addAction(Actions.preferencesAction)
 
 
 class HelpMenu(QtWidgets.QMenu):
@@ -196,15 +192,15 @@ class HelpMenu(QtWidgets.QMenu):
         self.addEntries()
 
     def addEntries(self):
-        self.websiteAction = self.addAction(Actions.websiteAction)
-        self.githubAction = self.addAction(Actions.githubAction)
-        self.discordAction = self.addAction(Actions.discordAction)
-        self.reportBugAction = self.addAction(Actions.reportBugAction)
-        self.donateAction = self.addAction(Actions.donateAction)
+        self.addAction(Actions.websiteAction)
+        self.addAction(Actions.githubAction)
+        self.addAction(Actions.discordAction)
+        self.addAction(Actions.reportBugAction)
+        self.addAction(Actions.donateAction)
         self.addSeparator()
 
-        self.changelogAction = self.addAction(Actions.changelogAction)
-        self.aboutAction = self.addAction(Actions.aboutAction)
+        self.addAction(Actions.changelogAction)
+        self.addAction(Actions.aboutAction)
 
 
 class MenuBar(QtWidgets.QMenuBar):
