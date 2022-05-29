@@ -258,10 +258,11 @@ class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
         self.checkAutoScroll()
 
     def checkAutoScroll(self):
-        cursorPosition = self.mapFromGlobal(QtGui.QCursor.pos()).x()
+        cursorPosition = self.mapFromGlobal(QtGui.QCursor.pos())
         sb = self.horizontalScrollBar()
 
-        if cursorPosition < 50:
-            sb.setValue(sb.value() - 3)
-        elif cursorPosition > self.width() - 50:
-            sb.setValue(sb.value() + 3)
+        if self.rect().contains(cursorPosition):
+            if cursorPosition.x() < 50:
+                sb.setValue(sb.value() - 3)
+            elif cursorPosition.x() > self.width() - 50:
+                sb.setValue(sb.value() + 3)
