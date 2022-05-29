@@ -141,15 +141,24 @@ class Actions(QtCore.QObject):
         cls.changelogAction = QAction(icons["changelog"], "Changelog...")
         cls.aboutAction = QAction(icons["about"], "About...")
 
+        cls.setClipboard(False)
+        cls.setBlockCount(0)
+        cls.setSelectionStatus(-2)
+
     @classmethod
     def setClipboard(cls, hasClipboard: bool) -> None:
         cls.pasteAction.setEnabled(hasClipboard)
 
     @classmethod
     def setEmptyActionsEnabled(cls, enabled: bool = True):
-        # There's ought to be a better way. I shouldn't need to
-        # manually go through all actions here
-        pass
+        cls.saveSongAction.setEnabled(enabled)
+        cls.saveSongAsAction.setEnabled(enabled)
+        cls.saveOptionsAction.setEnabled(enabled)
+        cls.exportPatternAction.setEnabled(enabled)
+        cls.exportMidiAction.setEnabled(enabled)
+        cls.exportSchematicAction.setEnabled(enabled)
+        cls.exportAudioAction.setEnabled(enabled)
+        cls.exportDatapackAction.setEnabled(enabled)
 
     @classmethod
     def setSelectionActionsEnabled(cls, enabled: bool = True):
@@ -177,8 +186,6 @@ class Actions(QtCore.QObject):
 
     @QtCore.pyqtSlot(int)
     def setSelectionStatus(selection: int) -> None:
-        if selection == -2:
-            Actions.setEmpty()
         if selection == -1:
             Actions.setNoneSelected()
         elif selection == 0:
@@ -186,9 +193,19 @@ class Actions(QtCore.QObject):
         elif selection == 1:
             Actions.setAllSelected()
 
+    @QtCore.pyqtSlot(int)
+    def setBlockCount(blockCount: int) -> None:
+        if blockCount == 0:
+            Actions.setEmpty()
+        else:
+            Actions.setEmptyActionsEnabled(True)
+
     @classmethod
     def setEmpty(cls):
         cls.setEmptyActionsEnabled(False)
+        cls.setSelectionActionsEnabled(False)
+        cls.setFullSelectionActionsEnabled(False)
+        cls.invertSelectionAction.setEnabled(False)
 
     @classmethod
     def setAllSelected(cls):

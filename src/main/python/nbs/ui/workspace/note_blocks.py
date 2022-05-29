@@ -326,6 +326,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     ########## Public slots ##########
     selectionChanged = QtCore.pyqtSignal(int)
     clipboardChanged = QtCore.pyqtSignal()
+    blockCountChanged = QtCore.pyqtSignal(int)
     blockAdded = QtCore.pyqtSignal()
     blockPlayed = QtCore.pyqtSignal(int, int, int, int, int)
 
@@ -492,6 +493,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         block = NoteBlock(x, y, *args, **kwargs)
         block.setPos(blockPos)
         self.addItem(block)
+        self.updateBlockCount()
         return block
 
     def addBlockManual(self, x, y, *args, **kwargs):
@@ -502,6 +504,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def removeBlock(self, block: NoteBlock) -> None:
         self.removeItem(block)
+        self.updateBlockCount()
         # TODO: self.blockRemoved.emit()
 
     def removeBlockAt(self, x, y):
@@ -514,6 +517,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def removeBlockManual(self, x, y):
         self.removeBlockAt(x, y)
         self.updateSceneSize()
+
+    def updateBlockCount(self):
+        self.blockCountChanged.emit(len(list(self.noteBlocks())))
 
     ########## SELECTION ##########
 
