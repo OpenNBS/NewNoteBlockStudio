@@ -245,14 +245,19 @@ class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
     the mouse cursor is near the left or right edges.
     """
 
-    def __init__(self, parent=None, *args, **kwargs):
+    def __init__(
+        self,
+        parent=None,
+        updateDelay: int = 10,
+        margins: int = 50,
+        scrollAmount: int = 3,
+    ):
         super().__init__(parent)
-        self.initUI()
-
-    def initUI(self):
+        self.margins = margins
+        self.scrollAmount = scrollAmount
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.startTimer(10)
+        self.startTimer(updateDelay)
 
     def timerEvent(self, event):
         self.checkAutoScroll()
@@ -262,7 +267,7 @@ class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
         sb = self.horizontalScrollBar()
 
         if self.rect().contains(cursorPosition):
-            if cursorPosition.x() < 50:
-                sb.setValue(sb.value() - 3)
-            elif cursorPosition.x() > self.width() - 50:
-                sb.setValue(sb.value() + 3)
+            if cursorPosition.x() < self.margins:
+                sb.setValue(sb.value() - self.scrollAmount)
+            elif cursorPosition.x() > self.width() - self.margins:
+                sb.setValue(sb.value() + self.scrollAmount)
