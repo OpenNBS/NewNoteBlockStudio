@@ -259,10 +259,10 @@ class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.startTimer(updateDelay)
 
-    def timerEvent(self, event):
+    def timerEvent(self, event: QtCore.QTimerEvent) -> None:
         self.checkAutoScroll()
 
-    def checkAutoScroll(self):
+    def checkAutoScroll(self) -> None:
         cursorPosition = self.mapFromGlobal(QtGui.QCursor.pos())
         sb = self.horizontalScrollBar()
 
