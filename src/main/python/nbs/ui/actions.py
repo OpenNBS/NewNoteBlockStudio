@@ -1,4 +1,7 @@
+from typing import Sequence
+
 import qtawesome as qta
+from nbs.core.data import Instrument
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
@@ -230,3 +233,68 @@ class Actions(QtCore.QObject):
         """Call this when no note blocks are selected."""
         cls.setSelectionActionsEnabled(False)
         cls.setFullSelectionActionsEnabled(True)
+
+
+setCurrentInstrumentActions = []
+changeInstrumentActions = []
+
+
+class SetCurrentInstrumentActionsManager(QtCore.QObject):
+    """Handle actions responsible for changing the currently active instrument."""
+
+    instrumentChanged = QtCore.pyqtSignal(int)
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.currentInstrument = None
+
+    @QtCore.pyqtSlot(list)
+    def updateActions(self, instruments: Sequence[Instrument]):
+        """Update the list of instruments."""
+        global setCurrentInstrumentActions
+        setCurrentInstrumentActions = []
+        for id_, instrument in enumerate(instruments):
+            action = QAction(f"{instrument.name}")
+            action.setData(id_)
+            action.triggered.connect(lambda: self.instrumentChanged.emit(action.data()))
+            action.triggered.connect(
+                lambda: self.changeCurrentInstrument(action.data())
+            )
+            action.setCheckable(True)
+            if id_ == self.currentInstrument:
+                action.setChecked(True)
+            setCurrentInstrumentActions.append(action)
+
+    @QtCore.pyqtSlot(int)
+    def changeCurrentInstrument(self, index: int):
+        print("Changing current instrument to", index)
+        self.currentInstrument = index
+
+
+class ChangeInstrumentActionsManager(QtCore.QObject):
+    """Handle actions responsible for changing the instrument of a selection."""
+
+    currentInstrumentChanged = QtCore.pyqtSignal(int)
+
+    # TODO: Perhaps here we should have individual add/remove/swapInstrument slots,
+    # because populating an entire menu when it's about to show is acceptable, but creating new
+    # QActions every time an instrument is changed might be too expensive.
+    # Or, instead, updateInstruments could be smart about which actions to keep or remove by detecting
+    # what changed in the list of instruments.
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        # self.actionGroup = QActionGroup(self)
+        # self.actionGroup.setExclusive(True)
+
+    @QtCore.pyqtSlot(list)
+    def updateActions(self, instruments: Sequence[Instrument]):
+        """Update the list of instruments."""
+        global changeInstrumentActions
+        changeInstrumentActions = []
+        for id_, instrument in enumerate(instruments):
+            action = QAction(f"...to {instrument.name}")
+            action.setCheckable(True)
+            # action.setData(id)
+            action.triggered.connect(lambda: self.currentInstrumentChanged.emit(id_))
+            changeInstrumentActions.append(action)

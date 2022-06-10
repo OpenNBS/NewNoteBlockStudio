@@ -2,7 +2,11 @@ from pathlib import Path
 
 from nbs.core.audio import AudioEngine
 from nbs.core.data import default_instruments
-from nbs.ui.actions import Actions
+from nbs.ui.actions import (
+    Actions,
+    ChangeInstrumentActionsManager,
+    SetCurrentInstrumentActionsManager,
+)
 from nbs.ui.menus import MenuBar
 from nbs.ui.toolbar import ToolBar
 from nbs.ui.workspace import *
@@ -74,13 +78,19 @@ class MainWindow(QtWidgets.QMainWindow):
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
             self.audioEngine.loadSound(sound_path)
 
-            self.menuBar().editMenu.changeInstrumentMenu.addInstrumentEntry(ins)
-            self.menuBar().settingsMenu.instrumentMenu.addInstrumentEntry(ins)
-            self.centralWidget().workspace.noteBlockWidget.menu.changeInstrumentMenu.addInstrumentEntry(
-                ins
-            )
+        self.setCurrentInstrumentActionsManager = SetCurrentInstrumentActionsManager()
+        self.changeInstrumentActionsManager = ChangeInstrumentActionsManager()
 
-        self.menuBar().editMenu.changeCurrentInstrument(ins)
+        self.setCurrentInstrumentActionsManager.updateActions(default_instruments)
+        self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
+            # TODO: connect this to future InstrumentManager object that will notify  widgets
+            lambda id_: self.centralWidget().workspace.noteBlockWidget.changeCurrentInstrument(
+                default_instruments[id_]
+            )
+            # self.centralWidget().workspace.piano.setValidRange(ins)
+        )
+
+        self.changeInstrumentActionsManager.updateActions(default_instruments)
 
     #
     #

@@ -346,6 +346,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedY = 0
         self.activeKey = 45
         self.previousPlaybackPosition = 0
+        self.currentInstrument = None
         self.initUI()
         self.initClipboard()
 
@@ -643,6 +644,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.removeBlock(block)
         self.updateSelectionStatus()
         self.updateSceneSize()
+
+    ########## INSTRUMENTS ##########
+
+    @QtCore.pyqtSlot(object)
+    def changeCurrentInstrument(self, instrument: Instrument):
+        self.currentInstrument = instrument
 
     ########## CLIPBOARD ##########
 
