@@ -247,6 +247,8 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.currentInstrument = None
+        self.actionGroup = QActionGroup(self)
+        self.actionGroup.setExclusive(True)
 
     @QtCore.pyqtSlot(list)
     def updateActions(self, instruments: Sequence[Instrument]):
@@ -263,12 +265,15 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
             action.setCheckable(True)
             if id_ == self.currentInstrument:
                 action.setChecked(True)
+            self.actionGroup.addAction(action)
             setCurrentInstrumentActions.append(action)
 
     @QtCore.pyqtSlot(int)
     def changeCurrentInstrument(self, index: int):
         print("Changing current instrument to", index)
         self.currentInstrument = index
+        global setCurrentInstrumentActions
+        setCurrentInstrumentActions[index].setChecked(True)
 
 
 class ChangeInstrumentActionsManager(QtCore.QObject):
