@@ -53,7 +53,6 @@ class InstrumentEditSubMenu(QtWidgets.QMenu):
         self.aboutToShow.connect(self.populateInstruments)
 
     def populateInstruments(self) -> None:
-        print("populateInstruments", actions.changeInstrumentActions)
         self.clear()
         for action in actions.changeInstrumentActions:
             self.addAction(action)
@@ -69,7 +68,6 @@ class InstrumentSettingsSubMenu(QtWidgets.QMenu):
         self.aboutToShow.connect(self.populateInstruments)
 
     def populateInstruments(self) -> None:
-        print("populateInstruments", actions.setCurrentInstrumentActions)
         self.clear()
         for action in actions.setCurrentInstrumentActions:
             self.addAction(action)

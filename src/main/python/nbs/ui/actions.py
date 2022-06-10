@@ -4,7 +4,7 @@ import qtawesome as qta
 from nbs.core.data import Instrument
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
+from PyQt5.QtWidgets import QAction, QActionGroup
 
 
 class Actions(QtCore.QObject):
@@ -246,7 +246,6 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.currentInstrument = None
         self.actionGroup = QActionGroup(self)
         self.actionGroup.setExclusive(True)
 
@@ -257,21 +256,14 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
         setCurrentInstrumentActions = []
         for id_, instrument in enumerate(instruments):
             action = QAction(f"{instrument.name}")
-            action.setData(id_)
-            action.triggered.connect(lambda: self.instrumentChanged.emit(action.data()))
-            action.triggered.connect(
-                lambda: self.changeCurrentInstrument(action.data())
-            )
+            action.triggered.connect(lambda: self.instrumentChanged.emit(id_))
             action.setCheckable(True)
-            if id_ == self.currentInstrument:
-                action.setChecked(True)
             self.actionGroup.addAction(action)
             setCurrentInstrumentActions.append(action)
 
     @QtCore.pyqtSlot(int)
     def changeCurrentInstrument(self, index: int):
         print("Changing current instrument to", index)
-        self.currentInstrument = index
         global setCurrentInstrumentActions
         setCurrentInstrumentActions[index].setChecked(True)
 
@@ -289,8 +281,6 @@ class ChangeInstrumentActionsManager(QtCore.QObject):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        # self.actionGroup = QActionGroup(self)
-        # self.actionGroup.setExclusive(True)
 
     @QtCore.pyqtSlot(list)
     def updateActions(self, instruments: Sequence[Instrument]):
@@ -300,6 +290,5 @@ class ChangeInstrumentActionsManager(QtCore.QObject):
         for id_, instrument in enumerate(instruments):
             action = QAction(f"...to {instrument.name}")
             action.setCheckable(True)
-            # action.setData(id)
             action.triggered.connect(lambda: self.currentInstrumentChanged.emit(id_))
             changeInstrumentActions.append(action)
