@@ -1,7 +1,4 @@
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5 import QtWidgets
-
-appctxt = ApplicationContext()
 
 SCROLL_BAR_SIZE = QtWidgets.qApp.style().pixelMetric(
     QtWidgets.QStyle.PM_ScrollBarExtent

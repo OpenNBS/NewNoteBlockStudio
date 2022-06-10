@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Generator, List, Optional, Sequence, Tuple, Union
 
+from nbs.core.context import appctxt
 from nbs.core.utils import *
 from nbs.ui.actions import Actions
 from nbs.ui.menus import EditMenu

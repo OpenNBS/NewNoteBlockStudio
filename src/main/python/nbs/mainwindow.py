@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from nbs.core.audio import AudioEngine
+from nbs.core.context import appctxt
 from nbs.core.data import default_instruments
 from nbs.ui.actions import (
     Actions,
@@ -10,7 +11,6 @@ from nbs.ui.actions import (
 from nbs.ui.menus import MenuBar
 from nbs.ui.toolbar import InstrumentToolBar, ToolBar
 from nbs.ui.workspace import *
-from nbs.ui.workspace.constants import appctxt  # TODO: move this somewhere else
 from nbs.ui.workspace.layers import LayerArea
 from nbs.ui.workspace.note_blocks import NoteBlockArea
 from nbs.ui.workspace.piano import HorizontalAutoScrollArea, PianoWidget
