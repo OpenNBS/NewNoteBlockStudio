@@ -32,6 +32,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(toolBar)
         self.setCentralWidget(mainArea)
 
+        mainArea.workspace.noteBlockWidget.blockCountChanged.connect(
+            Actions.setBlockCount
+        )
         mainArea.workspace.noteBlockWidget.selectionChanged.connect(
             Actions.setSelectionStatus
         )
