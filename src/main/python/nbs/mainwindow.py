@@ -21,60 +21,58 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMinimumSize(854, 480)
         self.initAudio()
         self.initUI()
+        self.initNoteBlocks()
+        self.initPiano()
         self.initInstruments()
-
-    def initUI(self):
-        menuBar = MenuBar()
-        toolBar = ToolBar()
-        mainArea = CentralArea(self)
-
-        self.setMenuBar(menuBar)
-        self.addToolBar(toolBar)
-        self.setCentralWidget(mainArea)
-
-        mainArea.workspace.noteBlockWidget.blockCountChanged.connect(
-            Actions.setBlockCount
-        )
-        mainArea.workspace.noteBlockWidget.selectionChanged.connect(
-            Actions.setSelectionStatus
-        )
-        mainArea.workspace.noteBlockWidget.selectionChanged.connect(
-            lambda: Actions.setClipboard(True)
-        )
-
-
-        mainArea.workspace.noteBlockWidget.blockAdded.connect(
-            lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
-        )
-        mainArea.piano.activeKeyChanged.connect(
-            lambda key: self.audioEngine.playSound(15, 0.5, 2 ** ((key - 45) / 12), 0)
-        )
-
-        Actions.playPauseAction.triggered.connect(
-            lambda checked: mainArea.workspace.noteBlockWidget.view.playbackManager.setPlaying(
-                checked
-            )
-        )
-        Actions.stopAction.triggered.connect(
-            mainArea.workspace.noteBlockWidget.view.playbackManager.stop
-        )
-
-        mainArea.workspace.noteBlockWidget.blockPlayed.connect(
-            lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
-        )
-
-        Actions.cutAction.triggered.connect(
-            mainArea.workspace.noteBlockWidget.cutSelection
-        )
-        Actions.copyAction.triggered.connect(
-            mainArea.workspace.noteBlockWidget.copySelection
-        )
-        Actions.pasteAction.triggered.connect(
-            mainArea.workspace.noteBlockWidget.pasteSelection
-        )
 
     def initAudio(self):
         self.audioEngine = AudioEngine(self)
+
+    def initUI(self):
+        self.menuBar = MenuBar()
+        self.toolBar = ToolBar()
+        self.mainArea = CentralArea(self)
+
+        self.setMenuBar(self.menuBar)
+        self.addToolBar(self.toolBar)
+        self.setCentralWidget(self.mainArea)
+
+        # TODO: this will be replaced by dependency injection
+        self.noteBlockArea = self.mainArea.workspace.noteBlockWidget
+        self.layerArea = self.mainArea.workspace.layerWidget
+        self.piano = self.mainArea.piano
+
+    def initNoteBlocks(self):
+        # Selection
+        self.noteBlockArea.blockCountChanged.connect(Actions.setBlockCount)
+        self.noteBlockArea.selectionChanged.connect(Actions.setSelectionStatus)
+        self.noteBlockArea.selectionChanged.connect(lambda: Actions.setClipboard(True))
+
+        Actions.cutAction.triggered.connect(self.noteBlockArea.cutSelection)
+        Actions.copyAction.triggered.connect(self.noteBlockArea.copySelection)
+        Actions.pasteAction.triggered.connect(self.noteBlockArea.pasteSelection)
+
+        # Playback
+        Actions.playPauseAction.triggered.connect(
+            lambda checked: self.noteBlockArea.view.playbackManager.setPlaying(checked)
+        )
+        Actions.stopAction.triggered.connect(
+            self.noteBlockArea.view.playbackManager.stop
+        )
+
+        # Sounds
+        self.noteBlockArea.blockAdded.connect(
+            lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
+        )
+        self.noteBlockArea.blockPlayed.connect(
+            lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
+        )
+
+    def initPiano(self):
+        # Sounds
+        self.piano.activeKeyChanged.connect(
+            lambda key: self.audioEngine.playSound(15, 0.5, 2 ** ((key - 45) / 12), 0)
+        )
 
     def initInstruments(self):
         for ins in default_instruments:
@@ -87,7 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCurrentInstrumentActionsManager.updateActions(default_instruments)
         self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
             # TODO: connect this to future InstrumentManager object that will notify  widgets
-            lambda id_: self.centralWidget().workspace.noteBlockWidget.changeCurrentInstrument(
+            lambda id_: self.noteBlockArea.changeCurrentInstrument(
                 default_instruments[id_]
             )
             # self.centralWidget().workspace.piano.setValidRange(ins)
