@@ -1,10 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 
 from .constants import *
-from .layers import LayerArea
-from .note_blocks import NoteBlockArea
-from .piano import HorizontalAutoScrollArea, PianoWidget
-from .time_bar import TimeBar
 
 __all__ = ["CentralArea"]
 
