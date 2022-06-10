@@ -114,51 +114,10 @@ class MainWindow(QtWidgets.QMainWindow):
     #
     #
     #
-    def drawToolBar(self):
-        icons = {
-            "new_song":         qta.icon('mdi.file-plus'),
-            "open_song":        qta.icon('mdi.folder-open'),
-            "save_song":        qta.icon('mdi.content-save'),
-            "rewind":           qta.icon('mdi.rewind'),
-            "fast_forward":     qta.icon('mdi.fast-forward'),
-            "play":             qta.icon('mdi.play'),
-            "pause":            qta.icon('mdi.pause'),
-            "stop":             qta.icon('mdi.stop'),
-            "record":           qta.icon('mdi.record'),
-            "loop":             qta.icon('mdi.repeat'),
-            "loop_off":         qta.icon('mdi.repeat-off'),
-            "undo":             qta.icon('mdi.undo'),
-            "redo":             qta.icon('mdi.redo'),
-            "cut":              qta.icon('mdi.content-cut'),
-            "copy":             qta.icon('mdi.content-copy'),
-            "paste":            qta.icon('mdi.content-paste'),
-            "delete":           qta.icon('mdi.delete'),
-            "select_all":       qta.icon('mdi.select-all'),
-            "song_instruments": qta.icon('mdi.piano'),
-            "song_info":        qta.icon('mdi.information'),
-            "song_properties":  qta.icon('mdi.label'),
-            "song_stats":       qta.icon('mdi.file-document-edit'),
-            "midi_devices":     qta.icon('mdi.usb'),
-            "settings":         qta.icon('mdi.settings')
-        }
-
-        instrument_list = ["harp", "double_bass", "bass_drum", "snare_drum", "click", "guitar", "flute", "bell",
-                           "chime", "xylophone", "iron_xylophone", "cow_bell", "didgeridoo", "bit", "banjo", "pling"]
-        instrument_button_list = [nbs.ui.components.InstrumentButton(instrument) for instrument in instrument_list]
-        for instrument in self.currentSong.custom_instruments:  # TODO: reset custom instruments on new song
-            instrument_button_list.append(nbs.ui.components.InstrumentButton("custom"))  # TODO: put in custom name
-
-        instrument_buttons = QtWidgets.QButtonGroup(self)
-        instrument_buttons.setExclusive(True)
-        for button in instrument_button_list:
-            instrument_buttons.addButton(button)
-
-    def drawStatusBar(self):
-        pass
 
     @QtCore.pyqtSlot()
     def new_song(self):
-        self.currentSong = nbs.core.data.Song()
+        # self.currentSong = nbs.core.data.Song()
         # TODO: save confirmation if editing unsaved work
         self.centralWidget().workspace.resetWorkspace()
 
@@ -183,14 +142,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 # dialog.saveState()
                 loadFlag = True
 
-        if loadFlag:
-            self.currentSong = nbs.core.data.Song(filename=filename)
-            self.centralWidget().workspace.resetWorkspace()
-            # TODO: load layers
-            for note in self.currentSong.notes:
-                self.centralWidget().workspace.noteBlockWidget.addBlock(note.tick, note.layer, note.key, note.instrument)
-            # It's really weird to updateSceneSize() here, there has to be a better solution.
-            self.centralWidget().workspace.noteBlockWidget.updateSceneSize()
+        # if loadFlag:
+        #    self.currentSong = nbs.core.data.Song(filename=filename)
+        #    self.centralWidget().workspace.resetWorkspace()
+        #    # TODO: load layers
+        #    for note in self.currentSong.notes:
+        #        self.centralWidget().workspace.noteBlockWidget.addBlock(
+        #            note.tick, note.layer, note.key, note.instrument
+        #        )
+        #    # It's really weird to updateSceneSize() here, there has to be a better solution.
+        #    self.centralWidget().workspace.noteBlockWidget.updateSceneSize()
 
         # TODO: The main window should only interact with the workspace (consisting of layer area + note block area),
         # not directly with the note block area. The workspace will do the talking between the layer and note block
