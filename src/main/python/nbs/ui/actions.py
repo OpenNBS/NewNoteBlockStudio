@@ -1,6 +1,7 @@
 from typing import Sequence
 
 import qtawesome as qta
+from nbs.core.context import appctxt
 from nbs.core.data import Instrument
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
@@ -259,6 +260,14 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
             action.triggered.connect(lambda: self.instrumentChanged.emit(id_))
             action.setCheckable(True)
             self.actionGroup.addAction(action)
+
+            icon = QIcon(
+                appctxt.get_resource(f"images/instruments/{instrument.icon_path}")
+            )
+            action.setIcon(icon)
+            action.setIconText(f"Change instrument to {instrument.name}")
+            action.setIconVisibleInMenu(False)
+
             setCurrentInstrumentActions.append(action)
 
     @QtCore.pyqtSlot(int)

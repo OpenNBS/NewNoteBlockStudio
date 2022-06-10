@@ -1,10 +1,6 @@
-from typing import Sequence
-
 import nbs.ui.actions as actions
-from nbs.core.data import Instrument
 from nbs.ui.actions import Actions
-from nbs.ui.workspace.constants import appctxt
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 
 class ToolBar(QtWidgets.QToolBar):
@@ -53,26 +49,19 @@ class ToolBar(QtWidgets.QToolBar):
 
 
 class InstrumentButton(QtWidgets.QToolButton):
-    def __init__(self, instrument: Instrument, action: QtWidgets.QAction, parent=None):
+    def __init__(self, action: QtWidgets.QAction, parent=None):
         super().__init__(parent)
         self.setDefaultAction(action)
-
-        icon = QtGui.QIcon(
-            appctxt.get_resource(f"images/instruments/{instrument.icon_path}")
-        )
-        self.setIcon(icon)
-        self.setToolTip(f"Change instrument to {instrument.name}")
 
 
 class InstrumentToolBar(QtWidgets.QToolBar):
     def __init__(self, parent=None):
         super().__init__(parent)
-        # self.populateInstruments(instruments)
+        # self.populateInstruments()
 
     @QtCore.pyqtSlot(object)
-    def populateInstruments(self, instruments: Sequence[Instrument]):
+    def populateInstruments(self):
         self.clear()
-        for instrument, action in zip(instruments, actions.setCurrentInstrumentActions):
-            print(instrument.name)
-            button = InstrumentButton(instrument, action, parent=self)
+        for action in actions.setCurrentInstrumentActions:
+            button = InstrumentButton(action, parent=self)
             self.addWidget(button)

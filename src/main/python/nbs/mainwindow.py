@@ -105,7 +105,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # self.centralWidget().workspace.piano.setValidRange(ins)
         )
 
-        self.instrumentBar.populateInstruments(default_instruments)
+        self.instrumentBar.populateInstruments()
 
         self.changeInstrumentActionsManager.updateActions(default_instruments)
 
