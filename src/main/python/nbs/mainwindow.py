@@ -8,7 +8,7 @@ from nbs.ui.actions import (
     SetCurrentInstrumentActionsManager,
 )
 from nbs.ui.menus import MenuBar
-from nbs.ui.toolbar import ToolBar
+from nbs.ui.toolbar import InstrumentToolBar, ToolBar
 from nbs.ui.workspace import *
 from nbs.ui.workspace.constants import appctxt  # TODO: move this somewhere else
 from nbs.ui.workspace.layers import LayerArea
@@ -36,9 +36,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def initUI(self):
         self.menuBar = MenuBar()
         self.toolBar = ToolBar()
+        self.instrumentBar = InstrumentToolBar()
 
         self.setMenuBar(self.menuBar)
         self.addToolBar(self.toolBar)
+        self.addToolBar(self.instrumentBar)
 
         self.noteBlockArea = NoteBlockArea()
         self.layerArea = LayerArea()
@@ -102,6 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             # self.centralWidget().workspace.piano.setValidRange(ins)
         )
+
+        self.instrumentBar.populateInstruments(default_instruments)
 
         self.changeInstrumentActionsManager.updateActions(default_instruments)
 
