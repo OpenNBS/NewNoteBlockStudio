@@ -11,6 +11,11 @@ from nbs.ui.menus import MenuBar
 from nbs.ui.toolbar import ToolBar
 from nbs.ui.workspace import *
 from nbs.ui.workspace.constants import appctxt  # TODO: move this somewhere else
+from nbs.ui.workspace.layers import LayerArea
+from nbs.ui.workspace.note_blocks import NoteBlockArea
+from nbs.ui.workspace.piano import HorizontalAutoScrollArea, PianoWidget
+from nbs.ui.workspace.time_bar import TimeBar
+from nbs.ui.workspace.workspace import Workspace
 from PyQt5 import QtCore, QtWidgets
 
 
@@ -31,16 +36,20 @@ class MainWindow(QtWidgets.QMainWindow):
     def initUI(self):
         self.menuBar = MenuBar()
         self.toolBar = ToolBar()
-        self.mainArea = CentralArea(self)
 
         self.setMenuBar(self.menuBar)
         self.addToolBar(self.toolBar)
-        self.setCentralWidget(self.mainArea)
 
-        # TODO: this will be replaced by dependency injection
-        self.noteBlockArea = self.mainArea.workspace.noteBlockWidget
-        self.layerArea = self.mainArea.workspace.layerWidget
-        self.piano = self.mainArea.piano
+        self.noteBlockArea = NoteBlockArea()
+        self.layerArea = LayerArea()
+        self.timeBar = TimeBar()
+        self.piano = PianoWidget(keyCount=88, offset=9, validRange=(33, 57))
+        self.pianoContainer = HorizontalAutoScrollArea()
+
+        self.workspace = Workspace(self.noteBlockArea, self.layerArea, self.timeBar)
+        self.centralArea = CentralArea(self.workspace, self.piano, self.pianoContainer)
+
+        self.setCentralWidget(self.centralArea)
 
     def initNoteBlocks(self):
         # Selection
@@ -69,6 +78,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def initPiano(self):
+        # Set active workspace key
+        self.piano.activeKeyChanged.connect(self.noteBlockArea.setActiveKey)
+
         # Sounds
         self.piano.activeKeyChanged.connect(
             lambda key: self.audioEngine.playSound(15, 0.5, 2 ** ((key - 45) / 12), 0)

@@ -15,11 +15,17 @@ class Workspace(QtWidgets.QSplitter):
     block area on the right.
     """
 
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        noteBlockWidget: QtCore.QObject,
+        layerWidget: QtCore.QObject,
+        timeBar=QtCore.QObject,
+        parent=None,
+    ):
         super().__init__(parent)
-        self.layerWidget = LayerArea()
-        self.noteBlockWidget = NoteBlockArea()
-        self.timeBar = TimeBar()
+        self.noteBlockWidget = noteBlockWidget
+        self.layerWidget = layerWidget
+        self.timeBar = timeBar
 
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -76,13 +82,22 @@ class Workspace(QtWidgets.QSplitter):
 
 
 class CentralArea(QtWidgets.QSplitter):
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        workspace: QtCore.QObject,
+        pianoWidget: QtCore.QObject,
+        pianoContainer: QtCore.QObject,
+        parent=None,
+    ):
         super().__init__(parent)
-        self.workspace = Workspace()
+        self.workspace = workspace
+        self.workspace.setParent(self)
 
-        self.piano = PianoWidget(keyCount=88, offset=9, validRange=(33, 57))
-        self.pianoScroll = HorizontalAutoScrollArea(parent=self)
-        self.pianoScroll.setWidget(self.piano)
+        self.pianoWidget = pianoWidget
+        self.workspace.setParent(self)
+        self.pianoContainer = pianoContainer
+        self.pianoContainer.setParent(self)
+        self.pianoContainer.setWidget(self.pianoWidget)
 
         self.initUI()
 
@@ -90,12 +105,11 @@ class CentralArea(QtWidgets.QSplitter):
         self.setOrientation(QtCore.Qt.Vertical)
         self.setHandleWidth(2)
         self.addWidget(self.workspace)
-        self.addWidget(self.pianoScroll)
+        self.addWidget(self.pianoContainer)
         # reserve just enough space for piano and let workspace occupy the rest
-        pianoHeight = self.piano.height()
+        pianoHeight = self.pianoWidget.height()
         self.setSizes([1, pianoHeight])
         self.handle(1).setEnabled(False)  # make handle unmovable
         self.setStretchFactor(0, 1)  # set workspace to stretch
         self.setStretchFactor(1, 0)  # set piano to NOT stretch
         # TODO: perhaps a QVBoxLayout is more appropriate here?
-        self.piano.activeKeyChanged.connect(self.workspace.noteBlockWidget.setActiveKey)
