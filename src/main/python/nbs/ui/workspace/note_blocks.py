@@ -829,7 +829,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.updateSceneSize()
 
     @QtCore.pyqtSlot(int)
-    def selectAllInLayer(self, id: int, clearPrevious: bool = False):
+    def selectAllInLayer(self, id: int, clearPrevious: bool = True):
         if clearPrevious:
             self.deselectAll()
         self.setAreaSelected(self.getLayerRegion(id))
