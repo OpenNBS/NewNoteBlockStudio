@@ -165,6 +165,7 @@ class Actions(QtCore.QObject):
         cls.exportSchematicAction.setEnabled(enabled)
         cls.exportAudioAction.setEnabled(enabled)
         cls.exportDatapackAction.setEnabled(enabled)
+        cls.invertSelectionAction.setEnabled(enabled)
 
     @classmethod
     def setSelectionActionsEnabled(cls, enabled: bool = True):
