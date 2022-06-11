@@ -85,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initPiano(self):
         # Set active workspace key
         self.piano.activeKeyChanged.connect(self.noteBlockArea.setActiveKey)
+        self.piano.activeKey = 39
 
         # Sounds
         self.piano.activeKeyChanged.connect(
