@@ -290,7 +290,7 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
 class ChangeInstrumentActionsManager(QtCore.QObject):
     """Handle actions responsible for changing the instrument of a selection."""
 
-    currentInstrumentChanged = QtCore.pyqtSignal(int)
+    instrumentChanged = QtCore.pyqtSignal(int)
 
     # TODO: Perhaps here we should have individual add/remove/swapInstrument slots,
     # because populating an entire menu when it's about to show is acceptable, but creating new
@@ -300,6 +300,10 @@ class ChangeInstrumentActionsManager(QtCore.QObject):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self.actionGroup = QActionGroup(self)
+        self.actionGroup.triggered.connect(
+            lambda action: self.instrumentChanged.emit(action.data())
+        )
 
     @QtCore.pyqtSlot(list)
     def updateActions(self, instruments: Sequence[Instrument]):
@@ -308,6 +312,6 @@ class ChangeInstrumentActionsManager(QtCore.QObject):
         changeInstrumentActions = []
         for id_, instrument in enumerate(instruments):
             action = QAction(f"...to {instrument.name}")
-            action.setCheckable(True)
-            action.triggered.connect(lambda: self.currentInstrumentChanged.emit(id_))
+            action.setData(id_)
+            self.actionGroup.addAction(action)
             changeInstrumentActions.append(action)
