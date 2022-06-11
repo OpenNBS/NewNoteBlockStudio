@@ -120,7 +120,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # 'Change instrument...' actions
         self.changeInstrumentActionsManager.updateActions(default_instruments)
-        self.changeInstrumentActionsManager
+        self.changeInstrumentActionsManager.instrumentChanged.connect(
+            self.noteBlockArea.changeSelectionInstrument
+        )
 
     #
     #

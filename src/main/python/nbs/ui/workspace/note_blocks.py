@@ -661,6 +661,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def setCurrentInstrument(self, id_: int):
         self.currentInstrument = id_
 
+    @QtCore.pyqtSlot(int)
+    def changeSelectionInstrument(self, id_: int):
+        for block in self.selectedItems():
+            block.setInstrument(id_)
 
     ########## CLIPBOARD ##########
 
