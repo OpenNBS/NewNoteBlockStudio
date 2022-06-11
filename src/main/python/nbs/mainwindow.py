@@ -93,12 +93,11 @@ class MainWindow(QtWidgets.QMainWindow):
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
             self.audioEngine.loadSound(sound_path)
 
+        # Set current instrument actions
         self.setCurrentInstrumentActionsManager = SetCurrentInstrumentActionsManager()
-        self.changeInstrumentActionsManager = ChangeInstrumentActionsManager()
-
         self.setCurrentInstrumentActionsManager.updateActions(default_instruments)
         self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
-            # TODO: connect this to future InstrumentManager object that will notify  widgets
+            # TODO: connect this to future InstrumentManager object that will notify widgets
             lambda id_: self.noteBlockArea.setCurrentInstrument(id_)
             # self.centralWidget().workspace.piano.setValidRange(ins)
         )
@@ -108,7 +107,10 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda id_: self.audioEngine.playSound(id_, 0.5, 2 ** ((45 - 45) / 12), 0)
         )
 
+        # 'Change instrument...' actions
+        self.changeInstrumentActionsManager = ChangeInstrumentActionsManager()
         self.changeInstrumentActionsManager.updateActions(default_instruments)
+        self.changeInstrumentActionsManager
 
     #
     #
