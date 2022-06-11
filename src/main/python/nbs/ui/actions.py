@@ -258,11 +258,11 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
         """Update the list of instruments."""
         global setCurrentInstrumentActions
         setCurrentInstrumentActions = []
+
         for id_, instrument in enumerate(instruments):
             action = QAction(f"{instrument.name}")
             action.setData(id_)
             action.setCheckable(True)
-            self.actionGroup.addAction(action)
 
             icon = QIcon(
                 appctxt.get_resource(f"images/instruments/{instrument.icon_path}")
@@ -271,6 +271,7 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
             action.setIconText(f"Change instrument to {instrument.name}")
             action.setIconVisibleInMenu(False)
 
+            self.actionGroup.addAction(action)
             setCurrentInstrumentActions.append(action)
 
     @QtCore.pyqtSlot(int)
