@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Generator, List, Optional, Sequence, Tuple, Union
 
 from nbs.core.context import appctxt
+from nbs.core.data import Instrument, default_instruments
 from nbs.core.utils import *
 from nbs.ui.actions import Actions  # TODO: remove dependency
 from nbs.ui.menus import EditMenu  # TODO: remove dependency
@@ -15,6 +16,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from .constants import *
 
 __all__ = ["NoteBlockArea"]
+
+
+instrument_data = default_instruments  # TODO: replace with actual data
 
 
 class TimeRuler(QtWidgets.QWidget):
@@ -347,7 +351,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedY = 0
         self.activeKey = 45
         self.previousPlaybackPosition = 0
-        self.currentInstrument = None
+        self.currentInstrument = 0
         self.initUI()
         self.initClipboard()
 
@@ -649,8 +653,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     ########## INSTRUMENTS ##########
 
     @QtCore.pyqtSlot(object)
-    def changeCurrentInstrument(self, instrument: Instrument):
-        self.currentInstrument = instrument
+    def setCurrentInstrument(self, id_: int):
+        self.currentInstrument = id_
+
 
     ########## CLIPBOARD ##########
 
@@ -922,7 +927,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             x, y = self.getGridPos(clickPos)
             if event.button() == QtCore.Qt.LeftButton:
                 self.removeBlockManual(x, y)
-                self.addBlockManual(x, y, self.activeKey, 100, 0, 0)
+                self.addBlockManual(
+                    x, y, self.activeKey, self.currentInstrument, 100, 0, 0
+                )
             elif event.button() == QtCore.Qt.RightButton:
                 if not self.hasSelection():  # Should open the menu otherwise
                     if self.blockAtPos(event.pos()) is not None:
@@ -1065,6 +1072,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.pan = pan
         self.pit = pit
         self.glow = 0
+        self.overlayColor = QtGui.QColor(*instrument_data[ins].color)
         self.label = self.getLabel()
         self.clicks = self.getClicks()
         self.isOutOfRange = False
@@ -1094,7 +1102,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         numberRect.setTop(midpoint)
 
         # Colors
-        blockColor = QtGui.QColor(60, 60, 255)  # replace with instrument color
+        blockColor = self.overlayColor
         labelColor = QtCore.Qt.yellow
         numberColor = QtCore.Qt.white
         selectedColor = QtGui.QColor(255, 255, 255, 180)
@@ -1198,3 +1206,9 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             self.pan,
             self.pit,
         )
+
+    def setInstrument(self, id_: int):
+        self.ins = id_
+        instrument = instrument_data[id_]
+        self.overlayColor = QtGui.QColor(*instrument.color)
+        self.update()

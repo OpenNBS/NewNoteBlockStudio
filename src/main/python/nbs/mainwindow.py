@@ -99,9 +99,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCurrentInstrumentActionsManager.updateActions(default_instruments)
         self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
             # TODO: connect this to future InstrumentManager object that will notify  widgets
-            lambda id_: self.noteBlockArea.changeCurrentInstrument(
-                default_instruments[id_]
-            )
+            lambda id_: self.noteBlockArea.setCurrentInstrument(id_)
             # self.centralWidget().workspace.piano.setValidRange(ins)
         )
 
