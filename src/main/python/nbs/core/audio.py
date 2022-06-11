@@ -67,7 +67,10 @@ class SoundQueue:
     def get_active_sounds(self) -> List[SoundInstance]:
         for sound in self.active_sounds:
             if sound.current_frame >= len(sound.samples):
-                self.active_sounds.remove(sound)
+                try:
+                    self.active_sounds.remove(sound)
+                except ValueError:
+                    print("AUDIO: Sound already removed")
         return self.active_sounds
 
 
