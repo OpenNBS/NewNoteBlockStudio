@@ -249,6 +249,9 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
         super().__init__(parent)
         self.actionGroup = QActionGroup(self)
         self.actionGroup.setExclusive(True)
+        self.actionGroup.triggered.connect(
+            lambda action: self.instrumentChanged.emit(action.data())
+        )
 
     @QtCore.pyqtSlot(list)
     def updateActions(self, instruments: Sequence[Instrument]):
@@ -257,7 +260,7 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
         setCurrentInstrumentActions = []
         for id_, instrument in enumerate(instruments):
             action = QAction(f"{instrument.name}")
-            action.triggered.connect(lambda: self.instrumentChanged.emit(id_))
+            action.setData(id_)
             action.setCheckable(True)
             self.actionGroup.addAction(action)
 
