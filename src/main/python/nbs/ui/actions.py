@@ -274,6 +274,10 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
             self.actionGroup.addAction(action)
             setCurrentInstrumentActions.append(action)
 
+    @property
+    def currentInstrument(self):
+        return self.actionGroup.checkedAction().data()
+
     @QtCore.pyqtSlot(int)
     def changeCurrentInstrument(self, index: int):
         print("Changing current instrument to", index)

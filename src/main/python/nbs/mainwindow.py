@@ -51,6 +51,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.workspace = Workspace(self.noteBlockArea, self.layerArea, self.timeBar)
         self.centralArea = CentralArea(self.workspace, self.piano, self.pianoContainer)
 
+        self.setCurrentInstrumentActionsManager = SetCurrentInstrumentActionsManager()
+        self.changeInstrumentActionsManager = ChangeInstrumentActionsManager()
+
         self.setCentralWidget(self.centralArea)
 
     def initNoteBlocks(self):
@@ -89,7 +92,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Sounds
         self.piano.activeKeyChanged.connect(
-            lambda key: self.audioEngine.playSound(15, 0.5, 2 ** ((key - 45) / 12), 0)
+            lambda key: self.audioEngine.playSound(
+                self.setCurrentInstrumentActionsManager.currentInstrument,
+                0.5,
+                2 ** ((key - 45) / 12),
+                0,
+            )
         )
 
     def initInstruments(self):
@@ -98,7 +106,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.audioEngine.loadSound(sound_path)
 
         # Set current instrument actions
-        self.setCurrentInstrumentActionsManager = SetCurrentInstrumentActionsManager()
         self.setCurrentInstrumentActionsManager.updateActions(default_instruments)
         self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
             # TODO: connect this to future InstrumentManager object that will notify widgets
@@ -112,7 +119,6 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         # 'Change instrument...' actions
-        self.changeInstrumentActionsManager = ChangeInstrumentActionsManager()
         self.changeInstrumentActionsManager.updateActions(default_instruments)
         self.changeInstrumentActionsManager
 
