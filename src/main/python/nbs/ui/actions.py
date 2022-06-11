@@ -278,11 +278,13 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
     def currentInstrument(self):
         return self.actionGroup.checkedAction().data()
 
-    @QtCore.pyqtSlot(int)
-    def changeCurrentInstrument(self, index: int):
-        print("Changing current instrument to", index)
+    @currentInstrument.setter
+    def currentInstrument(self, id_: int):
         global setCurrentInstrumentActions
-        setCurrentInstrumentActions[index].setChecked(True)
+        if id_ < 0 or id_ >= len(setCurrentInstrumentActions):
+            raise ValueError(f"Invalid instrument ID: {id}")
+        setCurrentInstrumentActions[id_].setChecked(True)
+        self.instrumentChanged.emit(id_)
 
 
 class ChangeInstrumentActionsManager(QtCore.QObject):

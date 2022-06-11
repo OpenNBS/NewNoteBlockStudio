@@ -108,6 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.noteBlockArea.setCurrentInstrument
             # self.centralWidget().workspace.piano.setValidRange(ins)
         )
+        self.setCurrentInstrumentActionsManager.currentInstrument = 0
 
         self.instrumentBar.populateInstruments()
         self.instrumentBar.instrumentButtonPressed.connect(
