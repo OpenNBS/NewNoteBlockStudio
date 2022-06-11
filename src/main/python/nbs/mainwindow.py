@@ -106,6 +106,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         self.instrumentBar.populateInstruments()
+        self.instrumentBar.instrumentButtonPressed.connect(
+            lambda id_: self.audioEngine.playSound(id_, 0.5, 2 ** ((45 - 45) / 12), 0)
+        )
 
         self.changeInstrumentActionsManager.updateActions(default_instruments)
 

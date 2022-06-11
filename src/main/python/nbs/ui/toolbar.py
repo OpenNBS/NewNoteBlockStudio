@@ -49,6 +49,9 @@ class ToolBar(QtWidgets.QToolBar):
 
 
 class InstrumentToolBar(QtWidgets.QToolBar):
+
+    instrumentButtonPressed = QtCore.pyqtSignal(int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         # self.populateInstruments()
@@ -56,7 +59,9 @@ class InstrumentToolBar(QtWidgets.QToolBar):
     @QtCore.pyqtSlot(object)
     def populateInstruments(self):
         self.clear()
-        for action in actions.setCurrentInstrumentActions:
+        for id_, action in enumerate(actions.setCurrentInstrumentActions):
             button = QtWidgets.QToolButton(parent=self)
             button.setDefaultAction(action)
+
+            button.pressed.connect(lambda: self.instrumentButtonPressed.emit(id_))
             self.addWidget(button)
