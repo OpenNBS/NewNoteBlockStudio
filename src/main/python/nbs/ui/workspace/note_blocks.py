@@ -332,7 +332,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     selectionChanged = QtCore.pyqtSignal(int)
     clipboardChanged = QtCore.pyqtSignal()
     blockCountChanged = QtCore.pyqtSignal(int)
-    blockAdded = QtCore.pyqtSignal()
+    blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
     blockPlayed = QtCore.pyqtSignal(int, int, int, int, int)
 
     def __init__(self, parent=None):
@@ -511,7 +511,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         block = self.addBlock(x, y, *args, **kwargs)
         block.mouseOver = True
         self.updateSceneSize()
-        self.blockAdded.emit()
+        self.blockAdded.emit(block.ins, block.key, block.vel, block.pan, block.pit)
 
     def removeBlock(self, block: NoteBlock) -> None:
         self.removeItem(block)
@@ -657,7 +657,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## INSTRUMENTS ##########
 
-    @QtCore.pyqtSlot(object)
+    @QtCore.pyqtSlot(int)
     def setCurrentInstrument(self, id_: int):
         self.currentInstrument = id_
 

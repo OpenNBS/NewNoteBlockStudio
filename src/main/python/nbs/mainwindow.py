@@ -73,10 +73,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Sounds
         self.noteBlockArea.blockAdded.connect(
-            lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
+            lambda ins: self.audioEngine.playSound(ins, 0.5, 1.2, 0)
         )
         self.noteBlockArea.blockPlayed.connect(
-            lambda: self.audioEngine.playSound(0, 0.5, 1.2, 0)
+            lambda ins: self.audioEngine.playSound(ins, 0.5, 1.2, 0)
         )
 
     def initPiano(self):
