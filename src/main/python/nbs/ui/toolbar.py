@@ -48,12 +48,6 @@ class ToolBar(QtWidgets.QToolBar):
         self.addAction("Compatible")
 
 
-class InstrumentButton(QtWidgets.QToolButton):
-    def __init__(self, action: QtWidgets.QAction, parent=None):
-        super().__init__(parent)
-        self.setDefaultAction(action)
-
-
 class InstrumentToolBar(QtWidgets.QToolBar):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -63,5 +57,6 @@ class InstrumentToolBar(QtWidgets.QToolBar):
     def populateInstruments(self):
         self.clear()
         for action in actions.setCurrentInstrumentActions:
-            button = InstrumentButton(action, parent=self)
+            button = QtWidgets.QToolButton(parent=self)
+            button.setDefaultAction(action)
             self.addWidget(button)
