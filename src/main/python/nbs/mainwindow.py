@@ -9,7 +9,7 @@ from nbs.ui.actions import (
     SetCurrentInstrumentActionsManager,
 )
 from nbs.ui.menus import MenuBar
-from nbs.ui.toolbar import InstrumentToolBar, ToolBar
+from nbs.ui.toolbar import ToolBar
 from nbs.ui.workspace import *
 from nbs.ui.workspace.layers import LayerArea
 from nbs.ui.workspace.note_blocks import NoteBlockArea
@@ -36,11 +36,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def initUI(self):
         self.menuBar = MenuBar()
         self.toolBar = ToolBar()
-        self.instrumentBar = InstrumentToolBar()
+        # self.instrumentBar = InstrumentToolBar()
 
         self.setMenuBar(self.menuBar)
         self.addToolBar(self.toolBar)
-        self.addToolBar(self.instrumentBar)
+        # self.addToolBar(self.instrumentBar)
 
         self.noteBlockArea = NoteBlockArea()
         self.layerArea = LayerArea()
@@ -111,8 +111,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.setCurrentInstrumentActionsManager.currentInstrument = 0
 
-        self.instrumentBar.populateInstruments()
-        self.instrumentBar.instrumentButtonPressed.connect(
+        self.toolBar.populateInstruments()
+        self.toolBar.instrumentButtonPressed.connect(
             lambda id_: self.audioEngine.playSound(
                 id_, 0.5, self.piano.activeKey - 45, 0
             )

@@ -4,8 +4,13 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class ToolBar(QtWidgets.QToolBar):
+
+    instrumentButtonPressed = QtCore.pyqtSignal(int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.instrumentButtonGroup = QtWidgets.QButtonGroup(self)
+        self.instrumentButtonGroup.idClicked.connect(self.instrumentButtonPressed)
         self.addActions()
 
     def addActions(self):
@@ -30,6 +35,9 @@ class ToolBar(QtWidgets.QToolBar):
         self.deleteAction = self.addAction(Actions.deleteAction)
         self.addSeparator()
 
+        # Instruments buttons go here
+        self.instrumentSeparator = self.addSeparator()
+
         self.songInfoAction = self.addAction(Actions.songInfoAction)
         self.songPropertiesAction = self.addAction(Actions.songPropertiesAction)
         self.instrumentSettingsAction = self.addAction(Actions.instrumentSettingsAction)
@@ -47,23 +55,15 @@ class ToolBar(QtWidgets.QToolBar):
 
         self.addAction("Compatible")
 
-
-class InstrumentToolBar(QtWidgets.QToolBar):
-
-    instrumentButtonPressed = QtCore.pyqtSignal(int)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.buttonGroup = QtWidgets.QButtonGroup(self)
-        self.buttonGroup.idClicked.connect(self.instrumentButtonPressed)
-
     @QtCore.pyqtSlot(object)
     def populateInstruments(self):
-        self.clear()
+        for button in self.instrumentButtonGroup.buttons():
+            button.deleteLater()
+
         for id_, action in enumerate(actions.setCurrentInstrumentActions):
             button = QtWidgets.QToolButton(parent=self)
             button.setDefaultAction(action)
 
-            self.addWidget(button)
-            self.buttonGroup.addButton(button)
-            self.buttonGroup.setId(button, id_)
+            self.insertWidget(self.instrumentSeparator, button)
+            self.instrumentButtonGroup.addButton(button)
+            self.instrumentButtonGroup.setId(button, id_)
