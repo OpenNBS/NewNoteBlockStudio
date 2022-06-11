@@ -11,6 +11,10 @@ from PyQt5 import QtCore
 PathLike = Union[str, bytes, os.PathLike]
 
 
+def key_to_pitch(key):
+    return 2 ** (key / 12)
+
+
 def vol_to_gain(vol: float) -> float:
     return math.log(max(vol, 0.0001), 10) * 20
 
@@ -135,9 +139,10 @@ class AudioEngine(QtCore.QObject):
         self.sounds.append(sound)
 
     @QtCore.pyqtSlot(int, float, float, float)
-    def playSound(self, index: int, volume: float, pitch: float, panning: float):
+    def playSound(self, index: int, volume: float, key: float, panning: float):
 
         sound = self.sounds[index]
+        pitch = key_to_pitch(key)
 
         new_sound = (
             sound._spawn(

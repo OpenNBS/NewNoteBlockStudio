@@ -76,14 +76,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Sounds
         self.noteBlockArea.blockAdded.connect(
-            lambda ins, key: self.audioEngine.playSound(
-                ins, 0.5, 2 ** ((key - 45) / 12), 0
-            )
+            lambda ins, key: self.audioEngine.playSound(ins, 0.5, key - 45, 0)
         )
         self.noteBlockArea.blockPlayed.connect(
-            lambda ins, key: self.audioEngine.playSound(
-                ins, 0.5, 2 ** ((key - 45) / 12), 0
-            )
+            lambda ins, key: self.audioEngine.playSound(ins, 0.5, key - 45, 0)
         )
 
     def initPiano(self):
@@ -95,7 +91,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda key: self.audioEngine.playSound(
                 self.setCurrentInstrumentActionsManager.currentInstrument,
                 0.5,
-                2 ** ((key - 45) / 12),
+                key - 45,
                 0,
             )
         )
@@ -115,7 +111,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.instrumentBar.populateInstruments()
         self.instrumentBar.instrumentButtonPressed.connect(
-            lambda id_: self.audioEngine.playSound(id_, 0.5, 2 ** ((self.piano.activeKey - 45) / 12), 0)
+            lambda id_: self.audioEngine.playSound(
+                id_, 0.5, self.piano.activeKey - 45, 0
+            )
         )
 
         # 'Change instrument...' actions
