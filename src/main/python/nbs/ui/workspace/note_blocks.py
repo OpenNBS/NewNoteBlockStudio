@@ -394,7 +394,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def initMenu(self):
         self.menu = EditMenu(self.view, isFloat=True)
-        self.menu.aboutToHide.connect(self.onCloseMenu)
+        # Dismissing a menu should "cancel" the next click, but triggering an option should not.
+        self.menu.aboutToHide.connect(self.onDismissMenu)
+        self.menu.triggered.connect(self.onTriggerMenu)
         self.connectMenuSignals()
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
@@ -404,8 +406,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return super().contextMenuEvent(event)
 
     @QtCore.pyqtSlot()
-    def onCloseMenu(self):
+    def onDismissMenu(self):
         self.isClosingMenu = True
+
+    def onTriggerMenu(self):
+        self.isClosingMenu = False
 
     def connectMenuSignals(self):
         Actions.deleteAction.triggered.connect(self.deleteSelection)
