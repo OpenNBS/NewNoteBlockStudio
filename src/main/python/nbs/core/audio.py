@@ -1,7 +1,7 @@
 import math
 import os
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List, Sequence, Tuple, Union
 
 import numpy as np
 import sounddevice as sd
@@ -165,3 +165,7 @@ class AudioEngine(QtCore.QObject):
         self.handler.push_samples(samples)
 
         print(index, volume, pitch, "Sound played")
+
+    def playSounds(self, sounds: Sequence[Tuple[int, float, float, float]]):
+        for sound in sounds:
+            self.playSound(*sound)

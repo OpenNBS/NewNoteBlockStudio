@@ -333,7 +333,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     clipboardChanged = QtCore.pyqtSignal()
     blockCountChanged = QtCore.pyqtSignal(int)
     blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
-    blockPlayed = QtCore.pyqtSignal(int, int, int, int, int)
+    tickPlayed = QtCore.pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -911,19 +911,22 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         blocks = self.items(region)
         return blocks
 
-    def playBlock(self, block: NoteBlock) -> None:
-        layer = self.layers[int(block.y() // BLOCK_SIZE)]
-        instrument = block.ins
-        key = block.key
-        volume = block.vel * layer.volume
-        panning = (block.pan * layer.panning) / 2
-        pitch = block.pit
-        block.play()
-        self.blockPlayed.emit(instrument, key, volume, panning, pitch)
+    def playBlocks(self, blocks: Sequence[NoteBlock]) -> None:
+        payload = []
+        for block in blocks:
+            layer = self.layers[int(block.y() // BLOCK_SIZE)]
+            instrument = block.ins
+            key = block.key
+            volume = block.vel * layer.volume
+            panning = (block.pan * layer.panning) / 2
+            pitch = block.pit
+            block.play()
+            payload.append((instrument, key, volume, panning, pitch))
+        self.tickPlayed.emit(payload)
 
     def playTick(self, tick: int) -> None:
-        for block in self.getBlocksInTick(tick):
-            self.playBlock(block)
+        blocks = self.getBlocksInTick(tick)
+        self.playBlocks(blocks)
 
     ########## EVENTS ##########
 
