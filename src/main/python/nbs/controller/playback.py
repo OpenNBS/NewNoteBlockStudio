@@ -1,3 +1,5 @@
+import time
+
 from PyQt5 import QtCore
 
 
@@ -9,6 +11,8 @@ class PlaybackController(QtCore.QObject):
         super().__init__(parent)
         self.tempo = 10.00
         self.currentTick = 0
+        self.lastTickTimestamp = None
+        self.error = 0
 
         self.timer = QtCore.QTimer()
         self.timer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
@@ -19,6 +23,7 @@ class PlaybackController(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def play(self):
+        self.lastTickTimestamp = None
         self.timer.start()
 
     @QtCore.pyqtSlot()
@@ -46,6 +51,24 @@ class PlaybackController(QtCore.QObject):
     @QtCore.pyqtSlot()
     def tickPlayback(self):
         offset = self.tempo / 100
+
+        currentTimeMs = time.time_ns() / 10**6
+
+        # Lag compensation
+        if self.lastTickTimestamp is not None:
+
+            timeDelta = currentTimeMs - self.lastTickTimestamp
+
+            print(f"Time delta: {timeDelta}")
+
+            self.error += timeDelta - 10
+            print(f"Accumulated error", self.error)
+
+            tickCompensationFactor = timeDelta / 10
+            offset *= tickCompensationFactor
+
+        self.lastTickTimestamp = currentTimeMs
+
         self.currentTick += offset
         self.playbackPositionChanged.emit(self.currentTick)
 
