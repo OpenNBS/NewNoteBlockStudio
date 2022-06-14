@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import List, Optional, Sequence
 
 import qtawesome as qta
+from nbs.core.song import Layer
 from PyQt5 import QtCore, QtWidgets
 
 from .constants import *
@@ -245,13 +246,13 @@ class LayerArea(VerticalScrollArea):
     def layerCount(self):
         return self.layout.count()
 
-    def createLayer(self, pos: Optional[int] = None):
+    def createLayer(self, pos: Optional[int] = None, *args, **kwargs):
         """
         Create a new layer. If `pos` is given, the layer will be added at that position;
         otherwise it will be appended.
         """
         pos = pos if pos is not None else self.layerCount
-        layer = LayerBar(pos, self.layerHeight)
+        layer = LayerBar(pos, self.layerHeight, parent=self, *args, **kwargs)
         self.layout.insertWidget(pos, layer)
 
         self.scaleChanged.connect(layer.changeScale)
@@ -282,11 +283,27 @@ class LayerArea(VerticalScrollArea):
         for i, layer in enumerate(self.layers):
             layer.setId(i)
 
+    ####### SONG ########
+
+    def reset(self):
+        for layer in self.layers:
+            layer.deleteLayer()
+
+    def loadLayerData(self, layers: Sequence[Layer]):
+        for layer in layers:
+            self.addLayer()
+
+    def getLayerData(self) -> List[Layer]:
+        layers = []
+        for layer in self.layers:
+            layers.append(Layer())
+        return layers
+
     ######## FEATURES ########
 
     @QtCore.pyqtSlot(int)
-    def addLayer(self, pos: int):
-        self.createLayer(pos)
+    def addLayer(self, pos: int, *args, **kwargs):
+        self.createLayer(pos, *args, **kwargs)
         self.updateLayerIds()
         self.layerAdded.emit(pos)
 

@@ -485,6 +485,45 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         viewTransform = self.view.transform()
         return self.itemAt(viewPos, viewTransform)
 
+    ########## SONG ##########
+
+    def reset(self) -> None:
+        self.layers = []
+        self.clear()
+        self.updateSceneSize()
+        self.updateBlockCount()
+        self.view.ensureVisible(0, 0, 0, 0)
+
+    def loadNoteData(self, blocks: Sequence[NoteBlock]) -> None:
+        self.reset()
+        for block in blocks:
+            self.addBlock(
+                block.tick,
+                block.layer,
+                block.key,
+                block.instrument,
+                block.velocity,
+                block.panning,
+                block.pitch,
+            )
+        self.updateBlockCount()
+        self.updateSceneSize()
+
+    def getNoteData(self) -> List[NoteBlock]:
+        blocks = []
+        for block in list(self.noteBlocks):
+            note = NoteBlock(
+                block.tick,
+                block.layer,
+                block.key,
+                block.instrument,
+                block.velocity,
+                block.panning,
+                block.pitch,
+            )
+            blocks.append(note)
+        return blocks
+
     ########## NOTE BLOCKS ##########
 
     def noteBlocks(self):
@@ -1017,6 +1056,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return False
 
 
+
 class PlaybackManager(QtCore.QObject):
 
     playbackPositionChanged = QtCore.pyqtSignal(float)
@@ -1077,11 +1117,13 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.yy = yy
         self.key = key
         self.ins = ins
+        self.ins = min(ins, 15)
         self.vel = vel
         self.pan = pan
         self.pit = pit
         self.glow = 0
         self.overlayColor = QtGui.QColor(*instrument_data[ins].color)
+        self.overlayColor = QtGui.QColor(*instrument_data[min(ins, 15)].color)
         self.label = self.getLabel()
         self.clicks = self.getClicks()
         self.isOutOfRange = False
@@ -1126,6 +1168,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         else:
             painter.setOpacity(0.5 + 0.5 * self.glow)
 
+        # Turn this into a QGraphicsPixmapItem and use a single pixmap for all note blocks.
         pixmap = QtGui.QPixmap(appctxt.get_resource("images/note_block_grayscale.png"))
         painter.drawPixmap(rect, pixmap)
         painter.setPen(QtCore.Qt.NoPen)
@@ -1199,12 +1242,12 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             self.glow -= 0.01
         else:
             self.glowTimer.stop()
-        print(self.glowTimer.isActive())
         self.update()
 
     def play(self):
         self.glow = 1
         self.glowTimer.start()
+        # self.glowTimer.start()
         self.update()
 
     def getData(self):
@@ -1215,6 +1258,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             self.pan,
             self.pit,
         )
+
 
     def setInstrument(self, id_: int):
         self.ins = id_
