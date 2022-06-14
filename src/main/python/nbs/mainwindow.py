@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from nbs.controller.playback import PlaybackController
 from nbs.core.audio import AudioEngine
 from nbs.core.context import appctxt
 from nbs.core.data import default_instruments
@@ -29,6 +30,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initAudio()
         self.initUI()
         self.initNoteBlocks()
+        self.initTimeBar()
         self.initPiano()
         self.initInstruments()
         self.initFile()
@@ -44,6 +46,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(self.menuBar)
         self.addToolBar(self.toolBar)
         # self.addToolBar(self.instrumentBar)
+
+        self.playbackController = PlaybackController()
 
         self.noteBlockArea = NoteBlockArea()
         self.layerArea = LayerArea()
@@ -70,11 +74,14 @@ class MainWindow(QtWidgets.QMainWindow):
         Actions.pasteAction.triggered.connect(self.noteBlockArea.pasteSelection)
 
         # Playback
-        Actions.playPauseAction.triggered.connect(
-            lambda checked: self.noteBlockArea.view.playbackManager.setPlaying(checked)
+        Actions.playPauseAction.triggered.connect(self.playbackController.setPlaying)
+        Actions.stopAction.triggered.connect(self.playbackController.stop)
+
+        self.playbackController.playbackPositionChanged.connect(
+            self.noteBlockArea.view.setPlaybackPosition
         )
-        Actions.stopAction.triggered.connect(
-            self.noteBlockArea.view.playbackManager.stop
+        self.noteBlockArea.view.playbackPositionChanged.connect(
+            self.playbackController.setPlaybackPosition
         )
 
         # Sounds
@@ -85,6 +92,12 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda sounds: self.audioEngine.playSounds(
                 ((ins, 0.5, key - 45, 0) for ins, key, *_ in sounds)
             )
+        )
+
+    def initTimeBar(self):
+        self.timeBar.tempoChanged.connect(self.playbackController.setTempo)
+        self.playbackController.playbackPositionChanged.connect(
+            self.timeBar.currentTimeChanged
         )
 
     def initPiano(self):

@@ -48,9 +48,6 @@ class Workspace(QtWidgets.QSplitter):
         self.noteBlockWidget.view.scaleChanged.connect(
             lambda x: self.layerWidget.updateLayerHeight(x * BLOCK_SIZE)
         )
-        self.noteBlockWidget.view.playbackManager.playbackPositionChanged.connect(
-            self.timeBar.currentTimeChanged_
-        )
         self.noteBlockWidget.sceneSizeChanged.connect(
             lambda _, height: self.layerWidget.updateLayerCount(height // BLOCK_SIZE)
         )
