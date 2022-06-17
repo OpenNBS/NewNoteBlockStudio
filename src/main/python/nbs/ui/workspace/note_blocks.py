@@ -216,7 +216,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
     playbackPositionChanged = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, objectName=__class__.__name__)
         self.currentScale = 1
         self.scrollMode = ScrollMode.PAGE_BY_PAGE
         self.ruler = TimeRuler(parent=self)
@@ -226,6 +226,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.viewport().setObjectName(self.objectName() + "Viewport")
         self.viewport().installEventFilter(self)
 
         self.horizontalScrollBar().valueChanged.connect(self.ruler.setOffset)
@@ -333,7 +334,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     tickPlayed = QtCore.pyqtSignal(list)
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, objectName=__class__.__name__)
         self.view = NoteBlockView(self)
         self.layers = []
         self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
