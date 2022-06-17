@@ -113,3 +113,21 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
         self.okButton = QtWidgets.QPushButton("OK", clicked=self.accept)
         self.footer.addWidget(self.okButton)
         # self.cancelButton = QtWidgets.QPushButton("Cancel", self, clicked=self.reject)
+
+        self.table.currentCellChanged.connect(self.updateSelection)
+
+    @QtCore.pyqtSlot(int, int, int, int)
+    def updateSelection(self, selectedRow, *_):
+        if self.table.selectedItems():
+            self.removeInstrumentButton.setEnabled(True)
+            self.shiftInstrumentUpButton.setEnabled(selectedRow > 0)
+            self.shiftInstrumentDownButton.setEnabled(
+                selectedRow < self.table.rowCount() - 1
+            )
+        else:
+            self.removeInstrumentButton.setEnabled(False)
+            self.shiftInstrumentUpButton.setEnabled(False)
+            self.shiftInstrumentDownButton.setEnabled(False)
+
+        def addInstrument(self):
+            pass
