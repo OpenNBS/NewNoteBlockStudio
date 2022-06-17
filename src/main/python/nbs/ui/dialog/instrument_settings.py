@@ -82,6 +82,7 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
 
         tableHeader = self.table.horizontalHeader()
         tableHeader.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        tableHeader.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
         print(self.instruments)
         for row, instrument in enumerate(self.instruments):
