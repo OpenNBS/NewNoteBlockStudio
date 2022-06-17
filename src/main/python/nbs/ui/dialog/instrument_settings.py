@@ -30,6 +30,32 @@ class InstrumentPressComboBox(QtWidgets.QComboBox):
         self.addItem("No")
 
 
+class InstrumentTable(QtWidgets.QTableWidget):
+    def __init__(self, instruments, parent=None):
+        super().__init__(parent)
+        self.setRowCount(len(instruments))
+        self.setColumnCount(4)
+        self.setHorizontalHeaderLabels(["Name", "Sound file", "Key", "Press"])
+
+        # Select one row at a time
+        self.setSelectionMode(QtWidgets.QTableWidget.SingleSelection)
+        self.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
+
+        # Set first two columns to stretch
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
+
+        for row, instrument in enumerate(instruments):
+            self.setItem(row, 0, QtWidgets.QTableWidgetItem(instrument.name))
+            self.setItem(row, 1, QtWidgets.QTableWidgetItem())
+            self.setCellWidget(row, 2, InstrumentKeySpinBox())  # instrument.key
+            self.setItem(row, 2, QtWidgets.QTableWidgetItem(instrument.press))
+            self.setCellWidget(row, 3, QtWidgets.QCheckBox())
+
+        self.resizeRowsToContents()
+
+
 class InstrumentSettingsDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -69,29 +95,7 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
         self.layout.addLayout(self.header)
 
         # Instrument table
-        self.table = QtWidgets.QTableWidget()
-        self.table.setRowCount(len(self.instruments))
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Name", "Sound file", "Key", "Press"])
-
-        self.table.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        # select one row at a time
-        self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.table.setDragDropOverwriteMode(False)
-
-        tableHeader = self.table.horizontalHeader()
-        tableHeader.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
-        tableHeader.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
-
-        print(self.instruments)
-        for row, instrument in enumerate(self.instruments):
-            self.table.setItem(row, 0, QtWidgets.QTableWidgetItem(instrument.name))
-            self.table.setItem(row, 1, QtWidgets.QTableWidgetItem())
-            self.table.setCellWidget(row, 2, InstrumentKeySpinBox())  # instrument.key
-            self.table.setItem(row, 2, QtWidgets.QTableWidgetItem(instrument.press))
-            self.table.setCellWidget(row, 3, QtWidgets.QCheckBox())
-
+        self.table = InstrumentTable(self.instruments)
         self.layout.addWidget(self.table)
 
         # Footer buttons
