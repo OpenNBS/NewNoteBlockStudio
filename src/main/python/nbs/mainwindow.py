@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from nbs.controller.instrument import InstrumentController
 from nbs.controller.playback import PlaybackController
 from nbs.core.audio import AudioEngine
 from nbs.core.context import appctxt
@@ -28,6 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
         self.initAudio()
+        self.initControllers()
         self.initUI()
         self.initNoteBlocks()
         self.initTimeBar()
@@ -38,6 +40,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def initAudio(self):
         self.audioEngine = AudioEngine(self)
 
+    def initControllers(self):
+        self.playbackController = PlaybackController()
+        self.instrumentController = InstrumentController(default_instruments)
+
     def initUI(self):
         self.menuBar = MenuBar()
         self.toolBar = ToolBar()
@@ -46,8 +52,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(self.menuBar)
         self.addToolBar(self.toolBar)
         # self.addToolBar(self.instrumentBar)
-
-        self.playbackController = PlaybackController()
 
         self.noteBlockArea = NoteBlockArea()
         self.layerArea = LayerArea()
