@@ -11,6 +11,7 @@ from nbs.ui.actions import (
     ChangeInstrumentActionsManager,
     SetCurrentInstrumentActionsManager,
 )
+from nbs.ui.dialog.instrument_settings import InstrumentSettingsDialog
 from nbs.ui.file import getLoadSongDialog
 from nbs.ui.menus import MenuBar
 from nbs.ui.toolbar import ToolBar
@@ -36,6 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initPiano()
         self.initInstruments()
         self.initFile()
+        self.initDialogs()
 
     def initAudio(self):
         self.audioEngine = AudioEngine(self)
@@ -150,6 +152,16 @@ class MainWindow(QtWidgets.QMainWindow):
         Actions.openSongAction.triggered.connect(self.loadSong)
         Actions.saveSongAction.triggered.connect(self.saveSong)
         Actions.saveSongAsAction.triggered.connect(self.saveSong)
+
+    def initDialogs(self):
+        Actions.instrumentSettingsAction.triggered.connect(self.showInstrumentSettings)
+
+    @QtCore.pyqtSlot()
+    def showInstrumentSettings(self):
+        dialog = InstrumentSettingsDialog()
+        dialog.setInstruments(default_instruments)
+        # self.instrumentController.instruments)
+        dialog.exec_()
 
     @QtCore.pyqtSlot()
     def loadSong(self):
