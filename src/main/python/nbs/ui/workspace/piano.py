@@ -51,6 +51,15 @@ class PianoKey(QtWidgets.QWidget):
             self.isPressed = False
             self.update()
 
+    @property
+    def isActive(self):
+        return self._isActive
+
+    @isActive.setter
+    def isActive(self, value):
+        self._isActive = value
+        self.update()
+
     def paintEvent(self, event):
         # Colors
         if self.isBlack:
@@ -175,7 +184,6 @@ class PianoWidget(QtWidgets.QWidget):
         self.keys[value].isActive = True
         self._activeKey = value
         self.activeKeyChanged.emit(value)
-        self.repaint()
 
     @QtCore.pyqtSlot(int)
     def setActiveKey(self, key):
