@@ -541,12 +541,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         block = NoteBlock(x, y, *args, **kwargs)
         block.setPos(blockPos)
         self.addItem(block)
-        self.updateBlockCount()
         return block
 
     def addBlockManual(self, x, y, *args, **kwargs):
         block = self.addBlock(x, y, *args, **kwargs)
         block.mouseOver = True
+        self.updateBlockCount()
         self.updateSceneSize()
         self.blockAdded.emit(block.ins, block.key, block.vel, block.pan, block.pit)
 
@@ -731,6 +731,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             for x, y, *data in data:
                 block = self.addBlock(x, y, *data)
                 block.setSelected(True)
+            self.updateBlockCount()
             self.updateSelectionStatus()
             self.selectionChanged.emit(self.selectionStatus)
 
