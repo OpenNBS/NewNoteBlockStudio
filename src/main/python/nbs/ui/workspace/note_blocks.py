@@ -340,6 +340,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.selection = QtWidgets.QRubberBand(
             QtWidgets.QRubberBand.Rectangle, parent=self.view.viewport()
         )
+        self.selection.hide()
+        self.selection.setGeometry(0, 0, 0, 0)
         self.selectionStart = None
         self.isDraggingSelection = False
         self.isClearingSelection = False
@@ -958,7 +960,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             elif event.button() == QtCore.Qt.RightButton:
                 self.setAreaSelected(selectionArea, False)
             self.selection.hide()
-            self.selection.setGeometry(QtCore.QRect(0, 0, 0, 0))
+            self.selection.setGeometry(0, 0, 0, 0)
             self.isDraggingSelection = False
         elif self.isClearingSelection:
             self.isClearingSelection = False
