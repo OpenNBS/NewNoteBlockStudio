@@ -603,13 +603,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot()
     def selectAll(self):
-        self.setBlocksSelected(self.items(), True)
+        self.setAreaSelected(self.sceneRect())
 
     @QtCore.pyqtSlot()
     def deselectAll(self):  # clearSelection/placeSelection
         if self.hasSelection():
             self._clearBlocksUnderSelection()
-            self.setBlocksSelected(self.items(), False)
+            self.clearSelection()
             self.updateSceneSize()
 
     @QtCore.pyqtSlot()
