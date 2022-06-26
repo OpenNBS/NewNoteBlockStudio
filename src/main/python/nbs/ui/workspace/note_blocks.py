@@ -1112,8 +1112,9 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         # OPACITY CONTROLS
         self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
         self.setGraphicsEffect(self.opacityEffect)
-        self.baseOpacity = 1.0
+        self.baseOpacity = 0.6
         self.glow = 0.0
+        self.updateOpacity()
 
         # DRAWING CACHE
         self.cachePixmap = QtGui.QPixmap()
@@ -1122,7 +1123,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         return self.RECT
 
     def updateOpacity(self):
-        opacity = self.baseOpacity + self.glow * 0.5
+        opacity = self.baseOpacity + self.glow * 0.4
         self.opacityEffect.setOpacity(opacity)
 
     def paint(self, painter, option, widget):
@@ -1176,7 +1177,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.updateOpacity()
 
     def hoverLeaveEvent(self, event):
-        self.baseOpacity = 0.5
+        self.baseOpacity = 0.6
         self.updateOpacity()
 
     def wheelEvent(self, event):
@@ -1216,8 +1217,8 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     def updateGlow(self):
         if self.glow > 0:
-            self.glow -= 0.01
             self.updateOpacity()
+            self.glow -= 0.01
 
     def play(self):
         self.glow = 1
