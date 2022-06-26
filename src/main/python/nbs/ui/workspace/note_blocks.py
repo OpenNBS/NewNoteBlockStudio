@@ -1105,6 +1105,9 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.baseOpacity = 1.0
         self.glow = 0.0
 
+        # DRAWING CACHE
+        self.cachePixmap = QtGui.QPixmap()
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
 
@@ -1113,6 +1116,17 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.opacityEffect.setOpacity(opacity)
 
     def paint(self, painter, option, widget):
+        if self.cachePixmap.isNull():
+            print("repainting")
+            self.paintCache()
+        else:
+            print("drawing from cache")
+        painter.drawPixmap(0, 0, self.cachePixmap)
+
+    def paintCache(self) -> None:
+        self.cachePixmap = QtGui.QPixmap(BLOCK_SIZE, BLOCK_SIZE)
+        painter = QtGui.QPainter(self.cachePixmap)
+
         # Geometry
         rect = self.boundingRect().toAlignedRect()
 
@@ -1152,6 +1166,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             painter.setBrush(QtCore.Qt.NoBrush)
             painter.drawRect(rect)
 
+        painter.end()
+
+    def resetCache(self):
+        self.cachePixmap.swap(QtGui.QPixmap())
+
     def hoverEnterEvent(self, event):
         self.baseOpacity = 1.0
         self.updateOpacity()
@@ -1173,12 +1192,12 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     def changeKey(self, steps):
         self.key += steps
-        self.refresh()
+        self.resetCache()
 
     def refresh(self):
         self.label = self.getLabel()
         self.clicks = self.getClicks()
-        self.update()
+        self.resetCache()
 
     def getLabel(self):
         octave, key = divmod(self.key + 9, 12)
@@ -1217,4 +1236,4 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.ins = id_
         instrument = instrument_data[id_]
         self.overlayColor = QtGui.QColor(*instrument.color)
-        self.update()
+        self.resetCache()
