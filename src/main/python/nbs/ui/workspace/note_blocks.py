@@ -1073,6 +1073,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
 
 class NoteBlock(QtWidgets.QGraphicsItem):
+
+    TOP_RECT = QtCore.QRect(0, 0, BLOCK_SIZE, BLOCK_SIZE / 2)
+    BOTTOM_RECT = QtCore.QRect(0, BLOCK_SIZE / 2, BLOCK_SIZE, BLOCK_SIZE / 2)
+
     def __init__(self, xx, yy, key, ins, vel=100, pan=0, pit=0, parent=None):
         super().__init__(parent)
         self.xx = xx
@@ -1111,11 +1115,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
     def paint(self, painter, option, widget):
         # Geometry
         rect = self.boundingRect().toAlignedRect()
-        midpoint = rect.height() / 2
-        labelRect = self.boundingRect()
-        labelRect.setBottom(midpoint)
-        numberRect = self.boundingRect()
-        numberRect.setTop(midpoint)
 
         # Colors
         blockColor = self.overlayColor
@@ -1138,11 +1137,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         painter.setFont(font)
         painter.setPen(labelColor)
         painter.drawText(
-            labelRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label
+            self.TOP_RECT, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label
         )
         painter.setPen(numberColor)
         painter.drawText(
-            numberRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, self.clicks
+            self.BOTTOM_RECT, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, self.clicks
         )
         if self.isSelected():
             painter.setPen(QtCore.Qt.NoPen)
