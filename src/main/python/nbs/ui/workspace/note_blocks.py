@@ -1105,9 +1105,9 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.selected = False
         self.setAcceptHoverEvents(True)
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
-        # TODO: experiment with other caching mores such as ItemCoordinateCache,
-        # optimize drawing code by reducing detail when zoomed out far etc.
-        self.setCacheMode(QtWidgets.QGraphicsItem.DeviceCoordinateCache)
+        # TODO: ItemCoordinateCache makes items pixelated. Invalidate the cache
+        # when zooming very close as few notes are being drawn.
+        self.setCacheMode(QtWidgets.QGraphicsItem.ItemCoordinateCache)
 
         # OPACITY CONTROLS
         self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
