@@ -508,7 +508,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def getNoteData(self) -> List[NoteBlock]:
         blocks = []
-        for block in list(self.noteBlocks):
+        for block in self.items():
             note = NoteBlock(
                 block.tick,
                 block.layer,
@@ -523,15 +523,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## NOTE BLOCKS ##########
 
-    def noteBlocks(self):
-        """An iterator which yields all the note blocks in the scene."""
-        for item in self.items():
-            if isinstance(item, NoteBlock):
-                yield item
-
     def clear(self):
         """Clear all note blocks in the scene."""
-        for item in self.noteBlocks():
+        for item in self.items():
             self.removeItem(item)
 
     def addBlock(self, x, y, *args, **kwargs):
@@ -566,7 +560,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.updateSceneSize()
 
     def updateBlockCount(self):
-        self.blockCountChanged.emit(len(list(self.noteBlocks())))
+        self.blockCountChanged.emit(len(self.items()))
 
     ########## SELECTION ##########
 
@@ -582,10 +576,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return len(self.selectedItems()) > 0
 
     def updateSelectionStatus(self):
-        if len(list(self.noteBlocks())) == 0:
+        if len(self.items()) == 0:
             self.selectionStatus = -2
         elif self.hasSelection():
-            if len(self.selectedItems()) == len(list(self.noteBlocks())):
+            if len(self.selectedItems()) == len(self.items()):
                 self.selectionStatus = 1
             else:
                 self.selectionStatus = 0
