@@ -1098,8 +1098,8 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         # OPACITY CONTROLS
         self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
         self.setGraphicsEffect(self.opacityEffect)
-        self.baseOpacity = 1
-        self.glow = 0
+        self.baseOpacity = 1.0
+        self.glow = 0.0
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
@@ -1154,7 +1154,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             painter.drawRect(rect)
 
     def hoverEnterEvent(self, event):
-        self.baseOpacity = 1
+        self.baseOpacity = 1.0
         self.updateOpacity()
 
     def hoverLeaveEvent(self, event):
