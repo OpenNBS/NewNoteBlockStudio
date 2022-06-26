@@ -352,10 +352,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         self.activeKey = 45
+        self.playingBlocks = set()
         self.previousPlaybackPosition = 0
         self.currentInstrument = 0
         self.initUI()
         self.initClipboard()
+        self.initPlayback()
 
     ########## UI ##########
 
@@ -883,6 +885,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## PLAYBACK ##########
 
+    def initPlayback(self):
+        self.glowTimer = QtCore.QTimer(self)
+        self.glowTimer.setInterval(1000 / 60)
+        self.glowTimer.timeout.connect(self.updateBlockGlowEffect)
+        self.glowTimer.start()
+
     @QtCore.pyqtSlot(float)
     def doPlayback(self, currentPlaybackPosition: float):
         if math.floor(self.previousPlaybackPosition) != math.floor(
@@ -890,6 +898,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         ):
             self.playTick(math.floor(currentPlaybackPosition))
         self.previousPlaybackPosition = currentPlaybackPosition
+        self.updateBlockGlowEffect()
 
     def getTickRegion(self, tick: int) -> QtCore.QRectF:
         x1 = tick * BLOCK_SIZE
@@ -913,11 +922,20 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             pitch = block.pit
             block.play()
             payload.append((instrument, key, volume, panning, pitch))
+        self.playingBlocks.update(blocks)
         self.tickPlayed.emit(payload)
 
     def playTick(self, tick: int) -> None:
         blocks = self.getBlocksInTick(tick)
         self.playBlocks(blocks)
+
+    def updateBlockGlowEffect(self) -> None:
+        toBeRemoved = set()
+        for block in self.playingBlocks:
+            block.updateGlow()
+            if block.glow < 0:
+                toBeRemoved.add(block)
+        self.playingBlocks -= toBeRemoved
 
     ########## EVENTS ##########
 
@@ -1079,11 +1097,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         # TODO: experiment with other caching mores such as ItemCoordinateCache,
         # optimize drawing code by reducing detail when zoomed out far etc.
         self.setCacheMode(QtWidgets.QGraphicsItem.DeviceCoordinateCache)
-        self.glowTimer = QtCore.QTimer()
-        self.glowTimer.setInterval(10)
-        self.glowTimer.timeout.connect(
-            self.updateGlow, QtCore.Qt.ConnectionType.DirectConnection
-        )
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
@@ -1185,14 +1198,10 @@ class NoteBlock(QtWidgets.QGraphicsItem):
     def updateGlow(self):
         if self.glow > 0:
             self.glow -= 0.01
-        else:
-            self.glowTimer.stop()
         self.update()
 
     def play(self):
         self.glow = 1
-        self.glowTimer.start()
-        # self.glowTimer.start()
         self.update()
 
     def getData(self):
