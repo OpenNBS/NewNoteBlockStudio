@@ -1123,6 +1123,13 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             print("drawing from cache")
         painter.drawPixmap(0, 0, self.cachePixmap)
 
+        rect = self.boundingRect()
+        selectedColor = QtGui.QColor(255, 255, 255, 180)
+        if self.isSelected():
+            painter.setPen(QtCore.Qt.NoPen)
+            painter.setBrush(selectedColor)
+            painter.drawRect(rect)
+
     def paintCache(self) -> None:
         self.cachePixmap = QtGui.QPixmap(BLOCK_SIZE, BLOCK_SIZE)
         painter = QtGui.QPainter(self.cachePixmap)
@@ -1157,10 +1164,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         painter.drawText(
             self.BOTTOM_RECT, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, self.clicks
         )
-        if self.isSelected():
-            painter.setPen(QtCore.Qt.NoPen)
-            painter.setBrush(selectedColor)
-            painter.drawRect(rect)
         if self.isOutOfRange:
             painter.setPen(QtCore.Qt.red)
             painter.setBrush(QtCore.Qt.NoBrush)
