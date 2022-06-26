@@ -960,7 +960,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         if self.isDraggingSelection:
-            selectionArea = self.view.mapToScene(self.selection.geometry()).boundingRect()
+            selectionArea = self.view.mapToScene(
+                self.selection.geometry()
+            ).boundingRect()
             # TODO: Update selection as the selection box is dragged
             if event.button() == QtCore.Qt.LeftButton:
                 self.setAreaSelected(selectionArea, True)
