@@ -1192,12 +1192,13 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     def changeKey(self, steps):
         self.key += steps
-        self.resetCache()
+        self.refresh()
 
     def refresh(self):
         self.label = self.getLabel()
         self.clicks = self.getClicks()
         self.resetCache()
+        self.update()
 
     def getLabel(self):
         octave, key = divmod(self.key + 9, 12)
@@ -1237,3 +1238,4 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         instrument = instrument_data[id_]
         self.overlayColor = QtGui.QColor(*instrument.color)
         self.resetCache()
+        self.update()
