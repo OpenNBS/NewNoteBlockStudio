@@ -394,7 +394,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         # Dismissing a menu should "cancel" the next click, but triggering an option should not.
         self.menu.aboutToHide.connect(self.onDismissMenu)
         self.menu.triggered.connect(self.onTriggerMenu)
-        self.connectMenuSignals()
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         self.menuClickPos = event.scenePos()
@@ -408,16 +407,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def onTriggerMenu(self):
         self.isClosingMenu = False
-
-    def connectMenuSignals(self):
-        Actions.deleteAction.triggered.connect(self.deleteSelection)
-        Actions.selectAllAction.triggered.connect(self.selectAll)
-        Actions.deselectAllAction.triggered.connect(self.deselectAll)
-        Actions.invertSelectionAction.triggered.connect(self.invertSelection)
-        Actions.selectAllLeftAction.triggered.connect(self.selectAllLeft)
-        Actions.selectAllRightAction.triggered.connect(self.selectAllRight)
-        Actions.expandSelectionAction.triggered.connect(self.expandSelection)
-        Actions.compressSelectionAction.triggered.connect(self.compressSelection)
 
     def toggleSelectLeftRightActions(self, pos: Union[QtCore.QPoint, QtCore.QPointF]):
         bbox = self.itemsBoundingRect()

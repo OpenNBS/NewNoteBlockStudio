@@ -78,6 +78,23 @@ class MainWindow(QtWidgets.QMainWindow):
         Actions.cutAction.triggered.connect(self.noteBlockArea.cutSelection)
         Actions.copyAction.triggered.connect(self.noteBlockArea.copySelection)
         Actions.pasteAction.triggered.connect(self.noteBlockArea.pasteSelection)
+        Actions.deleteAction.triggered.connect(self.noteBlockArea.deleteSelection)
+
+        Actions.selectAllAction.triggered.connect(self.noteBlockArea.selectAll)
+        Actions.deselectAllAction.triggered.connect(self.noteBlockArea.deselectAll)
+        Actions.invertSelectionAction.triggered.connect(
+            self.noteBlockArea.invertSelection
+        )
+        Actions.selectAllLeftAction.triggered.connect(self.noteBlockArea.selectAllLeft)
+        Actions.selectAllRightAction.triggered.connect(
+            self.noteBlockArea.selectAllRight
+        )
+        Actions.expandSelectionAction.triggered.connect(
+            self.noteBlockArea.expandSelection
+        )
+        Actions.compressSelectionAction.triggered.connect(
+            self.noteBlockArea.compressSelection
+        )
 
         # Playback
         Actions.playPauseAction.triggered.connect(self.playbackController.setPlaying)
