@@ -570,7 +570,15 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.updateSelectionStatus()
 
     def setAreaSelected(self, area: QtCore.QRectF, selected: bool = True):
-        self.setBlocksSelected(self.items(area), selected)
+        # There's no native way of subtracting an area from the current selection, so we use
+        # Qt's native implementation to add items (faster), but remove items individually.
+        if selected:
+            path = QtGui.QPainterPath()
+            path.addRect(QtCore.QRectF(area))
+            self.setSelectionArea(path, selected)
+        else:
+            self.setBlocksSelected(self.items(area), False)
+        self.updateSelectionStatus()
 
     def hasSelection(self):
         return len(self.selectedItems()) > 0
@@ -952,7 +960,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         if self.isDraggingSelection:
-            selectionArea = self.view.mapToScene(self.selection.geometry())
+            selectionArea = self.view.mapToScene(self.selection.geometry()).boundingRect()
             # TODO: Update selection as the selection box is dragged
             if event.button() == QtCore.Qt.LeftButton:
                 self.setAreaSelected(selectionArea, True)
