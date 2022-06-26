@@ -337,7 +337,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         super().__init__(parent, objectName=__class__.__name__)
         self.view = NoteBlockView(self)
         self.layers = []
-        self.selection = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle)
+        self.selection = QtWidgets.QRubberBand(
+            QtWidgets.QRubberBand.Rectangle, parent=self.view.viewport()
+        )
         self.selectionStart = None
         self.isDraggingSelection = False
         self.isClearingSelection = False
@@ -361,9 +363,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.initMenu()
         self.view.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         self.view.setCursor(QtCore.Qt.PointingHandCursor)
-        self.view.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
-        self.selectionProxy = self.addWidget(self.selection)
-        self.selectionProxy.setZValue(100)
         self.startTimer(10)
 
     def drawBackground(self, painter, rect):
@@ -959,7 +958,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         if self.isDraggingSelection:
-            selectionArea = QtCore.QRectF(self.selection.geometry())
+            selectionArea = self.view.mapToScene(self.selection.geometry())
             # TODO: Update selection as the selection box is dragged
             if event.button() == QtCore.Qt.LeftButton:
                 self.setAreaSelected(selectionArea, True)
@@ -1025,11 +1024,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             or event.buttons() == QtCore.Qt.RightButton
         ):
             self.isDraggingSelection = True
-            selectionRect = (
-                QtCore.QRectF(self.selectionStart, event.scenePos())
-                .normalized()
-                .toRect()
-            )
+            selectionRect = QtCore.QRectF(self.selectionStart, event.scenePos())
+            selectionRect = self.view.mapFromScene(selectionRect).boundingRect()
             self.selection.setGeometry(selectionRect)
         else:
             # call the parent's mouseMoveEvent to allow
