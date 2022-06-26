@@ -531,7 +531,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def addBlockManual(self, x, y, *args, **kwargs):
         block = self.addBlock(x, y, *args, **kwargs)
-        block.mouseOver = True
         self.updateBlockCount()
         self.updateSceneSize()
         self.blockAdded.emit(block.ins, block.key, block.vel, block.pan, block.pit)
@@ -1084,13 +1083,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.vel = vel
         self.pan = pan
         self.pit = pit
-        self.glow = 0
         self.overlayColor = QtGui.QColor(*instrument_data[ins].color)
         self.overlayColor = QtGui.QColor(*instrument_data[min(ins, 15)].color)
         self.label = self.getLabel()
         self.clicks = self.getClicks()
         self.isOutOfRange = False
-        self.mouseOver = False
         self.selected = False
         self.setAcceptHoverEvents(True)
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
@@ -1098,8 +1095,36 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         # optimize drawing code by reducing detail when zoomed out far etc.
         self.setCacheMode(QtWidgets.QGraphicsItem.DeviceCoordinateCache)
 
+        # OPACITY CONTROLS
+        self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
+        self.setGraphicsEffect(self.opacityEffect)
+        self._baseOpacity = 0.5
+        self._glow = 0
+
     def boundingRect(self):
         return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
+
+    def updateOpacity(self):
+        opacity = self._baseOpacity + self._glow * 0.5
+        self.opacityEffect.setOpacity(opacity)
+
+    @property
+    def baseOpacity(self) -> float:
+        return self._baseOpacity
+
+    @baseOpacity.setter
+    def baseOpacity(self, value: float):
+        self._baseOpacity = value
+        self.updateOpacity()
+
+    @property
+    def glow(self) -> float:
+        return self._glow
+
+    @glow.setter
+    def glow(self, value: float):
+        self._glow = value
+        self.updateOpacity()
 
     def paint(self, painter, option, widget):
         # Geometry
@@ -1120,12 +1145,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         font = QtGui.QFont()
         font.setPointSize(9)
 
-        # Paint
-        if self.mouseOver:
-            painter.setOpacity(1)
-        else:
-            painter.setOpacity(0.5 + 0.5 * self.glow)
-
         # Turn this into a QGraphicsPixmapItem and use a single pixmap for all note blocks.
         pixmap = QtGui.QPixmap(appctxt.get_resource("images/note_block_grayscale.png"))
         painter.drawPixmap(rect, pixmap)
@@ -1134,7 +1153,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_Overlay)
         painter.drawRect(rect)
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
-        painter.setOpacity(1)
         painter.setFont(font)
         painter.setPen(labelColor)
         painter.drawText(
@@ -1154,12 +1172,10 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             painter.drawRect(rect)
 
     def hoverEnterEvent(self, event):
-        self.mouseOver = True
-        self.update()
+        self.baseOpacity = 1
 
     def hoverLeaveEvent(self, event):
-        self.mouseOver = False
-        self.update()
+        self.baseOpacity = 0.5
 
     def wheelEvent(self, event):
         if event.delta() > 0:
@@ -1198,11 +1214,9 @@ class NoteBlock(QtWidgets.QGraphicsItem):
     def updateGlow(self):
         if self.glow > 0:
             self.glow -= 0.01
-        self.update()
 
     def play(self):
         self.glow = 1
-        self.update()
 
     def getData(self):
         return (
