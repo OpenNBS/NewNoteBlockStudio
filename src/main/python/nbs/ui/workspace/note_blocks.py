@@ -1074,8 +1074,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
 class NoteBlock(QtWidgets.QGraphicsItem):
 
+    # Geometry
+    RECT = QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
     TOP_RECT = QtCore.QRect(0, 0, BLOCK_SIZE, BLOCK_SIZE / 2)
     BOTTOM_RECT = QtCore.QRect(0, BLOCK_SIZE / 2, BLOCK_SIZE, BLOCK_SIZE / 2)
+
+    # Colors
+    LABEL_COLOR = QtCore.Qt.yellow
+    NUMBER_COLOR = QtCore.Qt.white
+
+    # Font
+    FONT = QtGui.QFont()
+    FONT.setPointSize(9)
 
     def __init__(self, xx, yy, key, ins, vel=100, pan=0, pit=0, parent=None):
         super().__init__(parent)
@@ -1109,7 +1119,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.cachePixmap = QtGui.QPixmap()
 
     def boundingRect(self):
-        return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
+        return self.RECT
 
     def updateOpacity(self):
         opacity = self.baseOpacity + self.glow * 0.5
@@ -1123,44 +1133,31 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             print("drawing from cache")
         painter.drawPixmap(0, 0, self.cachePixmap)
 
-        rect = self.boundingRect()
         selectedColor = QtGui.QColor(255, 255, 255, 180)
         if self.isSelected():
             painter.setPen(QtCore.Qt.NoPen)
             painter.setBrush(selectedColor)
-            painter.drawRect(rect)
+            painter.drawRect(self.RECT)
 
     def paintCache(self) -> None:
         self.cachePixmap = QtGui.QPixmap(BLOCK_SIZE, BLOCK_SIZE)
         painter = QtGui.QPainter(self.cachePixmap)
 
-        # Geometry
-        rect = self.boundingRect().toAlignedRect()
-
-        # Colors
-        blockColor = self.overlayColor
-        labelColor = QtCore.Qt.yellow
-        numberColor = QtCore.Qt.white
-        selectedColor = QtGui.QColor(255, 255, 255, 180)
-
-        # Font
-        font = QtGui.QFont()
-        font.setPointSize(9)
-
         # Turn this into a QGraphicsPixmapItem and use a single pixmap for all note blocks.
         pixmap = QtGui.QPixmap(appctxt.get_resource("images/note_block_grayscale.png"))
+        rect = self.RECT.toAlignedRect()
         painter.drawPixmap(rect, pixmap)
         painter.setPen(QtCore.Qt.NoPen)
-        painter.setBrush(QtGui.QBrush(blockColor, QtCore.Qt.SolidPattern))
+        painter.setBrush(QtGui.QBrush(self.overlayColor, QtCore.Qt.SolidPattern))
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_Overlay)
         painter.drawRect(rect)
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_SourceOver)
-        painter.setFont(font)
-        painter.setPen(labelColor)
+        painter.setFont(self.FONT)
+        painter.setPen(self.LABEL_COLOR)
         painter.drawText(
             self.TOP_RECT, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignBottom, self.label
         )
-        painter.setPen(numberColor)
+        painter.setPen(self.NUMBER_COLOR)
         painter.drawText(
             self.BOTTOM_RECT, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, self.clicks
         )
