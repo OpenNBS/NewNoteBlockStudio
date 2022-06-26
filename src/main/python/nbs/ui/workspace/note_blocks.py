@@ -1098,33 +1098,15 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         # OPACITY CONTROLS
         self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
         self.setGraphicsEffect(self.opacityEffect)
-        self._baseOpacity = 0.5
-        self._glow = 0
+        self.baseOpacity = 1
+        self.glow = 0
 
     def boundingRect(self):
         return QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
 
     def updateOpacity(self):
-        opacity = self._baseOpacity + self._glow * 0.5
+        opacity = self.baseOpacity + self.glow * 0.5
         self.opacityEffect.setOpacity(opacity)
-
-    @property
-    def baseOpacity(self) -> float:
-        return self._baseOpacity
-
-    @baseOpacity.setter
-    def baseOpacity(self, value: float):
-        self._baseOpacity = value
-        self.updateOpacity()
-
-    @property
-    def glow(self) -> float:
-        return self._glow
-
-    @glow.setter
-    def glow(self, value: float):
-        self._glow = value
-        self.updateOpacity()
 
     def paint(self, painter, option, widget):
         # Geometry
@@ -1173,9 +1155,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     def hoverEnterEvent(self, event):
         self.baseOpacity = 1
+        self.updateOpacity()
 
     def hoverLeaveEvent(self, event):
         self.baseOpacity = 0.5
+        self.updateOpacity()
 
     def wheelEvent(self, event):
         if event.delta() > 0:
@@ -1214,9 +1198,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
     def updateGlow(self):
         if self.glow > 0:
             self.glow -= 0.01
+            self.updateOpacity()
 
     def play(self):
         self.glow = 1
+        self.updateOpacity()
 
     def getData(self):
         return (
