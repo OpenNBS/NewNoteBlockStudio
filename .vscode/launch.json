@@ -2,10 +2,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "fbs: Run",
+            "name": "Python: Run",
             "type": "python",
-            "command": "fbs run",
             "request": "launch",
+            "program": "${workspaceFolder}/src/main/python/main.py",
             "cwd": "${workspaceFolder}",
             "env": {
                 "PATH": "${workspaceFolder}/.venv/Scripts"
