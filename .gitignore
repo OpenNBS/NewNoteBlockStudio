@@ -1,6 +1,9 @@
 # FFmpeg
 *.exe
 
+# Profiling output
+.tmp/
+
 # Editors
 .idea/
 

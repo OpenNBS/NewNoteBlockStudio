@@ -10,6 +10,18 @@
             "env": {
                 "PATH": "${workspaceFolder}/.venv/Scripts"
             }
+        },
+        {
+            "name": "Python: Profile",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main/python/main.py",
+            "args": ["--profile"],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PATH": "${workspaceFolder}/.venv/Scripts",
+                "PYTHONPATH": "${workspaceFolder}/src/main/python"
+            }
         }
     ]
 }
