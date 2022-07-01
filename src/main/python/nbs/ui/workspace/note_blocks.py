@@ -543,9 +543,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def removeBlockAt(self, x, y):
         """Remove the note block at the specified position."""
         pos = self.getScenePos(x, y)
-        clicked = self.itemAt(pos, QtGui.QTransform())
-        if isinstance(clicked, NoteBlock):
-            self.removeBlock(clicked)
+        itemAtPos = self.itemAt(pos, self.view.transform())
+        if itemAtPos is not None:
+            self.removeItem(itemAtPos)
 
     def removeBlockManual(self, x, y):
         self.removeBlockAt(x, y)
