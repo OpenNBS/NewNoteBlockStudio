@@ -15,7 +15,7 @@ class PlaybackController(QtCore.QObject):
 
         self.timer = QtCore.QTimer()
         self.timer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
-        self.timer.setInterval(10)
+        self.timer.setInterval(1000 / 60)
         self.timer.timeout.connect(
             self.tickPlayback, QtCore.Qt.ConnectionType.DirectConnection
         )
@@ -49,13 +49,13 @@ class PlaybackController(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def tickPlayback(self):
-        offset = self.tempo / 100
+        offset = self.tempo / 60
         currentTimeMs = time.time_ns() / 10**6
 
         # Lag compensation
         if self.lastTickTimestamp is not None:
             timeDelta = currentTimeMs - self.lastTickTimestamp
-            tickCompensationFactor = timeDelta / 10
+            tickCompensationFactor = timeDelta / (1000 / 60)
             offset *= tickCompensationFactor
 
         self.lastTickTimestamp = currentTimeMs
