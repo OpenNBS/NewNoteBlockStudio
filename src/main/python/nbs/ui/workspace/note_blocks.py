@@ -224,6 +224,11 @@ class NoteBlockView(QtWidgets.QGraphicsView):
 
         self.setViewportMargins(0, 32, 0, 0)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        # self.setRenderHints(
+        #    QtGui.QPainter.RenderHint.Antialiasing
+        #    | QtGui.QPainter.RenderHint.SmoothPixmapTransform
+        #    | QtGui.QPainter.RenderHint.TextAntialiasing
+        # )
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.viewport().setObjectName(self.objectName() + "Viewport")
@@ -1074,10 +1079,16 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
 class NoteBlock(QtWidgets.QGraphicsItem):
 
+    BLOCK_CACHE_SIZE = BLOCK_SIZE * 4
+
     # Geometry
     RECT = QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
-    TOP_RECT = QtCore.QRect(0, 0, BLOCK_SIZE, BLOCK_SIZE / 2)
-    BOTTOM_RECT = QtCore.QRect(0, BLOCK_SIZE / 2, BLOCK_SIZE, BLOCK_SIZE / 2)
+
+    CACHE_RECT = QtCore.QRect(0, 0, BLOCK_CACHE_SIZE, BLOCK_CACHE_SIZE)
+    TOP_RECT = QtCore.QRect(0, 0, BLOCK_CACHE_SIZE, BLOCK_CACHE_SIZE / 2)
+    BOTTOM_RECT = QtCore.QRect(
+        0, BLOCK_CACHE_SIZE / 2, BLOCK_CACHE_SIZE, BLOCK_CACHE_SIZE / 2
+    )
 
     # Colors
     LABEL_COLOR = QtCore.Qt.yellow
@@ -1085,7 +1096,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     # Font
     FONT = QtGui.QFont()
-    FONT.setPointSize(9)
+    FONT.setPointSize(36)
 
     def __init__(self, xx, yy, key, ins, vel=100, pan=0, pit=0, parent=None):
         super().__init__(parent)
@@ -1107,7 +1118,10 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
         # TODO: ItemCoordinateCache makes items pixelated. Invalidate the cache
         # when zooming very close as few notes are being drawn.
-        self.setCacheMode(QtWidgets.QGraphicsItem.ItemCoordinateCache)
+        self.setCacheMode(
+            QtWidgets.QGraphicsItem.ItemCoordinateCache,
+            logicalCacheSize=QtCore.QSize(self.BLOCK_CACHE_SIZE, self.BLOCK_CACHE_SIZE),
+        )
 
         # OPACITY CONTROLS
         self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
@@ -1132,7 +1146,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             self.paintCache()
         else:
             print("drawing from cache")
-        painter.drawPixmap(0, 0, self.cachePixmap)
+        painter.drawPixmap(QtCore.QRect(0, 0, 8, 8), self.cachePixmap, self.CACHE_RECT)
 
         selectedColor = QtGui.QColor(255, 255, 255, 180)
         if self.isSelected():
@@ -1141,12 +1155,12 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             painter.drawRect(self.RECT)
 
     def paintCache(self) -> None:
-        self.cachePixmap = QtGui.QPixmap(BLOCK_SIZE, BLOCK_SIZE)
+        self.cachePixmap = QtGui.QPixmap(self.BLOCK_CACHE_SIZE, self.BLOCK_CACHE_SIZE)
         painter = QtGui.QPainter(self.cachePixmap)
 
         # Turn this into a QGraphicsPixmapItem and use a single pixmap for all note blocks.
         pixmap = QtGui.QPixmap(appctxt.get_resource("images/note_block_grayscale.png"))
-        rect = self.RECT.toAlignedRect()
+        rect = self.CACHE_RECT
         painter.drawPixmap(rect, pixmap)
         painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QBrush(self.overlayColor, QtCore.Qt.SolidPattern))
