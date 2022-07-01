@@ -19,9 +19,7 @@ class PlaybackController(QtCore.QObject):
         self.timer = QtCore.QTimer()
         self.timer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
         self.timer.setInterval(MSPT)
-        self.timer.timeout.connect(
-            self.tickPlayback, QtCore.Qt.ConnectionType.DirectConnection
-        )
+        self.timer.timeout.connect(self.tickPlayback)
 
     @QtCore.pyqtSlot()
     def play(self):
