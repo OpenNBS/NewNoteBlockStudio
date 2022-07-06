@@ -6,7 +6,7 @@ class Instrument:
     name: str
     sound_path: str
     icon_path: str
-    color: tuple[int, int, int]
+    color: Tuple[int, int, int]
     press: bool
 
 
