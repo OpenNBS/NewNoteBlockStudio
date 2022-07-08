@@ -274,6 +274,18 @@ packaging = "*"
 test = ["pytest (>=6,!=7.0.0,!=7.0.1)", "pytest-cov (>=3.0.0)", "pytest-qt"]
 
 [[package]]
+name = "samplerate"
+version = "0.1.0"
+description = "Python bindings for libsamplerate based on CFFI and NumPy"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+cffi = ">=1.0.0"
+numpy = "*"
+
+[[package]]
 name = "sounddevice"
 version = "0.4.4"
 description = "Play and Record Sound with Python"
@@ -306,7 +318,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "3ba2fd7557bf45d304a0f2f6956bef3c4fda0258f0740b0463d979cbeb2c740f"
+content-hash = "80643ccc9587ffd14002ee749a02c560e6216a2585f4e06cc8997bfaf36a8d2d"
 
 [metadata.files]
 altgraph = [
@@ -511,6 +523,10 @@ qtawesome = [
 qtpy = [
     {file = "QtPy-2.1.0-py3-none-any.whl", hash = "sha256:aee0586081f943029312becece9f63977b0a9e3788f77a6ac8cc74802bb173d6"},
     {file = "QtPy-2.1.0.tar.gz", hash = "sha256:ca8cd4217175186344299ee4c0f7e7adcf362c70852ba35b255a534077025c06"},
+]
+samplerate = [
+    {file = "samplerate-0.1.0-py2.py3-none-any.whl", hash = "sha256:f55e5c9d0a8ba3c82a53b7d9c34a2d145439c61166a7f310efaec88f2781b8f8"},
+    {file = "samplerate-0.1.0.tar.gz", hash = "sha256:75ef725e6cd9c4545569caf4c47147beab7b53b2c36e5122e8c285d348f88847"},
 ]
 sounddevice = [
     {file = "sounddevice-0.4.4-py3-none-any.whl", hash = "sha256:66bb36220f6cf280d5f8937c68568a0181690c47e49c5081fa060e25a6daf875"},
