@@ -52,7 +52,7 @@ def query_default_output_device():
 
 
 def apply_volume(samples: np.ndarray, volume: float):
-    return samples * volume
+    samples *= volume
 
 
 def apply_gain_stereo(samples: np.ndarray, left_gain: float, right_gain: float) -> None:
