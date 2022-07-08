@@ -7,56 +7,65 @@ __all__ = ["TimeBar"]
 class SongTime(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.tempo = 10
+        self.tempo = 10.00
         self.currentTime = 10
         self.totalTime = 100
+        self.initUI()
 
-    def paintEvent(self, event):
-        # TODO: this can probably be a QLabel
-        painter = QtGui.QPainter()
-        painter.begin(self)
-        painter.setPen(QtCore.Qt.black)
-
+    def initUI(self):
+        # Song time (top)
+        self.songTimeLabel = QtWidgets.QLabel()
+        self.songTimeLabel.setAlignment(QtCore.Qt.AlignRight)
         font = QtGui.QFont()
         font.setPointSize(11)
         font.setBold(True)
-        painter.setFont(font)
+        self.songTimeLabel.setFont(font)
 
-        height = self.height()
-        midpoint = height / 2
-        width = self.width()
-        rect = QtCore.QRect(0, 0, width, midpoint)
-
-        alignFlags = QtCore.Qt.AlignRight + QtCore.Qt.AlignTop
-
-        painter.drawText(
-            rect, alignFlags, ticks_to_timestr(self.currentTime, self.tempo)
-        )
-
+        # Song length (bottom)
+        self.songLengthLabel = QtWidgets.QLabel()
+        self.songLengthLabel.setAlignment(QtCore.Qt.AlignRight)
+        font = QtGui.QFont()
         font.setPointSize(8)
         font.setBold(False)
-        rect.translate(0, midpoint)
+        self.songLengthLabel.setFont(font)
 
-        painter.setFont(font)
-        painter.drawText(
-            rect, alignFlags, f"/ {ticks_to_timestr(self.totalTime, self.tempo)}"
+        # Layout
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.songTimeLabel)
+        layout.addWidget(self.songLengthLabel)
+        layout.setAlignment(QtCore.Qt.AlignRight)
+        layout.setContentsMargins(0, 1, 0, 2)
+        layout.setSpacing(0)
+        layout.setStretchFactor(self.songTimeLabel, 0.7)
+        layout.setStretchFactor(self.songLengthLabel, 0.3)
+        self.setLayout(layout)
+
+        self.updateCurrentTime()
+        self.updateTotalTime()
+
+    def updateCurrentTime(self):
+        self.songTimeLabel.setText(ticks_to_timestr(self.currentTime, self.tempo))
+
+    def updateTotalTime(self):
+        self.songLengthLabel.setText(
+            "/ " + ticks_to_timestr(self.totalTime, self.tempo)
         )
-        painter.end()
 
     @QtCore.pyqtSlot(float)
     def tempoChanged(self, newTempo: float):
         self.tempo = newTempo
-        self.repaint()
+        self.updateCurrentTime()
+        self.updateTotalTime()
 
     @QtCore.pyqtSlot(float)
     def currentTimeChanged(self, newTime: float):
         self.currentTime = newTime
-        self.repaint()
+        self.updateCurrentTime()
 
     @QtCore.pyqtSlot(int)
     def totalTimeChanged(self, newTime: int):
         self.totalTime = newTime
-        self.repaint()
+        self.updateTotalTime()
 
 
 class TempoBox(QtWidgets.QDoubleSpinBox):
