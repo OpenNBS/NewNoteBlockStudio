@@ -1,9 +1,9 @@
 import math
 import os
-from dataclasses import dataclass
 from typing import List, Sequence, Tuple, Union
 
 import numpy as np
+import samplerate as sr
 import sounddevice as sd
 from pydub import AudioSegment
 from PyQt5 import QtCore
@@ -16,7 +16,13 @@ def key_to_pitch(key):
 
 
 def vol_to_gain(vol: float) -> float:
-    return math.log(max(vol, 0.0001), 10) * 20
+    if vol == 0:
+        return -float("inf")
+    return math.log(vol, 10) * 20
+
+
+def gain_to_vol(gain: float) -> float:
+    return 10 ** (gain / 20)
 
 
 sd.default.samplerate = 44100
@@ -45,13 +51,77 @@ def query_default_output_device():
     return sd.query_devices(output_device_id)
 
 
-@dataclass
+def apply_volume(samples: np.ndarray, volume: float):
+    return samples * volume
+
+
+def apply_gain_stereo(samples: np.ndarray, left_gain: float, right_gain: float) -> None:
+    l_mult_factor = gain_to_vol(left_gain)
+    r_mult_factor = gain_to_vol(right_gain)
+
+    samples[:, 0] *= l_mult_factor
+    samples[:, 1] *= r_mult_factor
+
+
+def apply_pan(samples: np.ndarray, pan: float) -> None:
+
+    # Simplified panning algorithm from pydub to operate on numpy arrays
+    # https://github.com/jiaaro/pydub/blob/0c26b10619ee6e31c2b0ae26a8e99f461f694e5f/pydub/effects.py#L284
+
+    max_boost_db = vol_to_gain(2.0)
+    boost_db = abs(pan) * max_boost_db
+
+    boost_factor = gain_to_vol(boost_db)
+    reduce_factor = gain_to_vol(max_boost_db) - boost_factor
+
+    reduce_db = vol_to_gain(reduce_factor)
+    boost_db /= 2.0
+
+    if pan < 0:
+        apply_gain_stereo(samples, boost_db, reduce_db)
+    else:
+        apply_gain_stereo(samples, reduce_db, boost_db)
+
+
 class SoundInstance:
-    samples: np.ndarray
-    current_frame: int = 0
+    def __init__(
+        self,
+        samples: np.ndarray,
+        volume: float = 1.0,
+        pitch: float = 1.0,
+        pan: float = 0.0,
+    ):
+        self.samples = samples
+        self.current_frame = 0
+
+        self.volume = volume
+        self.pitch = pitch
+        self.pan = pan
+
+        self.resampler = sr.CallbackResampler(
+            callback=self.get_input_callback(), ratio=1 / self.pitch, channels=2
+        )
+        self.resampler.__enter__()
 
     def __repr__(self):
         return f"<{self.__class__.__name__} ({self.current_frame}/{len(self.samples)})>"
+
+    def __del__(self):
+        self.resampler.__exit__()
+
+    def get_input_callback(self, n_frames: int = 256):
+        def producer():
+            while True:
+                yield self.samples[self.current_frame : self.current_frame + n_frames]
+                self.current_frame += n_frames
+
+        return lambda p=producer(): next(p)
+
+    def get_samples(self, n_frames: int):
+        samples = self.resampler.read(n_frames)
+        apply_volume(samples, self.volume)
+        apply_pan(samples, self.pan)
+        return samples
 
 
 class SoundQueue:
@@ -60,17 +130,16 @@ class SoundQueue:
         self.sample_rate = sample_rate
         self.channels = channels
 
-    def push_sound(self, samples: np.ndarray) -> None:
-        sound = SoundInstance(samples)
+    def push_sound(
+        self, samples: np.ndarray, pitch: float, volume: float, panning: float
+    ) -> None:
+        sound = SoundInstance(samples, volume, pitch, panning)
         self.active_sounds.append(sound)
 
     def get_active_sounds(self) -> List[SoundInstance]:
         for sound in self.active_sounds:
             if sound.current_frame >= len(sound.samples):
-                try:
-                    self.active_sounds.remove(sound)
-                except ValueError:
-                    print("AUDIO: Sound already removed")
+                self.active_sounds.remove(sound)
         return self.active_sounds
 
 
@@ -79,10 +148,12 @@ class AudioOutputHandler:
         self.sample_rate = sample_rate
         self.channels = channels
         self.queue = SoundQueue(sample_rate, channels)
-        self.stream = sd.OutputStream(callback=lambda *args: self.callback(*args))
+        self.stream = sd.OutputStream(
+            callback=lambda *args: self.playback_callback(*args)
+        )
 
-    def push_samples(self, samples: np.ndarray) -> None:
-        self.queue.push_sound(samples)
+    def push_sound(self, samples: np.ndarray, pitch, volume, panning) -> None:
+        self.queue.push_sound(samples, pitch, volume, panning)
 
     def start(self) -> None:
         self.stream.start()
@@ -101,24 +172,15 @@ class AudioOutputHandler:
         self.stop()
         self.close()
 
-    def callback(self, outdata: np.ndarray, frames: int, time, status) -> None:
+    def playback_callback(self, outdata: np.ndarray, frames: int, time, status) -> None:
         if status:
             print(status)
-        sounds = self.queue.get_active_sounds()
+
         outdata.fill(0)
-        for sound in sounds:
-            start = sound.current_frame
-            length = sound.samples.shape[0]
-            end = min(start + frames, length)
-
-            # print("Current:", sound.current_frame, start + frames, length, end)
-
-            samples = sound.samples[start:end]
-            if samples.shape[0] == 0:
-                print("AUDIO: No samples left")
-                continue
-            outdata[: end - start] += samples
-            sound.current_frame += frames
+        for sound in self.queue.get_active_sounds():
+            samples = sound.get_samples(frames)
+            end = len(samples)
+            outdata[:end] += samples
 
 
 class AudioEngine(QtCore.QObject):
@@ -139,30 +201,19 @@ class AudioEngine(QtCore.QObject):
         if sound.channels < self.channels:
             sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
 
-        self.sounds.append(sound)
-
-    @QtCore.pyqtSlot(int, float, float, float)
-    def playSound(self, index: int, volume: float, key: float, panning: float):
-
-        sound = self.sounds[index]
-        pitch = key_to_pitch(key)
-
-        new_sound = (
-            sound._spawn(
-                sound.raw_data,
-                overrides={"frame_rate": round(sound.frame_rate * pitch)},
-            )
-            .set_frame_rate(sound.frame_rate)
-            .apply_gain(vol_to_gain(volume))
-            .pan(panning)
-        )
-
-        samples = np.array(new_sound.get_array_of_samples(), dtype="int16")
+        samples = np.array(sound.get_array_of_samples(), dtype="int16")
         samples = samples.astype(np.float32, order="C") / 32768.0
         samples = np.reshape(
             samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
         )
-        self.handler.push_samples(samples)
+        self.sounds.append(samples)
+
+    @QtCore.pyqtSlot(int, float, float, float)
+    def playSound(self, index: int, volume: float, key: float, panning: float):
+        samples = self.sounds[index]
+        pitch = key_to_pitch(key)
+
+        self.handler.push_sound(samples, pitch, volume, panning)
 
         print(index, volume, pitch, "Sound played")
 
