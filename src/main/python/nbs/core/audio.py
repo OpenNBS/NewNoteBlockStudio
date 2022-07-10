@@ -83,39 +83,83 @@ def apply_pan(samples: np.ndarray, pan: float) -> None:
         apply_gain_stereo(samples, reduce_db, boost_db)
 
 
+class NoFreeResourcesError(Exception):
+    pass
+
+
+class Resampler:
+    def __init__(self):
+        self.samples = None
+        self.current_frame = 0
+        self.resampler = sr.CallbackResampler(
+            callback=self.get_input_callback(), ratio=1, channels=2
+        )
+        self.resampler.__enter__()
+
+    def reset_state(self):
+        self.samples = None
+        self.current_frame = 0
+        self.resampler.reset()
+
+    def set_ratio(self, ratio: float) -> None:
+        self.resampler.set_starting_ratio(ratio)
+
+    def set_samples(self, samples: np.ndarray):
+        self.samples = samples
+        self.current_frame = 0
+
+    def get_input_callback(self, n_frames: int = 256):
+        def producer():
+            if self.samples is None:
+                raise Exception("No samples set")
+            samples = self.samples[self.current_frame : self.current_frame + n_frames]
+            self.current_frame += n_frames
+            return samples
+
+        return producer
+
+    def read(self, n_frames: int = 256) -> np.ndarray:
+        return self.resampler.read(n_frames)
+
+
+class ResamplerPool:
+    def __init__(self, size):
+        self.size = size
+        self.free = []
+        self.in_use = []
+        self.a = 0
+
+        for _ in range(size):
+            self.free.append(Resampler())
+
+    def acquire(self) -> Resampler:
+        if len(self.free) <= 0:
+            raise NoFreeResourcesError("No free resamplers are available")
+        resampler = self.free.pop(0)
+        self.in_use.append(resampler)
+        return resampler
+
+    def release(self, resampler: Resampler):
+        self.in_use.remove(resampler)
+        self.free.append(resampler)
+
+
 class SoundInstance:
     def __init__(
         self,
-        samples: np.ndarray,
+        resampler: Resampler,
         volume: float = 1.0,
         pitch: float = 1.0,
         pan: float = 0.0,
     ):
-        self.samples = samples
-        self.current_frame = 0
+        self.resampler = resampler
 
         self.volume = volume
         self.pitch = pitch
         self.pan = pan
 
-        self.resampler = sr.CallbackResampler(
-            callback=self.get_input_callback(), ratio=1 / self.pitch, channels=2
-        )
-        self.resampler.__enter__()
-
     def __repr__(self):
-        return f"<{self.__class__.__name__} ({self.current_frame}/{len(self.samples)})>"
-
-    def __del__(self):
-        self.resampler.__exit__()
-
-    def get_input_callback(self, n_frames: int = 256):
-        def producer():
-            while True:
-                yield self.samples[self.current_frame : self.current_frame + n_frames]
-                self.current_frame += n_frames
-
-        return lambda p=producer(): next(p)
+        return f"<{self.__class__.__name__} ({self.resampler.current_frame}/{len(self.resampler.samples)})>"
 
     def get_samples(self, n_frames: int):
         samples = self.resampler.read(n_frames)
@@ -125,20 +169,32 @@ class SoundInstance:
 
 
 class SoundQueue:
-    def __init__(self, sample_rate, channels) -> None:
+    def __init__(self) -> None:
+        self.resampler_pool = ResamplerPool(size=256)
         self.active_sounds = []
-        self.sample_rate = sample_rate
-        self.channels = channels
 
     def push_sound(
         self, samples: np.ndarray, pitch: float, volume: float, panning: float
     ) -> None:
-        sound = SoundInstance(samples, volume, pitch, panning)
-        self.active_sounds.append(sound)
+        try:
+            resampler = self.resampler_pool.acquire()
+        except NoFreeResourcesError:
+            print("No free resamplers available")
+            return
+
+        resampler.set_ratio(1 / pitch)
+        resampler.set_samples(samples)
+
+        sound = SoundInstance(resampler, volume, pitch, panning)
+
+        self.active_sounds.insert(0, sound)
 
     def get_active_sounds(self) -> List[SoundInstance]:
         for sound in self.active_sounds:
-            if sound.current_frame >= len(sound.samples):
+            if sound.resampler.current_frame >= len(sound.resampler.samples):
+                resampler = sound.resampler
+                resampler.reset_state()
+                self.resampler_pool.release(resampler)
                 self.active_sounds.remove(sound)
         return self.active_sounds
 
@@ -147,7 +203,7 @@ class AudioOutputHandler:
     def __init__(self, sample_rate, channels) -> None:
         self.sample_rate = sample_rate
         self.channels = channels
-        self.queue = SoundQueue(sample_rate, channels)
+        self.queue = SoundQueue()
         self.stream = sd.OutputStream(
             callback=lambda *args: self.playback_callback(*args)
         )
