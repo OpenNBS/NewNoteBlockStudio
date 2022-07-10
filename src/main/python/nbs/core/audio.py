@@ -83,86 +83,28 @@ def apply_pan(samples: np.ndarray, pan: float) -> None:
         apply_gain_stereo(samples, reduce_db, boost_db)
 
 
-class NoFreeResourcesError(Exception):
-    pass
-
-
-class Resampler:
-    def __init__(self):
-        self.samples = None
-        self.current_frame = 0
-        self.resampler = sr.CallbackResampler(
-            callback=self.get_input_callback(), ratio=1, channels=2
-        )
-        self.resampler.__enter__()
-
-    def reset_state(self):
-        self.samples = None
-        self.current_frame = 0
-        self.resampler.reset()
-
-    def set_ratio(self, ratio: float) -> None:
-        self.resampler.set_starting_ratio(ratio)
-
-    def set_samples(self, samples: np.ndarray):
-        self.samples = samples
-        self.current_frame = 0
-
-    def get_input_callback(self, n_frames: int = 256):
-        def producer():
-            if self.samples is None:
-                raise Exception("No samples set")
-            samples = self.samples[self.current_frame : self.current_frame + n_frames]
-            self.current_frame += n_frames
-            return samples
-
-        return producer
-
-    def read(self, n_frames: int = 256) -> np.ndarray:
-        return self.resampler.read(n_frames)
-
-
-class ResamplerPool:
-    def __init__(self, size):
-        self.size = size
-        self.free = []
-        self.in_use = []
-        self.a = 0
-
-        for _ in range(size):
-            self.free.append(Resampler())
-
-    def acquire(self) -> Resampler:
-        if len(self.free) <= 0:
-            raise NoFreeResourcesError("No free resamplers are available")
-        resampler = self.free.pop(0)
-        self.in_use.append(resampler)
-        return resampler
-
-    def release(self, resampler: Resampler):
-        self.in_use.remove(resampler)
-        self.free.append(resampler)
-
-
 class SoundInstance:
     def __init__(
         self,
-        resampler: Resampler,
+        samples: np.ndarray,
         volume: float = 1.0,
         pitch: float = 1.0,
         pan: float = 0.0,
     ):
-        self.resampler = resampler
+        self.samples = samples
+        self.current_frame = 0
 
         self.volume = volume
         self.pitch = pitch
         self.pan = pan
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} ({self.resampler.current_frame}/{len(self.resampler.samples)})>"
+        return f"<{self.__class__.__name__} ({self.current_frame}/{len(self.samples)})>"
 
     def get_samples(self, n_frames: int):
-        samples = self.resampler.read(n_frames)
+        samples = self.samples[self.current_frame : self.current_frame + n_frames]
+        self.current_frame += n_frames
+
         apply_volume(samples, self.volume)
         apply_pan(samples, self.pan)
         return samples
@@ -170,31 +112,17 @@ class SoundInstance:
 
 class SoundQueue:
     def __init__(self) -> None:
-        self.resampler_pool = ResamplerPool(size=256)
         self.active_sounds = []
 
     def push_sound(
         self, samples: np.ndarray, pitch: float, volume: float, panning: float
     ) -> None:
-        try:
-            resampler = self.resampler_pool.acquire()
-        except NoFreeResourcesError:
-            print("No free resamplers available")
-            return
-
-        resampler.set_ratio(1 / pitch)
-        resampler.set_samples(samples)
-
-        sound = SoundInstance(resampler, volume, pitch, panning)
-
+        sound = SoundInstance(samples, volume, pitch, panning)
         self.active_sounds.insert(0, sound)
 
     def get_active_sounds(self) -> List[SoundInstance]:
         for sound in self.active_sounds:
-            if sound.resampler.current_frame >= len(sound.resampler.samples):
-                resampler = sound.resampler
-                resampler.reset_state()
-                self.resampler_pool.release(resampler)
+            if sound.current_frame >= len(sound.samples):
                 self.active_sounds.remove(sound)
         return self.active_sounds
 
@@ -249,6 +177,8 @@ class AudioEngine(QtCore.QObject):
         self.handler = AudioOutputHandler(sample_rate, channels)
         self.handler.start()
 
+        self.resampler = sr.Resampler(channels=2)
+
     def loadSound(self, path: PathLike):
         sound = AudioSegment.from_file(path)
 
@@ -269,7 +199,12 @@ class AudioEngine(QtCore.QObject):
         samples = self.sounds[index]
         pitch = key_to_pitch(key)
 
-        self.handler.push_sound(samples, pitch, volume, panning)
+        resampled_samples = self.resampler.process(
+            samples, ratio=1 / pitch, end_of_input=True
+        )
+        self.resampler.reset()
+
+        self.handler.push_sound(resampled_samples, pitch, volume, panning)
 
         print(index, volume, pitch, "Sound played")
 
