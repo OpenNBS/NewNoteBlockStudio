@@ -19,16 +19,6 @@ class App(QApplication):
         self.setApplicationVersion("0.0.1")
         # self.setWindowIcon(QtGui.QIcon(os.path.join(os.path.dirname(__file__), "icon.png")))
 
-    def notify(self, receiver: QObject, event: QEvent):
-        self.profiler.start()
-        ret = QApplication.notify(self, receiver, event)
-        if self.profiler.elapsed() > 5:
-            print(
-                f"Processing event type {event.type()} for object {receiver.objectName()} "
-                f"took {self.profiler.elapsed()}ms"
-            )
-        return ret
-
 
 class AppContext(ApplicationContext):
     @cached_property
