@@ -186,6 +186,10 @@ class ResamplingCache:
 
 
 class AudioEngine(QtCore.QObject):
+
+    soundLoaded = QtCore.pyqtSignal(int, bool)
+    finished = QtCore.pyqtSignal()
+
     def __init__(self, parent=None, sample_rate=44100, channels=2):
         super().__init__(parent)
         self.sample_rate = sample_rate
@@ -193,26 +197,37 @@ class AudioEngine(QtCore.QObject):
         self.master_volume = 0.5
         self.sounds = []
 
-        self.handler = AudioOutputHandler(sample_rate, channels)
+    def run(self):
+        self.handler = AudioOutputHandler(self.sample_rate, self.channels)
+        self.resampler = sr.Resampler(channels=self.channels)
+        self.resampler_cache = ResamplingCache()
         self.handler.start()
 
-        self.resampler = sr.Resampler(channels=2)
-        self.resampler_cache = ResamplingCache()
+    def stop(self):
+        print("Stopping audio engine")
+        self.handler.stop()
+        self.handler.close()
+        self.finished.emit()
 
-    def loadSound(self, path: PathLike):
-        sound = AudioSegment.from_file(path)
+    @QtCore.pyqtSlot(list)
+    def loadSounds(self, path_list: List[PathLike]):
+        for path in path_list:
+            sound = AudioSegment.from_file(path)
 
         sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
+            sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
 
-        if sound.channels < self.channels:
-            sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
+            if sound.channels < self.channels:
+                sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
 
-        samples = np.array(sound.get_array_of_samples(), dtype="int16")
-        samples = samples.astype(np.float32, order="C") / 32768.0
-        samples = np.reshape(
-            samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
-        )
-        self.sounds.append(samples)
+            samples = np.array(sound.get_array_of_samples(), dtype="int16")
+            samples = samples.astype(np.float32, order="C") / 32768.0
+            samples = np.reshape(
+                samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
+            )
+            self.sounds.append(samples)
+            print(f"Loaded {path}")
+            self.soundLoaded.emit(len(self.sounds) - 1, True)
 
     @QtCore.pyqtSlot(int, float, float, float)
     def playSound(self, index: int, volume: float, key: float, panning: float):
@@ -233,6 +248,7 @@ class AudioEngine(QtCore.QObject):
 
         self.handler.push_sound(resampled_samples, pitch, volume, panning)
 
+    @QtCore.pyqtSlot(list)
     def playSounds(self, sounds: Sequence[Tuple[int, float, float, float]]):
         for sound in sounds:
             self.playSound(*sound)

@@ -26,6 +26,9 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class MainWindow(QtWidgets.QMainWindow):
+
+    soundLoadRequested = QtCore.pyqtSignal(list)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Minecraft Note Block Studio")
@@ -41,7 +44,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initDialogs()
 
     def initAudio(self):
-        self.audioEngine = AudioEngine(self)
+        self.audioThread = QtCore.QThread()
+        self.audioEngine = AudioEngine()
+        self.audioEngine.moveToThread(self.audioThread)
+        self.audioThread.started.connect(self.audioEngine.run)
+        QtCore.QCoreApplication.instance().aboutToQuit.connect(self.audioEngine.stop)
+        self.audioEngine.finished.connect(self.audioThread.quit)
+        self.soundLoadRequested.connect(self.audioEngine.loadSounds)
+        self.audioThread.start()
 
     def initControllers(self):
         self.playbackController = PlaybackController()
@@ -142,9 +152,12 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def initInstruments(self):
+        sounds = []
         for ins in default_instruments:
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
-            self.audioEngine.loadSound(sound_path)
+            sounds.append(sound_path)
+
+        self.soundLoadRequested.emit(sounds)
 
         # Set current instrument actions
         self.setCurrentInstrumentActionsManager.updateActions(default_instruments)
