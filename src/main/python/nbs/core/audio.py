@@ -168,8 +168,13 @@ class AudioOutputHandler:
 
 
 class ResamplingCache:
-    def __init__(self) -> None:
+    def __init__(self, max_size: None) -> None:
         self.cache = {}
+        self.max_size = max_size
+        # TODO: implement cache entry cleanup
+
+    def __len__(self) -> int:
+        return len(self.cache)
 
     def get_samples(self, sound_index: int, pitch: float) -> np.ndarray:
         samples = self.cache.get((sound_index, pitch))
@@ -183,6 +188,43 @@ class ResamplingCache:
 
     def reset(self):
         self.cache = {}
+
+
+class CachedResampler:
+    def __init__(self, channels: int) -> None:
+        self.resampler = sr.Resampler(channels=channels)
+        self.cache = ResamplingCache()
+
+    def resample(
+        self, sound_index: int, samples: np.ndarray, pitch: float
+    ) -> np.ndarray:
+        """Return the given `samples` resampled to `pitch` (this always returns
+        a new copy of the sample array). `sound_index` is used to cache the
+        resampled samples, so that they can be reused if the same sound is
+        resampled to the same pitch.
+        """
+        try:
+            resampled = self.cache.get_samples(sound_index, pitch)
+        except IndexError:
+            resampled = self._process(samples, pitch)
+            self.cache.add_samples(samples)
+        return resampled
+
+    def _process(self, samples: np.ndarray, pitch: float) -> np.ndarray:
+        """Resample the given `samples` to `pitch`, returning a new array.
+
+        This is a private method, and should not be called directly."""
+        resampled = self.resampler.process(samples, ratio=1 / pitch, end_of_input=True)
+        self.resampler.reset()
+        return resampled
+
+    def reset_cache(self):
+        """Deletes all cached resampled samples."""
+        self.cache.reset()
+
+    @property
+    def cache_size(self) -> int:
+        return len(self.cache)
 
 
 class AudioEngine(QtCore.QObject):
@@ -199,8 +241,7 @@ class AudioEngine(QtCore.QObject):
 
     def run(self):
         self.handler = AudioOutputHandler(self.sample_rate, self.channels)
-        self.resampler = sr.Resampler(channels=self.channels)
-        self.resampler_cache = ResamplingCache()
+        self.resampler = CachedResampler(channels=self.channels)
         self.handler.start()
 
     def stop(self):
@@ -234,19 +275,8 @@ class AudioEngine(QtCore.QObject):
         samples = self.sounds[index]
         pitch = key_to_pitch(key)
         volume *= self.master_volume
-
-        try:
-            resampled_samples = self.resampler_cache.get_samples(index, pitch)
-        except IndexError:
-            resampled_samples = self.resampler.process(
-                samples, ratio=1 / pitch, end_of_input=True
-            )
-            self.resampler_cache.add_samples(index, pitch, resampled_samples)
-            self.resampler.reset()
-
-        print(index, volume, pitch, "Sound played")
-
-        self.handler.push_sound(resampled_samples, pitch, volume, panning)
+        resampled = self.resampler.resample(samples, pitch)
+        self.handler.push_sound(resampled, pitch, volume, panning)
 
     @QtCore.pyqtSlot(list)
     def playSounds(self, sounds: Sequence[Tuple[int, float, float, float]]):
