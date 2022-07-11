@@ -254,10 +254,7 @@ class AudioEngine(QtCore.QObject):
     def loadSounds(self, path_list: List[PathLike]):
         for path in path_list:
             sound = AudioSegment.from_file(path)
-
-        sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
             sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
-
             if sound.channels < self.channels:
                 sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
 
@@ -266,6 +263,7 @@ class AudioEngine(QtCore.QObject):
             samples = np.reshape(
                 samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
             )
+
             self.sounds.append(samples)
             print(f"Loaded {path}")
             self.soundLoaded.emit(len(self.sounds) - 1, True)
