@@ -175,7 +175,7 @@ class ResamplingCache:
         samples = self.cache.get((sound_index, pitch))
         if samples is None:
             raise IndexError("Sound not found in cache")
-        return samples
+        return samples.copy()
 
     def add_samples(self, sound_index: int, pitch: float, samples: np.ndarray) -> None:
         self.cache[(sound_index, pitch)] = samples
