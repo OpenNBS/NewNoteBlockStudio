@@ -168,7 +168,7 @@ class AudioOutputHandler:
 
 
 class ResamplingCache:
-    def __init__(self, max_size: None) -> None:
+    def __init__(self, max_size: Optional[int] = None) -> None:
         self.cache = {}
         self.max_size = max_size
         # TODO: implement cache entry cleanup
@@ -207,7 +207,7 @@ class CachedResampler:
             resampled = self.cache.get_samples(sound_index, pitch)
         except IndexError:
             resampled = self._process(samples, pitch)
-            self.cache.add_samples(samples)
+            self.cache.add_samples(sound_index, pitch, samples)
         return resampled
 
     def _process(self, samples: np.ndarray, pitch: float) -> np.ndarray:
@@ -273,7 +273,7 @@ class AudioEngine(QtCore.QObject):
         samples = self.sounds[index]
         pitch = key_to_pitch(key)
         volume *= self.master_volume
-        resampled = self.resampler.resample(samples, pitch)
+        resampled = self.resampler.resample(index, samples, pitch)
         self.handler.push_sound(resampled, pitch, volume, panning)
 
     @QtCore.pyqtSlot(list)
