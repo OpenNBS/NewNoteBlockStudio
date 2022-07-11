@@ -112,11 +112,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Sounds
         self.noteBlockArea.blockAdded.connect(
-            lambda ins, key: self.audioEngine.playSound(ins, 0.5, key - 45, 0)
+            lambda ins, key: self.audioEngine.playSound(ins, 1.0, key - 45, 0)
         )
         self.noteBlockArea.tickPlayed.connect(
             lambda sounds: self.audioEngine.playSounds(
-                ((ins, 0.5, key - 45, 0) for ins, key, *_ in sounds)
+                ((ins, 1.0, key - 45, 0) for ins, key, *_ in sounds)
             )
         )
 
@@ -135,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.piano.activeKeyChanged.connect(
             lambda key: self.audioEngine.playSound(
                 self.setCurrentInstrumentActionsManager.currentInstrument,
-                0.5,
+                1.0,
                 key - 45,
                 0,
             )
@@ -158,7 +158,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolBar.populateInstruments()
         self.toolBar.instrumentButtonPressed.connect(
             lambda id_: self.audioEngine.playSound(
-                id_, 0.5, self.piano.activeKey - 45, 0
+                id_, 1.0, self.piano.activeKey - 45, 0
             )
         )
 

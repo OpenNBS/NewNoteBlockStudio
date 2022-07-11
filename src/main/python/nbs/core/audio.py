@@ -190,6 +190,7 @@ class AudioEngine(QtCore.QObject):
         super().__init__(parent)
         self.sample_rate = sample_rate
         self.channels = channels
+        self.master_volume = 0.5
         self.sounds = []
 
         self.handler = AudioOutputHandler(sample_rate, channels)
@@ -217,6 +218,7 @@ class AudioEngine(QtCore.QObject):
     def playSound(self, index: int, volume: float, key: float, panning: float):
         samples = self.sounds[index]
         pitch = key_to_pitch(key)
+        volume *= self.master_volume
 
         try:
             resampled_samples = self.resampler_cache.get_samples(index, pitch)
