@@ -28,6 +28,7 @@ class InstrumentSoundFileCell(QtWidgets.QTableWidgetItem):
         self.setText(value)
         if disabled:
             self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEnabled)
+        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
         self.disabled = disabled
         self.setLoaded(False)
 
