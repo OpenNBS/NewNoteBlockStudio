@@ -1,6 +1,6 @@
 import math
 import os
-from typing import List, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import samplerate as sr
