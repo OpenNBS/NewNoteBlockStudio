@@ -93,7 +93,7 @@ class InstrumentTable(QtWidgets.QTableWidget):
 
         nameColItem = QtWidgets.QTableWidgetItem(instrument.name)
         soundFileColItem = InstrumentSoundFileCell(
-            instrument.soundPath, disabled=instrument.isDefault
+            instrument.sound_path, disabled=instrument.isDefault
         )
         keyColItem = InstrumentKeySpinBox(
             value=instrument.pitch, disabled=instrument.isDefault
