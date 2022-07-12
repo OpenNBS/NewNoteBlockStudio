@@ -87,8 +87,6 @@ class InstrumentTable(QtWidgets.QTableWidget):
         for row, instrument in enumerate(instruments):
             self.addRow(instrument)
 
-        self.resizeRowsToContents()
-
     def addRow(self, instrument: InstrumentInstance, row: Optional[int] = None):
         row = row if row is not None else self.rowCount()
 
@@ -112,6 +110,8 @@ class InstrumentTable(QtWidgets.QTableWidget):
             soundFileColItem.setFlags(
                 soundFileColItem.flags() & ~QtCore.Qt.ItemIsEditable
             )
+
+        self.resizeRowToContents(row)
 
 
 class InstrumentSettingsDialog(QtWidgets.QDialog):
