@@ -2,10 +2,11 @@ import colorsys
 import os
 from dataclasses import dataclass, field
 from random import randint
-from typing import Optional, Sequence, Tuple, Union
+from typing import Any, Optional, Sequence, Tuple, Union
 from uuid import UUID, uuid4
 
-from nbs.core.data import Instrument
+from nbs.core.context import appctxt
+from nbs.core.data import Instrument, default_instruments
 from PyQt5 import QtCore, QtGui
 
 Color = Tuple[int, int, int]
@@ -20,42 +21,47 @@ def random_color() -> Color:
     )
 
 
-def load_icon(path: PathLike) -> QtGui.QPixmap:
+def load_default_icon(path: PathLike) -> QtGui.QIcon:
     try:
-        return QtGui.QPixmap(path)
+        return QtGui.QIcon(appctxt.get_resource(f"images/instruments/{path}"))
     except FileNotFoundError:
         raise FileNotFoundError(f"Icon {path} not found")
 
 
-def paint_icon(pixmap: QtGui.QPixmap, color: Color) -> QtGui.QPixmap:
+def load_custom_icon(id: int) -> QtGui.QIcon:
+    # TODO: generate custom icon based on id
+    return load_default_icon("harp.png")
+
+
+def loadBlockPixmap(color: Color) -> QtGui.QPixmap:
+    pixmap = QtGui.QPixmap(32, 32)
     painter = QtGui.QPainter(pixmap)
     painter.setBrush(QtGui.QColor(*color))
     painter.drawRect(0, 0, pixmap.width(), pixmap.height())
+    painter.end()
 
 
 class InstrumentInstance:
-    def __init__(
-        self,
-        id: int,
-        name: str,
-        press: Optional[bool] = False,
-        color: Optional[Color] = None,
-        icon: Optional[QtGui.QPixmap] = None,
-        soundPath: Optional[PathLike] = None,
-    ) -> None:
+    def __init__(self, id: int, instrument: Instrument):
+        self.__instrument = instrument
         self.id = id
-        self.name = name
-        self.press = press
-        color = color or random_color()
-        self.icon = icon
-        self.soundPath = soundPath
+        if self.__instrument.icon_path is not None:
+            self.icon = load_default_icon(self.__instrument.icon_path)
+        else:
+            self.icon = load_custom_icon(self.id)
+        self.blockPixmap = loadBlockPixmap(self.__instrument.color)
         self.blockCount = 0
+        self.loaded = False
+        self.isDefault = False
 
-    @property
-    def loaded(self):
-        if self.sound is None:
-            return False
-        return os.path.exists(self.soundPath)
+    def __getattr__(self, name):
+        return getattr(self.__instrument, name)
+
+    def __setattr__(self, attr: str, value: Any) -> None:
+        if attr == "_InstrumentInstance__instrument":
+            object.__setattr__(self, attr, value)
+
+        return setattr(self.__instrument, attr, value)
 
     # name: str
     # icon: field(init=initIcon)
@@ -69,12 +75,14 @@ class InstrumentInstance:
 
 class InstrumentController(QtCore.QObject):
 
-    instrumentAdded = QtCore.pyqtSignal(Instrument)
-    instrumentChanged = QtCore.pyqtSignal(int, Instrument)
+    instrumentAdded = QtCore.pyqtSignal(InstrumentInstance)
+    instrumentChanged = QtCore.pyqtSignal(int, InstrumentInstance)
     instrumentRemoved = QtCore.pyqtSignal(int)
     instrumentSwapped = QtCore.pyqtSignal(int, int)
 
     instrumentListUpdated = QtCore.pyqtSignal(list)
+
+    instrumentSoundLoadRequested = QtCore.pyqtSignal(str)
 
     def __init__(self, instruments: Sequence[Instrument], parent=None) -> None:
         super().__init__(parent)
@@ -83,29 +91,36 @@ class InstrumentController(QtCore.QObject):
         if instruments:
             self.loadInstrumentsFromList(instruments)
 
-    def loadInstrumentsFromList(self, instruments: Sequence) -> None:
+    def loadInstrumentsFromList(self, instruments: Sequence[Instrument]) -> None:
         # TODO: use later for importing instruments from nbs file
         for ins in instruments:
-            self.loadInstrument(ins.name, ins.color, ins.icon_path, ins.sound_path)
+            self.loadInstrument(ins)
 
-    def loadInstrument(
-        self,
-        name: str,
-        color: Color,
-        iconPath: Optional[PathLike] = None,
-        soundPath: Optional[PathLike] = None,
-    ) -> None:
-        icon = load_icon(iconPath)
-        iconPixmap = paint_icon(self.noteBlockPixmap, color)
-        instrument = InstrumentInstance(
-            len(self.instruments), name, color, icon, soundPath
+    def loadInstrument(self, ins: Instrument) -> InstrumentInstance:
+        """Load an instrument into the instrument list, and return the added `InstrumentInstance`."""
+        # icon = load_icon(ins.icon_path)
+        # iconPixmap = paint_icon(self.noteBlockPixmap, color)
+        instrumentInstance = InstrumentInstance(
+            id=len(self.instruments),
+            instrument=ins,
         )
-        self.instruments.append(instrument)
+        self.instruments.append(instrumentInstance)
+        return instrumentInstance
+
+    @QtCore.pyqtSlot()
+    def createInstrument(self) -> None:
+        customId = len(self.instruments) - len(default_instruments) + 1
+        instrument = Instrument(
+            name=f"Custom Instrument #{customId}",
+            color=random_color(),
+        )
+        self.addInstrument(instrument)
 
     @QtCore.pyqtSlot(Instrument)
     def addInstrument(self, ins: Instrument) -> None:
-        self.loadInstrument(ins.name, ins.color, ins.icon_path, ins.sound_path)
-        self.instrumentAdded.emit(ins)
+        instrumentInstance = self.loadInstrument(ins)
+        self.instrumentAdded.emit(instrumentInstance)
+        self.instrumentSoundLoadRequested.emit(ins.sound_path)
         self.instrumentListUpdated.emit(self.instruments)
 
     @QtCore.pyqtSlot(int)

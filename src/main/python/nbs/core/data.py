@@ -1,14 +1,15 @@
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 @dataclass
 class Instrument:
     name: str
-    sound_path: str
-    icon_path: str
     color: Tuple[int, int, int]
-    press: bool
+    pitch: int = 45
+    press: bool = False
+    sound_path: Optional[str] = None
+    icon_path: Optional[str] = None
 
 
 default_instruments = [
