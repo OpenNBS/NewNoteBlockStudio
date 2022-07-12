@@ -32,7 +32,7 @@ class InstrumentSoundFileCell(QtWidgets.QTableWidgetItem):
         self.disabled = disabled
         self.setLoaded(False)
 
-    def setLoaded(self, loaded: Optional[bool] = True) -> None:
+    def setLoaded(self, loaded: bool = True) -> None:
         if loaded:
             self.setForeground(QtCore.Qt.GlobalColor.black)
             self.setToolTip("")
@@ -46,7 +46,7 @@ class InstrumentPressCheckBox(QtWidgets.QWidget):
 
     def __init__(
         self,
-        checked: Optional[bool] = False,
+        checked: bool = False,
         parent: QtWidgets.QWidget = None,
     ):
         super().__init__(parent)

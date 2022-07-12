@@ -266,7 +266,7 @@ class LayerArea(VerticalScrollArea):
         layer.shiftUpClicked.connect(self.shiftLayerUp)
         layer.shiftDownClicked.connect(self.shiftLayerDown)
 
-    def deleteLayer(self, pos: int, refill: Optional[bool] = True):
+    def deleteLayer(self, pos: int, refill: bool = True):
         """
         Delete the layer at position `pos`. If `refill` is `True`, a new empty
         layer is added at the end, so the layer count remains unchanged.

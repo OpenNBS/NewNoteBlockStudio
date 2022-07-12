@@ -1186,7 +1186,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         else:
             self.changeKey(-1)
 
-    def setSelectable(self, selectable: Optional[bool] = True) -> None:
+    def setSelectable(self, selectable: bool = True) -> None:
         self.setFlag(
             QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, selectable
         )
