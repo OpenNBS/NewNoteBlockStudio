@@ -187,14 +187,20 @@ class MainWindow(QtWidgets.QMainWindow):
         Actions.saveSongAsAction.triggered.connect(self.saveSong)
 
     def initDialogs(self):
-        Actions.instrumentSettingsAction.triggered.connect(self.showInstrumentSettings)
+        # Instrument settings
+        self.instrumentSettingsDialog = InstrumentSettingsDialog(
+            self.instrumentController
+        )
+        Actions.instrumentSettingsAction.triggered.connect(
+            self.instrumentSettingsDialog.show
+        )
+        self.instrumentSettingsDialog.instrumentAddRequested.connect(
+            self.instrumentController.createInstrument
+        )
+        self.instrumentController.instrumentAdded.connect(
+            self.instrumentSettingsDialog.addInstrument
+        )
 
-    @QtCore.pyqtSlot()
-    def showInstrumentSettings(self):
-        dialog = InstrumentSettingsDialog()
-        dialog.setInstruments(default_instruments)
-        # self.instrumentController.instruments)
-        dialog.exec_()
 
     @QtCore.pyqtSlot()
     def loadSong(self):

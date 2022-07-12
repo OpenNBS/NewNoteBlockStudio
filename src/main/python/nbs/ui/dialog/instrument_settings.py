@@ -115,10 +115,13 @@ class InstrumentTable(QtWidgets.QTableWidget):
 
 
 class InstrumentSettingsDialog(QtWidgets.QDialog):
-    def __init__(self, instrumentManager, parent=None):
+
+    instrumentAddRequested = QtCore.pyqtSignal()
+
+    def __init__(self, instruments, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Instrument Settings")
-        self.instruments = instrumentManager.instruments
+        self.instruments = instruments
         self.initUI()
 
     def setInstruments(self, instruments: Sequence[InstrumentInstance]):
@@ -161,8 +164,9 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
         self.footer = QtWidgets.QHBoxLayout()
         self.layout.addLayout(self.footer)
 
-        self.addInstrumentButton = QtWidgets.QPushButton("Add")
-        # self.addInstrumentButton.clicked.connect(self.onAddInstrument)
+        self.addInstrumentButton = QtWidgets.QPushButton(
+            "Add", clicked=self.onAddInstrument
+        )
         self.footer.addWidget(self.addInstrumentButton)
         self.removeInstrumentButton = QtWidgets.QPushButton("Remove")
         # self.removeInstrumentButton.clicked.connect(self.onRemoveInstrument)
@@ -193,5 +197,11 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
             self.shiftInstrumentUpButton.setEnabled(False)
             self.shiftInstrumentDownButton.setEnabled(False)
 
-        def addInstrument(self):
-            pass
+    @QtCore.pyqtSlot()
+    def onAddInstrument(self):
+        # Request a new instrument be added
+        self.instrumentAddRequested.emit()
+
+    @QtCore.pyqtSlot(InstrumentInstance)
+    def addInstrument(self, instrument: InstrumentInstance):
+        self.table.addRow(instrument)
