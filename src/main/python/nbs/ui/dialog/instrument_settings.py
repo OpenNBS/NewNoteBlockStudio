@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Optional, Sequence
 
 from nbs.controller.instrument import InstrumentInstance
 from nbs.core.data import default_instruments
@@ -22,18 +22,49 @@ class InstrumentKeySpinBox(QtWidgets.QSpinBox):
         return super().valueFromText(text)
 
 
-class InstrumentPressComboBox(QtWidgets.QComboBox):
-    def __init__(self, value: int = 0, disabled: bool = False, parent=None):
-        super().__init__()
-        self.setDisabled(disabled)
-        self.addItem("Yes")
-        self.addItem("No")
+class InstrumentSoundFileCell(QtWidgets.QTableWidgetItem):
+    def __init__(self, value: str = "None", disabled: bool = False, parent=None):
+        super().__init__(parent)
+        self.setText(value)
+        if disabled:
+            self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEnabled)
+        self.disabled = disabled
+        self.setLoaded(False)
+
+    def setLoaded(self, loaded: Optional[bool] = True) -> None:
+        if loaded:
+            self.setForeground(QtCore.Qt.GlobalColor.black)
+            self.setToolTip("")
+        else:
+            self.setForeground(QtCore.Qt.GlobalColor.red)
+            self.setToolTip("The sound file could not be loaded")
+
+
+class InstrumentPressCheckBox(QtWidgets.QWidget):
+    checked = QtCore.pyqtSignal(bool)
+
+    def __init__(
+        self,
+        checked: Optional[bool] = False,
+        parent: QtWidgets.QWidget = None,
+    ):
+        super().__init__(parent)
+        self.checkBox = QtWidgets.QCheckBox()
+        self.checkBox.setChecked(checked)
+        # QCheckBox.CheckState can be 0=unchecked, 1=partially checked, 2=checked
+        self.checkBox.stateChanged.connect(lambda state: self.checked.emit(bool(state)))
+
+        # Layout is needed so the checkbox is centered
+        self.layout = QtWidgets.QHBoxLayout()
+        self.layout.addWidget(self.checkBox)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.setLayout(self.layout)
 
 
 class InstrumentTable(QtWidgets.QTableWidget):
     def __init__(self, instruments, parent=None):
         super().__init__(parent)
-        self.setRowCount(len(instruments))
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(["Name", "Sound file", "Key", "Press"])
 
@@ -41,26 +72,53 @@ class InstrumentTable(QtWidgets.QTableWidget):
         self.setSelectionMode(QtWidgets.QTableWidget.SingleSelection)
         self.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
 
-        # Set first two columns to stretch
+        # Prevent resizing of columns, then set first two columns to stretch
         header = self.horizontalHeader()
+        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        header.setHighlightSections(False)
+
+        # Prevent resizing of rows
+        vHeader = self.verticalHeader()
+        vHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
+        vHeader.setHighlightSections(False)
 
         for row, instrument in enumerate(instruments):
-            self.setItem(row, 0, QtWidgets.QTableWidgetItem(instrument.name))
-            self.setItem(row, 1, QtWidgets.QTableWidgetItem())
-            self.setCellWidget(row, 2, InstrumentKeySpinBox())  # instrument.key
-            self.setItem(row, 2, QtWidgets.QTableWidgetItem(instrument.press))
-            self.setCellWidget(row, 3, QtWidgets.QCheckBox())
+            self.addRow(instrument)
 
         self.resizeRowsToContents()
 
+    def addRow(self, instrument: InstrumentInstance, row: Optional[int] = None):
+        row = row if row is not None else self.rowCount()
+
+        nameColItem = QtWidgets.QTableWidgetItem(instrument.name)
+        soundFileColItem = InstrumentSoundFileCell(
+            instrument.soundPath, disabled=instrument.isDefault
+        )
+        keyColItem = InstrumentKeySpinBox(
+            value=instrument.pitch, disabled=instrument.isDefault
+        )
+        pressColItem = InstrumentPressCheckBox(checked=instrument.press)
+
+        self.insertRow(row)
+        self.setItem(row, 0, nameColItem)
+        self.setItem(row, 1, soundFileColItem)
+        self.setCellWidget(row, 2, keyColItem)
+        self.setCellWidget(row, 3, pressColItem)
+
+        if instrument.isDefault:
+            nameColItem.setFlags(nameColItem.flags() & ~QtCore.Qt.ItemIsEditable)
+            soundFileColItem.setFlags(
+                soundFileColItem.flags() & ~QtCore.Qt.ItemIsEditable
+            )
+
 
 class InstrumentSettingsDialog(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, instrumentManager, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Instrument Settings")
-        self.instruments = default_instruments
+        self.instruments = instrumentManager.instruments
         self.initUI()
 
     def setInstruments(self, instruments: Sequence[InstrumentInstance]):
@@ -68,6 +126,7 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
         # self.instruments = instruments
 
     def initUI(self):
+        self.resize(QtCore.QSize(640, 400))
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.layout)
 
