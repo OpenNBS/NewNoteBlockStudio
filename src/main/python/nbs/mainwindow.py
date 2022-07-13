@@ -126,7 +126,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.noteBlockArea.tickPlayed.connect(
             lambda sounds: self.audioEngine.playSounds(
-                ((ins, 1.0, key - 45, 0) for ins, key, *_ in sounds)
+                ((ins, vol, key - 45, pan) for ins, key, vol, pan in sounds)
             )
         )
 

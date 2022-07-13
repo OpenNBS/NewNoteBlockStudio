@@ -915,12 +915,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for block in blocks:
             layer = self.layers[int(block.y() // BLOCK_SIZE)]
             instrument = block.ins
-            key = block.key
-            volume = block.vel * layer.volume
-            panning = (block.pan * layer.panning) / 2
-            pitch = block.pit
+            key = block.key + block.pit / 100
+            volume = (block.vel / 100) * (layer.volume / 100)
+            panning = block.pan / 100  # (block.pan * layer.panning) / 2
             block.play()
-            payload.append((instrument, key, volume, panning, pitch))
+            payload.append((instrument, key, volume, panning))
         self.playingBlocks.update(blocks)
         self.tickPlayed.emit(payload)
 
