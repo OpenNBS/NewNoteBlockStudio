@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from nbs.controller.instrument import InstrumentController
+from nbs.controller.layer import LayerController
 from nbs.controller.playback import PlaybackController
 from nbs.core.audio import AudioEngine
 from nbs.core.context import appctxt
@@ -31,12 +32,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.layers = []
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
         self.initAudio()
         self.initControllers()
         self.initUI()
         self.initNoteBlocks()
+        self.initLayers()
         self.initTimeBar()
         self.initPiano()
         self.initInstruments()
@@ -56,6 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initControllers(self):
         self.playbackController = PlaybackController()
         self.instrumentController = InstrumentController(default_instruments)
+        self.layerManager = LayerController(self.layers)
 
     def initUI(self):
         self.menuBar = MenuBar()
@@ -68,7 +72,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.addToolBar(self.instrumentBar)
         self.setStatusBar(self.statusBar)
 
-        self.noteBlockArea = NoteBlockArea()
+        self.noteBlockArea = NoteBlockArea(layers=self.layers)
         self.layerArea = LayerArea()
         self.timeBar = TimeBar()
         self.piano = PianoWidget(keyCount=88, offset=9, validRange=(33, 57))
@@ -129,6 +133,36 @@ class MainWindow(QtWidgets.QMainWindow):
                 ((ins, vol, key - 45, pan) for ins, key, vol, pan in sounds)
             )
         )
+
+    def initLayers(self):
+        lm = self.layerManager
+        la = self.layerArea
+        nba = self.noteBlockArea
+
+        # Connect widget to note block area (the manager isn't aware of selections,
+        # so the connection can be direct)
+        la.layerSelectRequested.connect(nba.selectAllInLayer)
+
+        # Connect note block area to manager (to inform it of changes in the layer count)
+        nba.sceneSizeChanged.connect(lambda _, height: lm.updateLayerCount(height))
+
+        # Connect widget to manager
+        la.layerAddRequested.connect(lm.addLayer)
+        la.layerRemoveRequested.connect(lm.removeLayer)
+        la.layerMoveRequested.connect(lm.moveLayer)
+        la.layerVolumeChangeRequested.connect(lm.setLayerVolume)
+        la.layerPanningChangeRequested.connect(lm.setLayerPanning)
+        la.layerLockChangeRequested.connect(lm.setLayerLock)
+        la.layerSoloChangeRequested.connect(lm.setLayerSolo)
+
+        # Connect manager to widget
+        lm.layerAdded.connect(la.addLayer)
+        lm.layerRemoved.connect(la.removeLayer)
+        lm.layerNameChanged.connect(la.changeLayerName)
+        lm.layerLockChanged.connect(la.changeLayerLock)
+        lm.layerSoloChanged.connect(la.changeLayerSolo)
+        lm.layerVolumeChanged.connect(la.changeLayerVolume)
+        lm.layerPanningChanged.connect(la.changeLayerPanning)
 
     def initTimeBar(self):
         self.timeBar.tempoChanged.connect(self.playbackController.setTempo)

@@ -1,7 +1,7 @@
 from typing import List, Optional, Sequence
 
 import qtawesome as qta
-from nbs.core.song import Layer
+from nbs.core.data import Layer
 from PyQt5 import QtCore, QtWidgets
 
 from .constants import *
@@ -173,17 +173,41 @@ class LayerBar(QtWidgets.QFrame):
         self.id = newId
         self.nameBox.setPlaceholderText("Layer {}".format(self.id + 1))
 
+    def setName(self, name: str):
+        self.name = name
+        self.nameBox.setText(name)
+
+    def setVolume(self, volume: int):
+        self.volume = volume
+        self.volumeDial.setValue(volume)
+
+    def setPanning(self, panning: int):
+        self.panning = panning
+        self.panningDial.setValue(panning)
+
+    def setLocked(self, locked: bool):
+        self.locked = locked
+        self.toolbar.actions()[0].setChecked(locked)
+
+    def setSolo(self, solo: bool):
+        self.solo = solo
+        self.toolbar.actions()[1].setChecked(solo)
+
+    # def setSelected(self, selected: bool):
+    #    self.selected = selected
+    #    self.setFrameShadow(QtWidgets.QFrame.Raised if selected else QtWidgets.QFrame.Plain)
+
 
 class LayerArea(VerticalScrollArea):
 
-    layerVolumeChanged = QtCore.pyqtSignal(int, int)
-    layerPanningChanged = QtCore.pyqtSignal(int, int)
-    layerLockChanged = QtCore.pyqtSignal(int, bool)
-    layerSoloChanged = QtCore.pyqtSignal(int, bool)
-    layerSelected = QtCore.pyqtSignal(int)
-    layerAdded = QtCore.pyqtSignal(int)
-    layerRemoved = QtCore.pyqtSignal(int)
-    layerMoved = QtCore.pyqtSignal(int, int)
+    layerVolumeChangeRequested = QtCore.pyqtSignal(int, int)
+    layerPanningChangeRequested = QtCore.pyqtSignal(int, int)
+    layerLockChangeRequested = QtCore.pyqtSignal(int, bool)
+    layerSoloChangeRequested = QtCore.pyqtSignal(int, bool)
+    layerSelectRequested = QtCore.pyqtSignal(int)
+    layerAddRequested = QtCore.pyqtSignal(int)
+    layerRemoveRequested = QtCore.pyqtSignal(int)
+    layerMoveRequested = QtCore.pyqtSignal(int, int)
 
     scaleChanged = QtCore.pyqtSignal(float)
 
@@ -200,7 +224,6 @@ class LayerArea(VerticalScrollArea):
         self.container = QtWidgets.QWidget()
         self.container.setLayout(self.layout)
         self.container.setContentsMargins(0, 0, 0, 0)
-        self.updateLayerCount(layerCount)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setMaximumWidth(324)  # TODO: calculate instead of hardcode
         self.setWidget(self.container)
@@ -215,26 +238,6 @@ class LayerArea(VerticalScrollArea):
         self.layerHeight = newHeight
         self.scaleChanged.emit(newHeight)
 
-    @QtCore.pyqtSlot(int)
-    def updateLayerCount(self, newCount):
-        print("Count:", newCount)
-        if self.layerCount < newCount:
-            while self.layerCount < newCount:
-                self.createLayer()
-                print("ADDING")
-        else:
-            pass
-            # We never need to delete layers after they're created,
-            # because syncing it to the note block view scrollbar should suffice
-            # (it should never be able to scroll farther than the intended amount of layers).
-            # Additionally, "hidden" layers should keep information about panning and
-            # pitch even if the song height "shrinks" due to deleting notes
-
-            # while self.layerCount > newCount:
-            #    i = self.layerCount - 1
-            #    print("REMOVING", i)
-            #    self.deleteLayer(i, refill=False)
-
     @property
     def layers(self):
         layers = []
@@ -246,25 +249,32 @@ class LayerArea(VerticalScrollArea):
     def layerCount(self):
         return self.layout.count()
 
-    def createLayer(self, pos: Optional[int] = None, *args, **kwargs):
+    def createLayer(self, pos: int, layer: Layer):
         """
-        Create a new layer. If `pos` is given, the layer will be added at that position;
-        otherwise it will be appended.
+        Create a new `LayerBar` widget for the corresponding `layer` at the given `pos`,
+        and add it to the layout.
         """
         pos = pos if pos is not None else self.layerCount
-        layer = LayerBar(pos, self.layerHeight, parent=self, *args, **kwargs)
+        args = (
+            layer.name,
+            layer.volume,
+            layer.panning,
+            layer.lock,
+            layer.solo,
+        )
+        layer = LayerBar(pos, self.layerHeight, *args, parent=self)
         self.layout.insertWidget(pos, layer)
 
         self.scaleChanged.connect(layer.changeScale)
-        layer.volumeChanged.connect(self.layerVolumeChanged)
-        layer.panningChanged.connect(self.layerPanningChanged)
-        layer.lockChanged.connect(self.layerLockChanged)
-        layer.soloChanged.connect(self.layerSoloChanged)
-        layer.selectAllClicked.connect(self.layerSelected)
-        layer.addClicked.connect(self.addLayer)
-        layer.removeClicked.connect(self.removeLayer)
-        layer.shiftUpClicked.connect(self.shiftLayerUp)
-        layer.shiftDownClicked.connect(self.shiftLayerDown)
+        layer.volumeChanged.connect(self.layerVolumeChangeRequested)
+        layer.panningChanged.connect(self.layerPanningChangeRequested)
+        layer.lockChanged.connect(self.layerLockChangeRequested)
+        layer.soloChanged.connect(self.layerSoloChangeRequested)
+        layer.selectAllClicked.connect(self.layerSelectRequested)
+        layer.addClicked.connect(self.layerAddRequested)
+        layer.removeClicked.connect(self.layerRemoveRequested)
+        layer.shiftUpClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, -1))
+        layer.shiftDownClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, +1))
 
     def deleteLayer(self, pos: int, refill: bool = True):
         """
@@ -301,26 +311,21 @@ class LayerArea(VerticalScrollArea):
 
     ######## FEATURES ########
 
-    @QtCore.pyqtSlot(int)
-    def addLayer(self, pos: int, *args, **kwargs):
-        self.createLayer(pos, *args, **kwargs)
+    @QtCore.pyqtSlot(int, Layer)
+    def addLayer(self, pos: int, layer: Layer):
+        self.createLayer(pos, layer)
         self.updateLayerIds()
-        self.layerAdded.emit(pos)
 
     @QtCore.pyqtSlot(int)
     def removeLayer(self, id: int):
         self.deleteLayer(id)
-        self.layerRemoved.emit(id)
         self.updateLayerIds()
 
     def moveLayer(self, id, newPos):
         layer = self.layers[id]
-
         self.layout.removeWidget(layer)
         self.layout.insertWidget(newPos, layer)
-
         self.updateLayerIds()
-        self.layerMoved.emit(id, newPos)
 
     @QtCore.pyqtSlot(int)
     def shiftLayerUp(self, id):
@@ -333,3 +338,23 @@ class LayerArea(VerticalScrollArea):
         if id == len(self.layers) - 1:
             return
         self.moveLayer(id, id + 1)
+
+    @QtCore.pyqtSlot(int, str)
+    def changeLayerName(self, id, name):
+        self.layers[id].setName(name)
+
+    @QtCore.pyqtSlot(int, int)
+    def changeLayerVolume(self, id, volume):
+        self.layers[id].setVolume(volume)
+
+    @QtCore.pyqtSlot(int, int)
+    def changeLayerPanning(self, id, panning):
+        self.layers[id].setPanning(panning)
+
+    @QtCore.pyqtSlot(int, bool)
+    def changeLayerLock(self, id, lock):
+        self.layers[id].setLock(lock)
+
+    @QtCore.pyqtSlot(int, bool)
+    def changeLayerSolo(self, id, solo):
+        self.layers[id].setSolo(solo)

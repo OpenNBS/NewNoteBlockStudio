@@ -3,6 +3,15 @@ from typing import Optional, Tuple
 
 
 @dataclass
+class Layer:
+    name: str = ""
+    lock: bool = False
+    solo: bool = False
+    volume: int = 100
+    panning: int = 0
+
+
+@dataclass
 class Instrument:
     name: str
     color: Tuple[int, int, int]

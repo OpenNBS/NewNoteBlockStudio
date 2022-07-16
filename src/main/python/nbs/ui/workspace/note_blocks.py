@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Generator, List, Optional, Sequence, Tuple, Union
 
 from nbs.core.context import appctxt
-from nbs.core.data import Instrument, default_instruments
+from nbs.core.data import Instrument, Layer, default_instruments
 from nbs.core.utils import *
 from nbs.ui.actions import Actions  # TODO: remove dependency
 from nbs.ui.menus import EditMenu  # TODO: remove dependency
@@ -191,16 +191,6 @@ class Marker(QtWidgets.QWidget):
         self.updatePos()
 
 
-@dataclass
-class Layer:
-    """Represents a layer in the note block area."""
-
-    lock: bool = False
-    solo: bool = False
-    volume: int = 100
-    panning: int = 0
-
-
 class ScrollMode(Enum):
     """Enum for the different scroll modes for `NoteBlockView`."""
 
@@ -333,10 +323,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
     tickPlayed = QtCore.pyqtSignal(list)
 
-    def __init__(self, parent=None):
+    def __init__(self, layers: Sequence[Layer], parent=None):
         super().__init__(parent, objectName=__class__.__name__)
         self.view = NoteBlockView(self)
-        self.layers = []
+        self.layers = layers
         self.selection = QtWidgets.QRubberBand(
             QtWidgets.QRubberBand.Rectangle, parent=self.view.viewport()
         )
@@ -444,11 +434,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             bbox = QtCore.QRectF(0, 0, 0, 0)
         viewSize = self.view.rect()
         newSize = (
-            math.ceil((bbox.right() + viewSize.width()) / BLOCK_SIZE) * BLOCK_SIZE,
-            math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE) * BLOCK_SIZE,
+            math.ceil((bbox.right() + viewSize.width()) / BLOCK_SIZE),
+            math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE),
         )
-        self.setSceneRect(QtCore.QRectF(0, 0, *newSize))
-        self.updateLayerCount()
+        self.setSceneRect(
+            QtCore.QRectF(0, 0, newSize[0] * BLOCK_SIZE, newSize[1] * BLOCK_SIZE)
+        )
         self.sceneSizeChanged.emit(*newSize)
         print(*newSize)
 
@@ -478,7 +469,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     ########## SONG ##########
 
     def reset(self) -> None:
-        self.layers = []
         self.clear()
         self.updateSceneSize()
         self.updateBlockCount()
@@ -765,14 +755,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## LAYERS ##########
 
-    def updateLayerCount(self):
-        layerCount = self.height() // BLOCK_SIZE
-        while len(self.layers) < layerCount:
-            self.layers.append(Layer())
-        while len(self.layers) > layerCount:
-            self.layers.pop()
-        print("New layer count:", len(self.layers))
-
     def updateBlocksSelectableStatus(
         self, blocks: Optional[Sequence[NoteBlock]] = None
     ) -> None:
@@ -815,17 +797,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         blocks = self.items(region)
         return blocks
 
-    @QtCore.pyqtSlot(int, int)
-    def setLayerVolume(self, id: int, volume: int):
-        self.layers[id].volume = volume
-
-    @QtCore.pyqtSlot(int, int)
-    def setLayerPanning(self, id: int, panning: int):
-        self.layers[id].panning = panning
-
     @QtCore.pyqtSlot(int, bool)
-    def setLayerLock(self, id: int, lock: bool):
-        self.layers[id].lock = lock
+    def setLayerLock(self, id: int, lock: bool) -> None:
+        # self.updateBlocksSelectableStatus()
         for block in self.getBlocksInLayer(id):
             block.setFlag(
                 QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, not lock
@@ -834,17 +808,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool):
-        self.layers[id].solo = solo
-        self.update()
+        pass
 
     @QtCore.pyqtSlot(int)
     def addLayer(self, id: int):
         blocksToShift = self.getBlocksBelowLayer(id)
         for block in blocksToShift:
             block.moveBy(0, BLOCK_SIZE)
-
-        self.layers.insert(id, Layer())
-
         self.updateSceneSize()
 
     @QtCore.pyqtSlot(int)
@@ -854,9 +824,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         blocksToShift = self.getBlocksBelowLayer(id)
         for block in blocksToShift:
             block.moveBy(0, -BLOCK_SIZE)
-
-        self.layers.pop(id)
-
         self.updateSceneSize()
 
     @QtCore.pyqtSlot(int)
@@ -877,10 +844,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             block.moveBy(0, distance)
         for block in blocks2:
             block.moveBy(0, -distance)
-
-        tempLayer = self.layers[id1]
-        self.layers[id1] = self.layers[id2]
-        self.layers[id2] = tempLayer
 
     ########## PLAYBACK ##########
 
