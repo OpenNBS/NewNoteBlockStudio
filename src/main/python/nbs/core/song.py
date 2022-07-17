@@ -4,6 +4,8 @@ from typing import Union
 
 import pynbs
 
+from .data import Instrument, Layer, Note
+
 PathLike = Union[str, bytes, os.PathLike]
 
 CURRENT_NBS_VERSION = 5
@@ -29,15 +31,6 @@ class Note:
     pitch: int = 0
 
 
-@dataclass
-class Layer:
-    id: int
-    name: str = ""
-    lock: bool = False
-    volume: int = 100
-    panning: int = 0
-
-
 class Song:
     def __init__(self, header, notes, layers=[], instruments=[]):
         self.header = header
@@ -50,7 +43,16 @@ class Song:
         song = pynbs.read(path)
         header = song.header
         notes = song.notes
-        layers = song.layers
+        layers = [
+            Layer(
+                name=layer.name,
+                lock=layer.lock == 1,
+                solo=layer.lock == 2,
+                volume=layer.volume,
+                panning=layer.panning,
+            )
+            for layer in song.layers
+        ]
         instruments = song.instruments
         return cls(header, notes, layers, instruments)
 

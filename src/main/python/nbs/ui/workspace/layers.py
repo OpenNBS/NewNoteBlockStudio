@@ -276,16 +276,13 @@ class LayerArea(VerticalScrollArea):
         layer.shiftUpClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, -1))
         layer.shiftDownClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, +1))
 
-    def deleteLayer(self, pos: int, refill: bool = True):
+    def deleteLayer(self, pos: int):
         """
-        Delete the layer at position `pos`. If `refill` is `True`, a new empty
-        layer is added at the end, so the layer count remains unchanged.
+        Delete the layer at position `pos` from the layout.
         """
         removedLayer = self.layout.takeAt(pos).widget()
         self.layout.removeWidget(removedLayer)
         removedLayer.deleteLater()
-        if refill:
-            self.createLayer()
 
     def updateLayerIds(self):
         # Would've been better as a signal connected to all layers,
@@ -294,14 +291,6 @@ class LayerArea(VerticalScrollArea):
             layer.setId(i)
 
     ####### SONG ########
-
-    def reset(self):
-        for layer in self.layers:
-            layer.deleteLayer()
-
-    def loadLayerData(self, layers: Sequence[Layer]):
-        for layer in layers:
-            self.addLayer()
 
     def getLayerData(self) -> List[Layer]:
         layers = []

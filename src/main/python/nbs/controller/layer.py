@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence
 
 from nbs.core.data import Layer
 from PyQt5 import QtCore
@@ -7,7 +7,7 @@ from PyQt5 import QtCore
 class LayerController(QtCore.QObject):
     """Object that manages a sequence of layers."""
 
-    layerAdded = QtCore.pyqtSignal(int, Layer)
+    layerAdded = QtCore.pyqtSignal(int, object)
     layerRemoved = QtCore.pyqtSignal(int)
     layerMoved = QtCore.pyqtSignal(int, int)
     layerNameChanged = QtCore.pyqtSignal(int, str)
@@ -16,7 +16,7 @@ class LayerController(QtCore.QObject):
     layerLockChanged = QtCore.pyqtSignal(int, bool)
     layerSoloChanged = QtCore.pyqtSignal(int, bool)
 
-    def __init__(self, layers: Sequence[Layer], parent: QtCore.QObject = None) -> None:
+    def __init__(self, layers: List[Layer], parent: QtCore.QObject = None) -> None:
         super().__init__(parent)
         self.layers = layers
 
@@ -49,6 +49,16 @@ class LayerController(QtCore.QObject):
             self.layers.pop()
         print("New layer count:", len(self.layers))
 
+    @QtCore.pyqtSlot(int, str)
+    def loadLayers(self, layers: Sequence[Layer]) -> None:
+        for layer in layers:
+            self.addLayer(layer=layer)
+
+    @QtCore.pyqtSlot()
+    def resetLayers(self) -> None:
+        while len(self.layers) > 0:
+            self.removeLayer(0)
+
     @QtCore.pyqtSlot()
     @QtCore.pyqtSlot(int)
     @QtCore.pyqtSlot(int, Layer)
@@ -65,7 +75,7 @@ class LayerController(QtCore.QObject):
     @QtCore.pyqtSlot(int)
     def removeLayer(self, id: int) -> None:
         self.layers.pop(id)
-        self.layerRemoved.emit(self.layers[id])
+        self.layerRemoved.emit(id)
 
     @QtCore.pyqtSlot(int, int)
     def setLayerName(self, id: int, name: str) -> None:

@@ -245,7 +245,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         song = Song.from_file(filename)
         self.noteBlockArea.loadNoteData(song.notes)
-        self.layerArea.loadLayerData(song.layers)
+        self.layerManager.resetLayers()
+        self.layerManager.loadLayers(song.layers)
         self.setCurrentInstrumentActionsManager.currentInstrument = 0
 
     @QtCore.pyqtSlot()
