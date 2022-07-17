@@ -150,6 +150,7 @@ class MainWindow(QtWidgets.QMainWindow):
         la.layerAddRequested.connect(lm.addLayer)
         la.layerRemoveRequested.connect(lm.removeLayer)
         la.layerMoveRequested.connect(lm.moveLayer)
+        la.layerNameChangeRequested.connect(lm.setLayerName)
         la.layerVolumeChangeRequested.connect(lm.setLayerVolume)
         la.layerPanningChangeRequested.connect(lm.setLayerPanning)
         la.layerLockChangeRequested.connect(lm.setLayerLock)

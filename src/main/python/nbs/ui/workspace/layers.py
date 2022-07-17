@@ -29,6 +29,7 @@ class VerticalScrollArea(QtWidgets.QScrollArea):
 class LayerBar(QtWidgets.QFrame):
     """A single layer bar."""
 
+    nameChanged = QtCore.pyqtSignal(int, str)
     volumeChanged = QtCore.pyqtSignal(int, int)
     panningChanged = QtCore.pyqtSignal(int, int)
     lockChanged = QtCore.pyqtSignal(int, bool)
@@ -94,6 +95,10 @@ class LayerBar(QtWidgets.QFrame):
         self.nameBox = QtWidgets.QLineEdit()
         self.nameBox.setFixedSize(76, 16)
         self.nameBox.setPlaceholderText("Layer {}".format(self.id + 1))
+        self.nameBox.setText(self.name)
+        self.nameBox.textChanged.connect(
+            lambda value: self.nameChanged.emit(self.id, value)
+        )
         self.toolbar.addWidget(self.nameBox)
 
         self.volumeDial = QtWidgets.QDial()
@@ -200,6 +205,7 @@ class LayerBar(QtWidgets.QFrame):
 
 class LayerArea(VerticalScrollArea):
 
+    layerNameChangeRequested = QtCore.pyqtSignal(int, str)
     layerVolumeChangeRequested = QtCore.pyqtSignal(int, int)
     layerPanningChangeRequested = QtCore.pyqtSignal(int, int)
     layerLockChangeRequested = QtCore.pyqtSignal(int, bool)
@@ -266,6 +272,7 @@ class LayerArea(VerticalScrollArea):
         self.layout.insertWidget(pos, layerBar)
 
         self.scaleChanged.connect(layerBar.changeScale)
+        layerBar.nameChanged.connect(self.layerNameChangeRequested)
         layerBar.volumeChanged.connect(self.layerVolumeChangeRequested)
         layerBar.panningChanged.connect(self.layerPanningChangeRequested)
         layerBar.lockChanged.connect(self.layerLockChangeRequested)

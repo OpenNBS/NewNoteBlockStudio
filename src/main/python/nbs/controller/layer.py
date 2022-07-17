@@ -77,7 +77,7 @@ class LayerController(QtCore.QObject):
         self.layers.pop(id)
         self.layerRemoved.emit(id)
 
-    @QtCore.pyqtSlot(int, int)
+    @QtCore.pyqtSlot(int, str)
     def setLayerName(self, id: int, name: str) -> None:
         self.layers[id].name = name
         self.layerNameChanged.emit(id, name)
