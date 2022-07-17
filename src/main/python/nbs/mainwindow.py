@@ -187,6 +187,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def initInstruments(self):
+
+        self.instrumentController = InstrumentController(default_instruments)
+
         sounds = []
         for ins in default_instruments:
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
@@ -224,7 +227,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initDialogs(self):
         # Instrument settings
         self.instrumentSettingsDialog = InstrumentSettingsDialog(
-            self.instrumentController
+            self.instrumentController.instruments
         )
         Actions.instrumentSettingsAction.triggered.connect(
             self.instrumentSettingsDialog.show

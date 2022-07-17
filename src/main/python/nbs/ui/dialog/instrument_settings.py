@@ -1,7 +1,6 @@
 from typing import Optional, Sequence
 
 from nbs.controller.instrument import InstrumentInstance
-from nbs.core.data import default_instruments
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -64,7 +63,7 @@ class InstrumentPressCheckBox(QtWidgets.QWidget):
 
 
 class InstrumentTable(QtWidgets.QTableWidget):
-    def __init__(self, instruments, parent=None):
+    def __init__(self, instruments: Sequence[InstrumentInstance], parent=None):
         super().__init__(parent)
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(["Name", "Sound file", "Key", "Press"])
