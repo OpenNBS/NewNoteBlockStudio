@@ -207,7 +207,7 @@ class CachedResampler:
             resampled = self.cache.get_samples(sound_index, pitch)
         except IndexError:
             resampled = self._process(samples, pitch)
-            self.cache.add_samples(sound_index, pitch, samples)
+            self.cache.add_samples(sound_index, pitch, resampled)
         return resampled
 
     def _process(self, samples: np.ndarray, pitch: float) -> np.ndarray:
