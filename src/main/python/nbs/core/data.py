@@ -21,6 +21,17 @@ class Instrument:
     icon_path: Optional[str] = None
 
 
+@dataclass
+class Note:
+    tick: int
+    layer: int
+    instrument: int
+    key: int
+    velocity: int = 100
+    panning: int = 0
+    pitch: int = 0
+
+
 default_instruments = [
     Instrument(
         name="Harp",
