@@ -262,19 +262,21 @@ class LayerArea(VerticalScrollArea):
             layer.lock,
             layer.solo,
         )
-        layer = LayerBar(pos, self.layerHeight, *args, parent=self)
-        self.layout.insertWidget(pos, layer)
+        layerBar = LayerBar(pos, self.layerHeight, *args, parent=self)
+        self.layout.insertWidget(pos, layerBar)
 
-        self.scaleChanged.connect(layer.changeScale)
-        layer.volumeChanged.connect(self.layerVolumeChangeRequested)
-        layer.panningChanged.connect(self.layerPanningChangeRequested)
-        layer.lockChanged.connect(self.layerLockChangeRequested)
-        layer.soloChanged.connect(self.layerSoloChangeRequested)
-        layer.selectAllClicked.connect(self.layerSelectRequested)
-        layer.addClicked.connect(self.layerAddRequested)
-        layer.removeClicked.connect(self.layerRemoveRequested)
-        layer.shiftUpClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, -1))
-        layer.shiftDownClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, +1))
+        self.scaleChanged.connect(layerBar.changeScale)
+        layerBar.volumeChanged.connect(self.layerVolumeChangeRequested)
+        layerBar.panningChanged.connect(self.layerPanningChangeRequested)
+        layerBar.lockChanged.connect(self.layerLockChangeRequested)
+        layerBar.soloChanged.connect(self.layerSoloChangeRequested)
+        layerBar.selectAllClicked.connect(self.layerSelectRequested)
+        layerBar.addClicked.connect(self.layerAddRequested)
+        layerBar.removeClicked.connect(self.layerRemoveRequested)
+        layerBar.shiftUpClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, -1))
+        layerBar.shiftDownClicked.connect(
+            lambda *a: self.layerMoveRequested.emit(*a, +1)
+        )
 
     def deleteLayer(self, pos: int):
         """
