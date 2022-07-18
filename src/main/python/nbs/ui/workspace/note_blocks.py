@@ -1039,12 +1039,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return False
 
 
-
-
-
-
-
-
 class NoteBlock(QtWidgets.QGraphicsItem):
 
     # Geometry
@@ -1205,7 +1199,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             self.pan,
             self.pit,
         )
-
 
     def setInstrument(self, id_: int):
         self.ins = id_
