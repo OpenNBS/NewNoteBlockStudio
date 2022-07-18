@@ -1,6 +1,7 @@
 {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
     "python.analysis.extraPaths": ["./src/main/python"],
+    "python.analysis.typeCheckingMode": "basic",
     "python.formatting.provider": "black",
     "python.languageServer": "Pylance",
     "python.linting.enabled": false,
