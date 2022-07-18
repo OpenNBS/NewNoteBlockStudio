@@ -52,10 +52,10 @@ class TimeRuler(QtWidgets.QWidget):
         painter = QtGui.QPainter()
         painter.begin(self)
         fm = painter.fontMetrics()
-        painter.setPen(QtCore.Qt.NoPen)
-        painter.setBrush(QtCore.Qt.white)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
+        painter.setBrush(QtCore.Qt.GlobalColor.white)
         painter.drawRect(rect)
-        painter.setPen(QtCore.Qt.black)
+        painter.setPen(QtCore.Qt.GlobalColor.black)
         painter.drawLine(rect.bottomLeft(), rect.bottomRight())
         painter.drawLine(rect.left(), mid, rect.right(), mid)
         startTick, startPos = divmod(self.offset, blocksize)
@@ -70,7 +70,10 @@ class TimeRuler(QtWidgets.QWidget):
                 text = str(int(currentTick))
                 textRect = self.getTextRect(fm, text, round(x), y)
                 painter.drawText(
-                    textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text
+                    textRect,
+                    QtCore.Qt.AlignmentFlag.AlignHCenter
+                    | QtCore.Qt.AlignmentFlag.AlignTop,
+                    text,
                 )
             x += blocksize
         # Top part
@@ -91,7 +94,9 @@ class TimeRuler(QtWidgets.QWidget):
             y = mid / 2 - 1
             textRect = self.getTextRect(fm, text, x, y)
             painter.drawText(
-                textRect, QtCore.Qt.AlignHCenter + QtCore.Qt.AlignTop, text
+                textRect,
+                QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
+                text,
             )
         painter.end()
 
@@ -127,7 +132,7 @@ class Marker(QtWidgets.QWidget):
         self.offset = 0
         self.scale = 1
         self.setMouseTracking(True)
-        self.setCursor(QtCore.Qt.SizeHorCursor)
+        self.setCursor(QtCore.Qt.CursorShape.SizeHorCursor)
         self.setFixedHeight(800)
         self.setFixedWidth(16)
         self.raise_()
@@ -135,7 +140,7 @@ class Marker(QtWidgets.QWidget):
     def paintEvent(self, event):
         painter = QtGui.QPainter()
         painter.begin(self)
-        markerColor = QtCore.Qt.green
+        markerColor = QtCore.Qt.GlobalColor.green
         pen = QtGui.QPen(markerColor)
         pen.setWidth(2)
         painter.setPen(pen)
@@ -158,7 +163,7 @@ class Marker(QtWidgets.QWidget):
     def mouseMoveEvent(self, event):
         # The event pos is relative to the bounding box of the widget, so we calculate
         # how much it should move based on how far from the center the mouse moved
-        if event.buttons() == QtCore.Qt.LeftButton:
+        if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
             offset = event.pos().x() - 8
             pos = self.posToTick(self.tickToPos(self.pos) + offset)
             self.setPos(pos)
@@ -213,9 +218,11 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.marker = Marker(parent=self)
 
         self.setViewportMargins(0, 32, 0, 0)
-        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.setTransformationAnchor(
+            QtWidgets.QGraphicsView.ViewportAnchor.AnchorUnderMouse
+        )
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.viewport().setObjectName(self.objectName() + "Viewport")
         self.viewport().installEventFilter(self)
 
@@ -254,7 +261,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
             self.scaleChanged.emit(self.currentScale)
 
     def wheelEvent(self, event):
-        if event.modifiers() == QtCore.Qt.ControlModifier:
+        if event.modifiers() == QtCore.Qt.KeyboardModifier.ControlModifier:
             if event.angleDelta().y() > 0:
                 self.changeScale(1.2)
             else:
@@ -328,7 +335,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.view = NoteBlockView(self)
         self.layers = layers
         self.selection = QtWidgets.QRubberBand(
-            QtWidgets.QRubberBand.Rectangle, parent=self.view.viewport()
+            QtWidgets.QRubberBand.Shape.Rectangle, parent=self.view.viewport()
         )
         self.selection.hide()
         self.selection.setGeometry(0, 0, 0, 0)
@@ -355,15 +362,19 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.updateSceneSize()
         self.installEventFilter(self)
         self.initMenu()
-        self.view.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        self.view.setCursor(QtCore.Qt.PointingHandCursor)
+        self.view.setAlignment(
+            QtCore.Qt.AlignmentFlag(
+                QtCore.Qt.AlignmentFlag.AlignTop | QtCore.Qt.AlignmentFlag.AlignLeft
+            )
+        )
+        self.view.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.startTimer(10)
 
     def drawBackground(self, painter, rect):
-        painter.setPen(QtCore.Qt.NoPen)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtGui.QColor(240, 240, 240))
         painter.drawRect(rect)
-        painter.setPen(QtCore.Qt.SolidLine)
+        painter.setPen(QtCore.Qt.PenStyle.SolidLine)
         start = int(rect.x() // BLOCK_SIZE)
         end = int(rect.right() // BLOCK_SIZE + 1)
         for x in range(start, end):
@@ -374,8 +385,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             painter.drawLine(x * BLOCK_SIZE, rect.y(), x * BLOCK_SIZE, rect.bottom())
 
     def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
-        painter.setPen(QtCore.Qt.NoPen)
-        painter.setBrush(QtCore.Qt.black)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
+        painter.setBrush(QtCore.Qt.GlobalColor.black)
         painter.setOpacity(0.25)
         for id, layer in enumerate(self.layers):
             if layer.lock:
