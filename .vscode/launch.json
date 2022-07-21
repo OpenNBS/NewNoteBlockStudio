@@ -6,7 +6,10 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/main/python/main.py",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src/main/python"
+            }
         },
         {
             "name": "Python: Profile",
