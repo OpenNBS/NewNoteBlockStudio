@@ -142,7 +142,7 @@ class LayerBar(QtWidgets.QFrame):
         )
         soloAction.setCheckable(True)
         soloAction.triggered.connect(
-            lambda checked: self.lockChanged.emit(self.id, checked)
+            lambda checked: self.soloChanged.emit(self.id, checked)
         )
 
         selectAllAction = self.toolbar.addAction(
@@ -196,9 +196,9 @@ class LayerBar(QtWidgets.QFrame):
         self.panning = panning
         self.panningDial.setValue(panning)
 
-    def setLocked(self, locked: bool):
-        self.locked = locked
-        self.toolbar.actions()[0].setChecked(locked)
+    def setLock(self, lock: bool):
+        self.lock = lock
+        self.toolbar.actions()[0].setChecked(lock)
 
     def setSolo(self, solo: bool):
         self.solo = solo

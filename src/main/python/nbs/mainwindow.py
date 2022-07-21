@@ -165,6 +165,13 @@ class MainWindow(QtWidgets.QMainWindow):
         lm.layerVolumeChanged.connect(la.changeLayerVolume)
         lm.layerPanningChanged.connect(la.changeLayerPanning)
 
+        # Connect manager to note block area
+        lm.layerAdded.connect(nba.addLayer)
+        lm.layerRemoved.connect(nba.removeLayer)
+        lm.layerSwapped.connect(nba.shiftLayers)
+        lm.layerLockChanged.connect(nba.setLayerLock)
+        lm.layerSoloChanged.connect(nba.setLayerSolo)
+
     def initTimeBar(self):
         self.timeBar.tempoChanged.connect(self.playbackController.setTempo)
         self.playbackController.playbackPositionChanged.connect(

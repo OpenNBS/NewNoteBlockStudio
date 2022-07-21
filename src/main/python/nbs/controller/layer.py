@@ -9,7 +9,7 @@ class LayerController(QtCore.QObject):
 
     layerAdded = QtCore.pyqtSignal(int, object)
     layerRemoved = QtCore.pyqtSignal(int)
-    layerMoved = QtCore.pyqtSignal(int, int)
+    layerSwapped = QtCore.pyqtSignal(int, int)
     layerNameChanged = QtCore.pyqtSignal(int, str)
     layerVolumeChanged = QtCore.pyqtSignal(int, int)
     layerPanningChanged = QtCore.pyqtSignal(int, int)
@@ -109,4 +109,4 @@ class LayerController(QtCore.QObject):
     @QtCore.pyqtSlot(int, int)
     def swapLayers(self, id1: int, id2: int) -> None:
         self.layers[id1], self.layers[id2] = self.layers[id2], self.layers[id1]
-        self.layerMoved.emit(id1, id2 - id1)
+        self.layerSwapped.emit(id1, id2)

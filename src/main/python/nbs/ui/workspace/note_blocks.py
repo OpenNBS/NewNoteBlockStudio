@@ -819,7 +819,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool):
-        pass
+        self.update()
 
     @QtCore.pyqtSlot(int)
     def addLayer(self, id: int):
