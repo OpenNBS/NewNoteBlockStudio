@@ -3,9 +3,10 @@ import sys
 
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
-from nbs.mainwindow import MainWindow
 from PyQt5.QtCore import QElapsedTimer, QEvent, QObject, Qt
 from PyQt5.QtWidgets import QApplication
+
+from nbs.mainwindow import MainWindow
 
 
 class App(QApplication):

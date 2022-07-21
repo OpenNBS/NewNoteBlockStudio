@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from PyQt5 import QtCore, QtWidgets
+
 from nbs.controller.instrument import InstrumentController
 from nbs.controller.layer import LayerController
 from nbs.controller.playback import PlaybackController
@@ -23,7 +25,6 @@ from nbs.ui.workspace.note_blocks import NoteBlockArea
 from nbs.ui.workspace.piano import HorizontalAutoScrollArea, PianoWidget
 from nbs.ui.workspace.time_bar import TimeBar
 from nbs.ui.workspace.workspace import Workspace
-from PyQt5 import QtCore, QtWidgets
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -245,7 +246,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.instrumentController.instrumentAdded.connect(
             self.instrumentSettingsDialog.addInstrument
         )
-
 
     @QtCore.pyqtSlot()
     def loadSong(self):

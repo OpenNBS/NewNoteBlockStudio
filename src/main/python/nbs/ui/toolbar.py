@@ -1,6 +1,7 @@
+from PyQt5 import QtCore, QtWidgets
+
 import nbs.ui.actions as actions
 from nbs.ui.actions import Actions
-from PyQt5 import QtCore, QtWidgets
 
 
 class ToolBar(QtWidgets.QToolBar):

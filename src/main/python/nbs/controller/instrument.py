@@ -5,9 +5,10 @@ from random import randint
 from typing import Any, Optional, Sequence, Tuple, Union
 from uuid import UUID, uuid4
 
+from PyQt5 import QtCore, QtGui
+
 from nbs.core.context import appctxt
 from nbs.core.data import Instrument, default_instruments
-from PyQt5 import QtCore, QtGui
 
 Color = Tuple[int, int, int]
 PathLike = Union[str, bytes, os.PathLike]

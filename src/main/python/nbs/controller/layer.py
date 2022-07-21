@@ -1,7 +1,8 @@
 from typing import List, Optional, Sequence
 
-from nbs.core.data import Layer
 from PyQt5 import QtCore
+
+from nbs.core.data import Layer
 
 
 class LayerController(QtCore.QObject):

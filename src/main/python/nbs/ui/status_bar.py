@@ -1,7 +1,8 @@
 from typing import List
 
-from nbs.core.data import Instrument
 from PyQt5 import QtCore, QtWidgets
+
+from nbs.core.data import Instrument
 
 
 class StatusBar(QtWidgets.QStatusBar):

@@ -1,8 +1,9 @@
 from typing import List, Optional, Sequence
 
 import qtawesome as qta
-from nbs.core.data import Layer
 from PyQt5 import QtCore, QtWidgets
+
+from nbs.core.data import Layer
 
 from .constants import *
 

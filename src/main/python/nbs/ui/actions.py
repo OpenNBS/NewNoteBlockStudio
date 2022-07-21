@@ -1,12 +1,13 @@
 from typing import Sequence
 
 import qtawesome as qta
-from nbs.controller.instrument import InstrumentInstance
-from nbs.core.context import appctxt
-from nbs.core.data import Instrument
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup
+
+from nbs.controller.instrument import InstrumentInstance
+from nbs.core.context import appctxt
+from nbs.core.data import Instrument
 
 
 class Actions(QtCore.QObject):

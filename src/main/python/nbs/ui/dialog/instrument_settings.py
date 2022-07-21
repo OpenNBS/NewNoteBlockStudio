@@ -1,7 +1,8 @@
 from typing import Optional, Sequence
 
-from nbs.controller.instrument import InstrumentInstance
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+from nbs.controller.instrument import InstrumentInstance
 
 
 class InstrumentKeySpinBox(QtWidgets.QSpinBox):

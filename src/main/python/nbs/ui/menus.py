@@ -1,7 +1,8 @@
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 import nbs.ui.actions as actions
 from nbs.core.data import Instrument
 from nbs.ui.actions import Actions
-from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class FileMenu(QtWidgets.QMenu):

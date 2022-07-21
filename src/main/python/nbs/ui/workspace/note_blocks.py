@@ -6,12 +6,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Generator, List, Optional, Sequence, Tuple, Union
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 from nbs.core.context import appctxt
 from nbs.core.data import Instrument, Layer, default_instruments
 from nbs.core.utils import *
 from nbs.ui.actions import Actions  # TODO: remove dependency
 from nbs.ui.menus import EditMenu  # TODO: remove dependency
-from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .constants import *
 
