@@ -110,6 +110,9 @@ class LayerBar(QtWidgets.QFrame):
         self.volumeDial.setNotchesVisible(True)
         self.volumeDial.setContentsMargins(0, 0, 0, 0)
         self.volumeDial.setMaximumWidth(32)
+        self.volumeDial.valueChanged.connect(
+            lambda value: self.volumeChanged.emit(self.id, value)
+        )
         self.toolbar.addWidget(self.volumeDial)
 
         self.panningDial = QtWidgets.QDial()
@@ -120,6 +123,9 @@ class LayerBar(QtWidgets.QFrame):
         self.panningDial.setValue(0)
         self.panningDial.setContentsMargins(0, 0, 0, 0)
         self.panningDial.setMaximumWidth(32)
+        self.panningDial.valueChanged.connect(
+            lambda value: self.panningChanged.emit(self.id, value)
+        )
         self.toolbar.addWidget(self.panningDial)
 
         # self.addAction(self.icons["volume"], "Volume")
