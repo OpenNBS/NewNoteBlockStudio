@@ -33,8 +33,8 @@ class AppContext(ApplicationContext):
         self.app.setApplicationName("Minecraft Note Block Studio")
 
         # Enable support for high DPI displays and use high res icons
-        self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-        self.app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+        self.app.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+        self.app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
 
         # Create main window
         window = MainWindow()

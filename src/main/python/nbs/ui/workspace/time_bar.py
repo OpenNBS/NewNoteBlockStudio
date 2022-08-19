@@ -16,7 +16,7 @@ class SongTime(QtWidgets.QWidget):
     def initUI(self):
         # Song time (top)
         self.songTimeLabel = QtWidgets.QLabel()
-        self.songTimeLabel.setAlignment(QtCore.Qt.AlignRight)
+        self.songTimeLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         font = QtGui.QFont()
         font.setPointSize(11)
         font.setBold(True)
@@ -24,7 +24,7 @@ class SongTime(QtWidgets.QWidget):
 
         # Song length (bottom)
         self.songLengthLabel = QtWidgets.QLabel()
-        self.songLengthLabel.setAlignment(QtCore.Qt.AlignRight)
+        self.songLengthLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         font = QtGui.QFont()
         font.setPointSize(8)
         font.setBold(False)
@@ -34,7 +34,7 @@ class SongTime(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.songTimeLabel)
         layout.addWidget(self.songLengthLabel)
-        layout.setAlignment(QtCore.Qt.AlignRight)
+        layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         layout.setContentsMargins(0, 1, 0, 2)
         layout.setSpacing(0)
         layout.setStretchFactor(self.songTimeLabel, 0.7)
@@ -83,10 +83,10 @@ class TempoBox(QtWidgets.QDoubleSpinBox):
         self.setRange(0.1, 60)
         self.setSingleStep(0.25)
         self.setValue(self.tempo)
-        self.setAlignment(QtCore.Qt.AlignRight)
+        self.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         self.setSuffix(" t/s")
         self.valueChanged.connect(self.changeTempo)
-        self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
 
     def contextMenuEvent(self, e: QtGui.QContextMenuEvent) -> None:
         # As there's no hook to modify the items on the default QSpinBox

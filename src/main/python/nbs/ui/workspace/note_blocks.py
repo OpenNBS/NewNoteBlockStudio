@@ -371,7 +371,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.view.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.startTimer(10)
 
-    def drawBackground(self, painter, rect):
+    def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtGui.QColor(240, 240, 240))
         painter.drawRect(rect)

@@ -32,7 +32,7 @@ class PianoKey(QtWidgets.QWidget):
         self.isActive = False
         self.previousKey = None
         self.currentKey = None
-        self.setCursor(QtCore.Qt.PointingHandCursor)
+        self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.installEventFilter(self)
 
     def pressKey(self):
@@ -71,7 +71,7 @@ class PianoKey(QtWidgets.QWidget):
                 color = QtGui.QColor(30, 30, 30)
             if self.isPressed:
                 color = color.lighter(110)
-            textColor = QtCore.Qt.white
+            textColor = QtCore.Qt.GlobalColor.white
         else:
             if self.isActive:
                 color = QtGui.QColor(51, 102, 255)
@@ -81,7 +81,7 @@ class PianoKey(QtWidgets.QWidget):
                 color = QtGui.QColor(255, 255, 255)
             if self.isPressed:
                 color = color.darker(120)
-            textColor = QtCore.Qt.black
+            textColor = QtCore.Qt.GlobalColor.black
         bevelColor = color.darker(130)
         outlineColor = color.darker(200)
 
@@ -105,7 +105,9 @@ class PianoKey(QtWidgets.QWidget):
         painter.drawRects(rect, bevel)
         painter.setPen(textColor)
         painter.drawText(
-            textRect, QtCore.Qt.AlignCenter + QtCore.Qt.AlignBottom, self.label
+            textRect,
+            QtCore.Qt.AlignmentFlag.AlignCenter | QtCore.Qt.AlignmentFlag.AlignBottom,
+            self.label,
         )
         painter.end()
 
@@ -114,13 +116,13 @@ class PianoKey(QtWidgets.QWidget):
         # in order to allow sliding the mouse over the piano, we install
         # an eventFilter on every piano key to detect when the mouse moves
         # over a certain key, then tell that key to be pressed.
-        if event.type() == QtCore.QEvent.MouseButtonPress:
+        if event.type() == QtCore.QEvent.Type.MouseButtonPress:
             self.pressKey()
-        if event.type() == QtCore.QEvent.MouseButtonRelease:
+        if event.type() == QtCore.QEvent.Type.MouseButtonRelease:
             self.releaseKey()
             if self.currentKey is not None:
                 self.currentKey.releaseKey()
-        if event.type() == QtCore.QEvent.MouseMove:
+        if event.type() == QtCore.QEvent.Type.MouseMove:
             moveEvent = QtGui.QMouseEvent(event)
             widget = QtWidgets.qApp.widgetAt(moveEvent.globalPos())
             self.currentKey = widget if isinstance(widget, PianoKey) else None
@@ -128,7 +130,7 @@ class PianoKey(QtWidgets.QWidget):
                 self.previousKey.releaseKey()
             if (
                 self.currentKey is not None
-                and moveEvent.buttons() == QtCore.Qt.LeftButton
+                and moveEvent.buttons() == QtCore.Qt.MouseButton.LeftButton
             ):
                 self.currentKey.pressKey()
             self.previousKey = self.currentKey
@@ -263,8 +265,8 @@ class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
         super().__init__(parent)
         self.margins = margins
         self.scrollAmount = scrollAmount
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.startTimer(updateDelay)
 
     def timerEvent(self, event: QtCore.QTimerEvent) -> None:
