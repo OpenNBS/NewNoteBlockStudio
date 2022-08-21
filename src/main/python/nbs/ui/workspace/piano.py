@@ -1,3 +1,5 @@
+from typing import List
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .constants import *
@@ -193,8 +195,8 @@ class PianoWidget(QtWidgets.QWidget):
 
     def initUI(self):
         self.keys = []
-        self.whiteKeys = []
-        self.blackKeys = []
+        self.whiteKeys: List[PianoKey] = []
+        self.blackKeys: List[PianoKey] = []
         self.blackPositions = (1, 3, 6, 8, 10)
         self.layout = QtWidgets.QHBoxLayout()
         # Bigger margin on the top to accomodate raised black keys
@@ -231,8 +233,8 @@ class PianoWidget(QtWidgets.QWidget):
     def arrangeBlackKeys(self):
         """Update position of the black keys on the piano."""
         key = self.whiteKeys[0]
-        keyWidth = key.width() * 0.6
-        keyHeight = key.height() * 0.6
+        keyWidth = round(key.width() * 0.6)
+        keyHeight = round(key.height() * 0.6)
         keyOffset = key.width() * 0.7
         yPos = key.y() - 6
         offset = self.blackKeysInRange(0, self.offset)
@@ -240,7 +242,7 @@ class PianoWidget(QtWidgets.QWidget):
             oct, key = divmod(i + offset, 5)
             pos = oct * 12 + self.blackPositions[key] - self.offset
             # Set x pos based on the position of the previous (white) key
-            xPos = self.keys[pos - 1].x() + keyOffset
+            xPos = round(self.keys[pos - 1].x() + keyOffset)
             self.blackKeys[i].resize(keyWidth, keyHeight)
             self.blackKeys[i].move(xPos, yPos)
             self.blackKeys[i].raise_()

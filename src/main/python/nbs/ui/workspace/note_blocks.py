@@ -38,7 +38,7 @@ class TimeRuler(QtWidgets.QWidget):
         # https://stackoverflow.com/a/32078341/9045426
         textRect = fm.boundingRect(text)
         textRect = fm.boundingRect(textRect, 0, text)
-        textRect.moveCenter(QtCore.QPoint(x, y))
+        textRect.moveCenter(QtCore.QPoint(round(x), round(y)))
         # if textRect.left() < 0 and textRect.right() >= (textRect.width() / 2):
         #    textRect.moveLeft(1)
         # if textRect.right() > rect.width():
@@ -48,7 +48,7 @@ class TimeRuler(QtWidgets.QWidget):
     def paintEvent(self, event):
         self.resize(self.parent().width(), self.height())
         rect = self.rect()
-        mid = rect.height() / 2
+        mid = rect.height() // 2
         blocksize = BLOCK_SIZE * self.scale
         painter = QtGui.QPainter()
         painter.begin(self)
@@ -174,11 +174,12 @@ class Marker(QtWidgets.QWidget):
     def posToTick(self, pos):
         return (pos + self.offset) / (self.scale * BLOCK_SIZE)
 
-    def tickToPos(self, tick):
-        return tick * self.scale * BLOCK_SIZE - self.offset
+    def tickToPos(self, tick: float) -> int:
+        return round(tick * self.scale * BLOCK_SIZE - self.offset)
 
     def updatePos(self):
-        self.move(self.tickToPos(self.pos) - 8, 0)
+        # TODO: rename this attribute. pos() is a method of QWidget
+        self.move(self.tickToPos(self.pos - 8), 0)
 
     @QtCore.pyqtSlot(float)
     def setPos(self, pos: float):
@@ -293,7 +294,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         """
 
         viewport = self.viewport()
-        viewYCenter = (
+        viewYCenter = round(
             self.mapToScene(viewport.rect().center()).y() + 1
         )  # The +1 is to avoid rounding errors
 
@@ -383,7 +384,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 painter.setPen(QtGui.QColor(181, 181, 181))
             else:
                 painter.setPen(QtGui.QColor(216, 216, 216))
-            painter.drawLine(x * BLOCK_SIZE, rect.y(), x * BLOCK_SIZE, rect.bottom())
+            painter.drawLine(
+                x * BLOCK_SIZE, round(rect.y()), x * BLOCK_SIZE, round(rect.bottom())
+            )
 
     def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
@@ -469,7 +472,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         y = point.y() // BLOCK_SIZE
         return x, y
 
-    def getScenePos(self, x, y):
+    def getScenePos(self, x: int, y: int):
         """Return the top left scene position of a set of grid coordinates."""
         return QtCore.QPoint(x * BLOCK_SIZE, y * BLOCK_SIZE)
 
@@ -523,7 +526,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for item in self.items():
             self.removeItem(item)
 
-    def addBlock(self, x, y, *args, **kwargs):
+    def addBlock(self, x: int, y: int, *args, **kwargs):
         """Add a note block at the specified position."""
         blockPos = self.getScenePos(x, y)
         block = NoteBlock(x, y, *args, **kwargs)
@@ -542,14 +545,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.updateBlockCount()
         # TODO: self.blockRemoved.emit()
 
-    def removeBlockAt(self, x, y):
+    def removeBlockAt(self, x: int, y: int) -> None:
         """Remove the note block at the specified position."""
         pos = self.getScenePos(x, y)
         itemAtPos = self.itemAt(pos, self.view.transform())
         if itemAtPos is not None:
             self.removeItem(itemAtPos)
 
-    def removeBlockManual(self, x, y):
+    def removeBlockManual(self, x: int, y: int) -> None:
         self.removeBlockAt(x, y)
         self.updateSceneSize()
 
@@ -861,7 +864,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def initPlayback(self):
         self.glowTimer = QtCore.QTimer(self)
-        self.glowTimer.setInterval(1000 / 60)
+        self.glowTimer.setInterval(1000 // 60)
         self.glowTimer.timeout.connect(self.updateBlockGlowEffect)
         self.glowTimer.start()
 
@@ -962,7 +965,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.isMovingBlocks = False
         else:
             clickPos = event.scenePos()
-            x, y = self.getGridPos(clickPos)
+            x, y = (round(i) for i in self.getGridPos(clickPos))
             if event.button() == QtCore.Qt.LeftButton:
                 self.removeBlockManual(x, y)
                 self.addBlockManual(
@@ -1047,8 +1050,8 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     # Geometry
     RECT = QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
-    TOP_RECT = QtCore.QRect(0, 0, BLOCK_SIZE, BLOCK_SIZE / 2)
-    BOTTOM_RECT = QtCore.QRect(0, BLOCK_SIZE / 2, BLOCK_SIZE, BLOCK_SIZE / 2)
+    TOP_RECT = QtCore.QRect(0, 0, BLOCK_SIZE, BLOCK_SIZE // 2)
+    BOTTOM_RECT = QtCore.QRect(0, BLOCK_SIZE // 2, BLOCK_SIZE, BLOCK_SIZE // 2)
 
     # Colors
     LABEL_COLOR = QtCore.Qt.yellow

@@ -37,8 +37,8 @@ class SongTime(QtWidgets.QWidget):
         layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         layout.setContentsMargins(0, 1, 0, 2)
         layout.setSpacing(0)
-        layout.setStretchFactor(self.songTimeLabel, 0.7)
-        layout.setStretchFactor(self.songLengthLabel, 0.3)
+        layout.setStretchFactor(self.songTimeLabel, 7)
+        layout.setStretchFactor(self.songLengthLabel, 3)
         self.setLayout(layout)
 
         self.updateCurrentTime()
