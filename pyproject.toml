@@ -22,6 +22,10 @@ isort = "^5.10.1"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--cov=nbs"
+
 [tool.isort]
 profile = "black"
 known_first_party = ["nbs"]
