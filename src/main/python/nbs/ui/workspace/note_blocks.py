@@ -1071,7 +1071,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.vel = vel
         self.pan = pan
         self.pit = pit
-        self.overlayColor = QtGui.QColor(*instrument_data[ins].color)
+        self.overlayColor = QtGui.QColor(*instrument_data[min(ins, 15)].color)
         self.overlayColor = QtGui.QColor(*instrument_data[min(ins, 15)].color)
         self.label = self.getLabel()
         self.clicks = self.getClicks()
