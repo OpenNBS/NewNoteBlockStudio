@@ -21,6 +21,17 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src/main/python"
             }
+        },
+        {
+            "name": "Python: Coverage",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main/python/main.py",
+            "args": ["--coverage"],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src/main/python"
+            }
         }
     ]
 }
