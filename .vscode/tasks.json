@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Generate coverage report",
+            "type": "shell",
+            "command": "poetry run pytest --cov-report html"
+        },
+        {
+            "label": "Open coverage report",
+            "type": "shell",
+            "command": "htmlcov/index.html"
+        }
+    ]
+}

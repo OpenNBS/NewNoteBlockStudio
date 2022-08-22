@@ -24,14 +24,10 @@
         },
         {
             "name": "Python: Coverage",
-            "type": "python",
+            "type": "node-terminal",
             "request": "launch",
-            "program": "${workspaceFolder}/src/main/python/main.py",
-            "args": ["--coverage"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/src/main/python"
-            }
+            "preLaunchTask": "Generate coverage report",
+            "postDebugTask": "Open coverage report"
         }
     ]
 }
