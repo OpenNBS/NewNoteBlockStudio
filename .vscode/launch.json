@@ -13,18 +13,14 @@
         },
         {
             "name": "Python: Profile",
-            "type": "python",
+            "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/src/main/python/main.py",
-            "args": ["--profile"],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/src/main/python"
-            }
+            "preLaunchTask": "Generate profiling report",
+            "postDebugTask": "Open profiling report"
         },
         {
             "name": "Python: Coverage",
-            "type": "node-terminal",
+            "type": "node",
             "request": "launch",
             "preLaunchTask": "Generate coverage report",
             "postDebugTask": "Open coverage report"

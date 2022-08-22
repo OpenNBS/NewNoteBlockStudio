@@ -2,6 +2,16 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Generate profiling report",
+            "type": "shell",
+            "command": ".venv/Scripts/Activate.ps1; python -m cProfile -o profile.prof ${workspaceFolder}/src/main/python/main.py"
+        },
+        {
+            "label": "Open profiling report",
+            "type": "shell",
+            "command": ".venv/Scripts/Activate.ps1; snakeviz ${workspaceFolder}/profile.prof"
+        },
+        {
             "label": "Generate coverage report",
             "type": "shell",
             "command": "poetry run pytest --cov-report html"

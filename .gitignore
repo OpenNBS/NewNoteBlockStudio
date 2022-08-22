@@ -3,6 +3,7 @@
 
 # Profiling output
 .tmp/
+*.prof
 
 # Editors
 .idea/
