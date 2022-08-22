@@ -3,22 +3,25 @@ import sys
 
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
-from PyQt5.QtCore import QElapsedTimer, QEvent, QObject, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
 from nbs.mainwindow import MainWindow
 
 
 class App(QApplication):
-
-    profiler = QElapsedTimer()
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.setOrganizationName("Minecraft Note Block Studio")
         self.setApplicationName("Minecraft Note Block Studio")
         self.setApplicationVersion("0.0.1")
         # self.setWindowIcon(QtGui.QIcon(os.path.join(os.path.dirname(__file__), "icon.png")))
+
+        # Enable support for high DPI displays and use high res icons
+        os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+        self.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
+        self.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
 
 
 class AppContext(ApplicationContext):
@@ -27,16 +30,6 @@ class AppContext(ApplicationContext):
         return App(sys.argv)
 
     def run(self):
-        os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-
-        # Set application info
-        self.app.setApplicationName("Minecraft Note Block Studio")
-
-        # Enable support for high DPI displays and use high res icons
-        self.app.setAttribute(Qt.ApplicationAttribute.AA_EnableHighDpiScaling, True)
-        self.app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
-
-        # Create main window
         window = MainWindow()
         window.show()
 
