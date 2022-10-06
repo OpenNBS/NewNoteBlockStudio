@@ -2,7 +2,7 @@ import colorsys
 import os
 from dataclasses import dataclass, field
 from random import randint
-from typing import Any, Optional, Sequence, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 from uuid import UUID, uuid4
 
 from PyQt5 import QtCore, QtGui
@@ -88,7 +88,7 @@ class InstrumentController(QtCore.QObject):
     def __init__(self, instruments: Sequence[Instrument], parent=None) -> None:
         super().__init__(parent)
         self.noteBlockPixmap = QtGui.QPixmap(":/images/note_block.png")
-        self.instruments = []
+        self.instruments: List[InstrumentInstance] = []
         if instruments:
             self.loadInstrumentsFromList(instruments)
 

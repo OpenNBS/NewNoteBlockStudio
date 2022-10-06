@@ -205,8 +205,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.soundLoadRequested.emit(sounds)
 
+        instrumentList = self.instrumentController.instruments
+
         # Set current instrument actions
-        self.setCurrentInstrumentActionsManager.updateActions(default_instruments)
+        self.setCurrentInstrumentActionsManager.updateActions(instrumentList)
         self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
             # TODO: connect this to future InstrumentManager object that will notify widgets
             self.noteBlockArea.setCurrentInstrument
@@ -222,7 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         # 'Change instrument...' actions
-        self.changeInstrumentActionsManager.updateActions(default_instruments)
+        self.changeInstrumentActionsManager.updateActions(instrumentList)
         self.changeInstrumentActionsManager.instrumentChanged.connect(
             self.noteBlockArea.changeSelectionInstrument
         )
