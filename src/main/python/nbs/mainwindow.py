@@ -149,6 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda _, height: lm.setWorkspaceLayerCount(height)
         )
         lm.populatedLayerCountChanged.connect(nba.setMinimumLayerCount)
+        lm.visibleLayerCountChanged.connect(la.setLayerCount)
 
         # Connect widget to manager
         la.layerAddRequested.connect(lm.addLayer)

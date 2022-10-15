@@ -262,10 +262,22 @@ class LayerArea(VerticalScrollArea):
     def layerCount(self):
         return self.layout.count()
 
-    def createLayer(self, pos: int, layer: Layer):
+    @QtCore.pyqtSlot(int)
+    def setLayerCount(self, count: int) -> None:
+        """
+        Sets the amount of layers to be displayed by creating or deleting enough layers.
+        """
+        while self.layerCount > count:
+            self.deleteLayer(self.layerCount - 1)
+        while self.layerCount < count:
+            self.createLayer()
+        self.updateLayerIds()
+
+    def createLayer(self, pos: Optional[int] = None, layer: Layer = Layer()):
         """
         Create a new `LayerBar` widget for the corresponding `layer` at the given `pos`,
-        and add it to the layout.
+        and add it to the layout. If `pos` is None, the layer is appended; if `layer` is
+        None, an empty layer is created.
         """
         pos = pos if pos is not None else self.layerCount
         args = (
@@ -292,10 +304,12 @@ class LayerArea(VerticalScrollArea):
             lambda *a: self.layerMoveRequested.emit(*a, +1)
         )
 
-    def deleteLayer(self, pos: int):
+    def deleteLayer(self, pos: Optional[int] = None):
         """
-        Delete the layer at position `pos` from the layout.
+        Delete the layer at position `pos` from the layout. If `pos` is None, the last
+        layer is deleted.
         """
+        pos = pos if pos is not None else self.layerCount - 1
         removedLayer = self.layout.takeAt(pos).widget()
         self.layout.removeWidget(removedLayer)
         removedLayer.deleteLater()
