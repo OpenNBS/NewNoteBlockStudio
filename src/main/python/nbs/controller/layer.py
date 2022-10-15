@@ -61,7 +61,7 @@ class LayerController(QtCore.QObject):
         if count != previousCount:
             self.visibleLayerCountChanged.emit(count)
             print(f"Layer count changed from {previousCount} to {count}")
-        self.populatedLayerCountChanged.emit(self.lastPopulatedLayerId)
+        self.updatePopulatedLayerCount()
         # Visible = how many layers should appear on the screen (includes "fake" layers at the bottom)
         # Populated = how many layers have had their data changed
 
@@ -75,6 +75,9 @@ class LayerController(QtCore.QObject):
             if self.layers[i] != EMPTY_LAYER:
                 return i
         return -1
+
+    def updatePopulatedLayerCount(self) -> None:
+        self.populatedLayerCountChanged.emit(self.lastPopulatedLayerId + 1)
 
     @QtCore.pyqtSlot(int, str)
     def loadLayers(self, layers: Sequence[Layer]) -> None:
@@ -98,36 +101,43 @@ class LayerController(QtCore.QObject):
             layer = Layer()
         self.layers.insert(index, layer)
         self.layerAdded.emit(index, layer)
+        self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int)
     def removeLayer(self, id: int) -> None:
         self.layers.pop(id)
         self.layerRemoved.emit(id)
+        self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, str)
     def setLayerName(self, id: int, name: str) -> None:
         self.layers[id].name = name
         self.layerNameChanged.emit(id, name)
+        self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, int)
     def setLayerVolume(self, id: int, volume: int) -> None:
         self.layers[id].volume = volume
         self.layerVolumeChanged.emit(id, volume)
+        self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, int)
     def setLayerPanning(self, id: int, panning: int) -> None:
         self.layers[id].panning = panning
         self.layerPanningChanged.emit(id, panning)
+        self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerLock(self, id: int, lock: bool) -> None:
         self.layers[id].lock = lock
         self.layerLockChanged.emit(id, lock)
+        self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool) -> None:
         self.layers[id].solo = solo
         self.layerSoloChanged.emit(id, solo)
+        self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, int)
     def moveLayer(self, id: int, offset: int) -> None:
@@ -137,3 +147,4 @@ class LayerController(QtCore.QObject):
     def swapLayers(self, id1: int, id2: int) -> None:
         self.layers[id1], self.layers[id2] = self.layers[id2], self.layers[id1]
         self.layerSwapped.emit(id1, id2)
+        self.updatePopulatedLayerCount()
