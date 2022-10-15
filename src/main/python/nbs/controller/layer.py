@@ -4,10 +4,13 @@ from PyQt5 import QtCore
 
 from nbs.core.data import Layer
 
+EMPTY_LAYER = Layer()
+
 
 class LayerController(QtCore.QObject):
     """Object that manages a sequence of layers."""
 
+    layerCountChanged = QtCore.pyqtSignal(int)
     layerAdded = QtCore.pyqtSignal(int, object)
     layerRemoved = QtCore.pyqtSignal(int)
     layerSwapped = QtCore.pyqtSignal(int, int)
@@ -20,35 +23,53 @@ class LayerController(QtCore.QObject):
     def __init__(self, layers: List[Layer], parent: QtCore.QObject = None) -> None:
         super().__init__(parent)
         self.layers = layers
+        self.workspaceLayerCount = 0
 
-    @QtCore.pyqtSlot(int)
-    def updateLayerCount(self, count: int) -> None:
+    def setWorkspaceLayerCount(self, count: int) -> None:
+        """
+        Set the number of layers visible on the note block area.
+        This is used to ensure that at least these many layers
+        are created, allowing the user to interact with them.
+        """
+        self.workspaceLayerCount = count
+        self.updateLayerCount()
 
-        # TODO: This is dangerous, because it creates the possibility of managing layers
-        # SEPARATELY from the note block scene. We can never have less layers than
-        # the note block scene, and the workspace should probably ensure this is not the case
-        #
-        # The workspace should do the internal syncing between the two, and have
-        # methods to announce changes to the synced state, so that we don't need
-        # to worry about it here.
-        #
-        # The problem is that the layer count is a shared state between layers and
-        # note blocks - it's not a property of the layer controller, but of the workspace.
-        # Since note blocks are managed by the NoteBlockArea, we need information there
-        # in order to know how many layers there should exist.
-        #
-        # I don't think the main window should be responsible for managing this --
-        # it's supposed to work at a higher level than that.
-
+    def updateLayerCount(self) -> None:
+        """
+        Create or delete enough layers to match the last populated layer
+        in the song, be it in the note block area or in the layer list.
+        """
+        # This ensures that at least: a) the number of rows visible
+        # on the note block area, and b) the last layer that has had
+        # its data changed, whichever is bigger, have a layer object
+        # associated with them. All extra layers are discarded.
+        # This makes this object the "single source of truth" for
+        # the number of layers in the song - the workspace can "request"
+        # the addition of more layers through the setWorkspaceLayerCount()
+        # slot, but this object will handle their creation.
+        count = max(self.lastPopulatedLayerId, self.workspaceLayerCount)
+        previousCount = len(self.layers)
         print("LayerController.updateLayerCount:", count)
-
         while len(self.layers) < count:
-            print("Adding layer")
-            self.addLayer()
-        # TODO: we might want to keep the layers there when "shrinking" the layer count to avoid data deletion?
+            print("Creating layer")
+            self.layers.append(Layer())
         while len(self.layers) > count:
+            print("Removing layer")
             self.layers.pop()
-        print("New layer count:", len(self.layers))
+        if count != previousCount:
+            self.layerCountChanged.emit(count)
+            print(f"Layer count changed from {previousCount} to {count}")
+
+    @property
+    def lastPopulatedLayerId(self) -> int:
+        """
+        Return the index of the last layer that has had its data changed.
+        Used to ensure that at least this many layers remain visible.
+        """
+        for i in range(len(self.layers) - 1, -1, -1):
+            if self.layers[i] != EMPTY_LAYER:
+                return i
+        return -1
 
     @QtCore.pyqtSlot(int, str)
     def loadLayers(self, layers: Sequence[Layer]) -> None:

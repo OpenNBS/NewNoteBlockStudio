@@ -354,6 +354,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.playingBlocks = set()
         self.previousPlaybackPosition = 0
         self.currentInstrument = 0
+        self.minimumLayerCount = 0
         self.initUI()
         self.initClipboard()
         self.initPlayback()
@@ -443,20 +444,17 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     ########## COORDINATE TRANSFORMATION ##########
 
     def updateSceneSize(self):
-        if len(self.items()) > 1:
+        if len(self.items()) >= 1:
             bbox = self.itemsBoundingRect()
         else:
             bbox = QtCore.QRectF(0, 0, 0, 0)
         viewSize = self.view.rect()
-        newSize = (
-            math.ceil((bbox.right() + viewSize.width()) / BLOCK_SIZE),
-            math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE),
-        )
-        self.setSceneRect(
-            QtCore.QRectF(0, 0, newSize[0] * BLOCK_SIZE, newSize[1] * BLOCK_SIZE)
-        )
-        self.sceneSizeChanged.emit(*newSize)
-        print(*newSize)
+        width = math.ceil((bbox.right() + viewSize.width()) / BLOCK_SIZE)
+        height = math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE)
+        height = max(height, self.minimumLayerCount)
+        self.setSceneRect(QtCore.QRectF(0, 0, width * BLOCK_SIZE, height * BLOCK_SIZE))
+        self.sceneSizeChanged.emit(width, height)
+        print(f"Scene size changed to {width}x{height}")
 
     def getGridPos(self, point):
         """
@@ -769,6 +767,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.setSelectionTopLeft(selectionPos)
 
     ########## LAYERS ##########
+
+    @QtCore.pyqtSlot(int)
+    def setMinimumLayerCount(self, count: int) -> None:
+        """
+        Set the minimum number of layers that will be visible
+        on the screen.
+        """
+        if count < 0:
+            raise ValueError("Layer count must be a positive integer")
+        self.minimumLayerCount = count
+        if self.height() // BLOCK_SIZE < self.minimumLayerCount:
+            self.updateSceneSize()
 
     def updateBlocksSelectableStatus(
         self, blocks: Optional[Sequence[NoteBlock]] = None

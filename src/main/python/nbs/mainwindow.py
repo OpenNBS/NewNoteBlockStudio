@@ -145,7 +145,8 @@ class MainWindow(QtWidgets.QMainWindow):
         la.layerSelectRequested.connect(nba.selectAllInLayer)
 
         # Connect note block area to manager (to inform it of changes in the layer count)
-        nba.sceneSizeChanged.connect(lambda _, height: lm.updateLayerCount(height))
+        nba.sceneSizeChanged.connect(lambda _, height: lm.setWorkspaceLayerCount(height))
+        lm.layerCountChanged.connect(nba.setMinimumLayerCount)
 
         # Connect widget to manager
         la.layerAddRequested.connect(lm.addLayer)
