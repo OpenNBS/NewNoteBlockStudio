@@ -40,6 +40,7 @@ def loadBlockPixmap(color: Color) -> QtGui.QPixmap:
     painter.setBrush(QtGui.QColor(*color))
     painter.drawRect(0, 0, pixmap.width(), pixmap.height())
     painter.end()
+    return pixmap
 
 
 class InstrumentInstance:
@@ -55,7 +56,7 @@ class InstrumentInstance:
         self.loaded = False
         self.isDefault = False
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         return getattr(self.__instrument, name)
 
     def __setattr__(self, attr: str, value: Any) -> None:
@@ -85,7 +86,9 @@ class InstrumentController(QtCore.QObject):
 
     instrumentSoundLoadRequested = QtCore.pyqtSignal(str)
 
-    def __init__(self, instruments: Sequence[Instrument], parent=None) -> None:
+    def __init__(
+        self, instruments: Sequence[Instrument], parent: Optional[QtCore.QObject] = None
+    ) -> None:
         super().__init__(parent)
         self.noteBlockPixmap = QtGui.QPixmap(":/images/note_block.png")
         self.instruments: List[InstrumentInstance] = []

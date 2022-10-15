@@ -11,7 +11,7 @@ from PyQt5 import QtCore
 PathLike = Union[str, bytes, os.PathLike]
 
 
-def key_to_pitch(key):
+def key_to_pitch(key: float) -> float:
     return 2 ** (key / 12)
 
 
@@ -112,7 +112,7 @@ class SoundInstance:
 
 class SoundQueue:
     def __init__(self) -> None:
-        self.active_sounds = []
+        self.active_sounds: list[SoundInstance] = []
 
     def push_sound(
         self, samples: np.ndarray, pitch: float, volume: float, panning: float
