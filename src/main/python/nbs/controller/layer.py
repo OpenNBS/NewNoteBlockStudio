@@ -10,7 +10,8 @@ EMPTY_LAYER = Layer()
 class LayerController(QtCore.QObject):
     """Object that manages a sequence of layers."""
 
-    layerCountChanged = QtCore.pyqtSignal(int)
+    visibleLayerCountChanged = QtCore.pyqtSignal(int)
+    populatedLayerCountChanged = QtCore.pyqtSignal(int)
     layerAdded = QtCore.pyqtSignal(int, object)
     layerRemoved = QtCore.pyqtSignal(int)
     layerSwapped = QtCore.pyqtSignal(int, int)
@@ -32,6 +33,7 @@ class LayerController(QtCore.QObject):
         are created, allowing the user to interact with them.
         """
         self.workspaceLayerCount = count
+        print("LayerController.setWorkspaceLayerCount:", count)
         self.updateLayerCount()
 
     def updateLayerCount(self) -> None:
@@ -57,8 +59,11 @@ class LayerController(QtCore.QObject):
             print("Removing layer")
             self.layers.pop()
         if count != previousCount:
-            self.layerCountChanged.emit(count)
+            self.visibleLayerCountChanged.emit(count)
             print(f"Layer count changed from {previousCount} to {count}")
+        self.populatedLayerCountChanged.emit(self.lastPopulatedLayerId)
+        # Visible = how many layers should appear on the screen (includes "fake" layers at the bottom)
+        # Populated = how many layers have had their data changed
 
     @property
     def lastPopulatedLayerId(self) -> int:

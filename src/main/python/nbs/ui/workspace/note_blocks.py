@@ -452,6 +452,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         width = math.ceil((bbox.right() + viewSize.width()) / BLOCK_SIZE)
         height = math.ceil((bbox.bottom() + viewSize.height()) / BLOCK_SIZE)
         height = max(height, self.minimumLayerCount)
+        print("Calculated height:", height, "Min. count:", self.minimumLayerCount)
         self.setSceneRect(QtCore.QRectF(0, 0, width * BLOCK_SIZE, height * BLOCK_SIZE))
         self.sceneSizeChanged.emit(width, height)
         print(f"Scene size changed to {width}x{height}")
@@ -774,8 +775,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Set the minimum number of layers that will be visible
         on the screen.
         """
-        if count < 0:
-            raise ValueError("Layer count must be a positive integer")
         self.minimumLayerCount = count
         if self.height() // BLOCK_SIZE < self.minimumLayerCount:
             self.updateSceneSize()
