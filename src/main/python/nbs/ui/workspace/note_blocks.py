@@ -775,8 +775,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         Set the minimum number of layers that will be visible
         on the screen.
         """
-        self.minimumLayerCount = count
-        if self.height() // BLOCK_SIZE < self.minimumLayerCount:
+        print("minimumLayerCount changed:", self.minimumLayerCount)
+        if count != self.minimumLayerCount:
+            self.minimumLayerCount = count
             self.updateSceneSize()
 
     def updateBlocksSelectableStatus(
