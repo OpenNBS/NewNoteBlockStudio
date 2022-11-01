@@ -164,7 +164,7 @@ class Marker(QtWidgets.QWidget):
         # how much it should move based on how far from the center the mouse moved
         if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
             offset = event.pos().x()
-            tick = self.posToTick(self.tickToPos(self.tick) + offset)
+            tick = self.posToTick(self.pos().x() + offset)
             self.setTick(tick)
             self.moved.emit(tick)
 
@@ -172,7 +172,7 @@ class Marker(QtWidgets.QWidget):
         return (pos + self.offset) / (self.scale * BLOCK_SIZE)
 
     def tickToPos(self, tick: float) -> int:
-        return round(tick * self.scale * BLOCK_SIZE) - self.width() // 2
+        return round(tick * self.scale * BLOCK_SIZE) - self.width() // 2 - self.offset
 
     def updatePos(self) -> None:
         self.move(self.tickToPos(self.tick), 0)
