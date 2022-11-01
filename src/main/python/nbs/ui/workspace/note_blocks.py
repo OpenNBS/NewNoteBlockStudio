@@ -129,7 +129,7 @@ class Marker(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.pos = 0
+        self.tick = 0
         self.offset = 0
         self.scale = 1
         self.setMouseTracking(True)
@@ -165,26 +165,24 @@ class Marker(QtWidgets.QWidget):
         # The event pos is relative to the bounding box of the widget, so we calculate
         # how much it should move based on how far from the center the mouse moved
         if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
-            offset = event.pos().x() - 8
-            pos = self.posToTick(self.tickToPos(self.pos) + offset)
-            self.setPos(pos)
-            self.moved.emit(pos)
-        return
+            offset = event.pos().x()
+            tick = self.posToTick(self.tickToPos(self.tick) + offset)
+            self.setTick(tick)
+            self.moved.emit(tick)
 
     def posToTick(self, pos):
         return (pos + self.offset) / (self.scale * BLOCK_SIZE)
 
     def tickToPos(self, tick: float) -> int:
-        return round(tick * self.scale * BLOCK_SIZE - self.offset)
+        return round(tick * self.scale * BLOCK_SIZE) - self.width() // 2
 
     def updatePos(self):
-        # TODO: rename this attribute. pos() is a method of QWidget
-        self.move(self.tickToPos(self.pos - 8), 0)
+        self.move(self.tickToPos(self.tick), 0)
 
     @QtCore.pyqtSlot(float)
-    def setPos(self, pos: float):
+    def setTick(self, tick: float):
         """Set the position of the marker, in ticks."""
-        self.pos = max(0, pos)
+        self.tick = max(0, tick)
         self.updatePos()
 
     @QtCore.pyqtSlot(int)
@@ -240,7 +238,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
 
     @QtCore.pyqtSlot(float)
     def setPlaybackPosition(self, tick):
-        self.marker.setPos(tick)
+        self.marker.setTick(tick)
         self.scene().doPlayback(tick)
         self.updateScroll(int(tick * BLOCK_SIZE))
 
