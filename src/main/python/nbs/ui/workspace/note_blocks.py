@@ -127,7 +127,7 @@ class Marker(QtWidgets.QWidget):
 
     moved = QtCore.pyqtSignal(float)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(parent)
         self.tick = 0
         self.offset = 0
@@ -138,20 +138,18 @@ class Marker(QtWidgets.QWidget):
         self.setFixedWidth(16)
         self.raise_()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         painter = QtGui.QPainter()
         painter.begin(self)
-        markerColor = QtCore.Qt.GlobalColor.green
+        markerColor = QtCore.Qt.GlobalColor.black
         pen = QtGui.QPen(markerColor)
         pen.setWidth(2)
         painter.setPen(pen)
-        # pos = self.tickToPos(self.markerPos)
-        # painter.drawLine(pos, 0, pos, self.height())
         painter.drawLine(8, 0, 8, self.height())
         painter.fillPath(self.getMarkerHead(), QtGui.QBrush(markerColor))
         painter.end()
 
-    def getMarkerHead(self):
+    def getMarkerHead(self) -> QtGui.QPainterPath:
         point1 = QtCore.QPoint(0, 0)
         point2 = QtCore.QPoint(16, 0)
         point3 = QtCore.QPoint(8, 16)
@@ -161,7 +159,7 @@ class Marker(QtWidgets.QWidget):
         path.addRegion(region)
         return path
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         # The event pos is relative to the bounding box of the widget, so we calculate
         # how much it should move based on how far from the center the mouse moved
         if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
@@ -170,29 +168,29 @@ class Marker(QtWidgets.QWidget):
             self.setTick(tick)
             self.moved.emit(tick)
 
-    def posToTick(self, pos):
+    def posToTick(self, pos: int) -> float:
         return (pos + self.offset) / (self.scale * BLOCK_SIZE)
 
     def tickToPos(self, tick: float) -> int:
         return round(tick * self.scale * BLOCK_SIZE) - self.width() // 2
 
-    def updatePos(self):
+    def updatePos(self) -> None:
         self.move(self.tickToPos(self.tick), 0)
 
     @QtCore.pyqtSlot(float)
-    def setTick(self, tick: float):
+    def setTick(self, tick: float) -> None:
         """Set the position of the marker, in ticks."""
         self.tick = max(0, tick)
         self.updatePos()
 
     @QtCore.pyqtSlot(int)
-    def setOffset(self, value):
-        self.offset = value
+    def setOffset(self, offset: int) -> None:
+        self.offset = offset
         self.updatePos()
 
     @QtCore.pyqtSlot(float)
-    def setScale(self, value):
-        self.scale = value
+    def setScale(self, scale: float) -> None:
+        self.scale = scale
         self.updatePos()
 
 
