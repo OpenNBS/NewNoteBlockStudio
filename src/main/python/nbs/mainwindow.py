@@ -94,7 +94,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Selection
         self.noteBlockArea.blockCountChanged.connect(Actions.setBlockCount)
         self.noteBlockArea.selectionChanged.connect(Actions.setSelectionStatus)
-        self.noteBlockArea.selectionChanged.connect(lambda: Actions.setClipboard(True))
 
         Actions.cutAction.triggered.connect(self.noteBlockArea.cutSelection)
         Actions.copyAction.triggered.connect(self.noteBlockArea.copySelection)
@@ -122,6 +121,9 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.noteBlockArea.pasteSelection(
                 self.clipboardManager.getContent()
             )
+        )
+        self.clipboardManager.clipboardCountChanged.connect(
+            lambda length: Actions.setClipboard(length > 0)
         )
 
         # Playback

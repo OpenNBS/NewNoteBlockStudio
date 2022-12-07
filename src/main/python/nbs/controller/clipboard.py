@@ -18,6 +18,8 @@ class ClipboardController(QtCore.QObject):
     ) -> None:
         super().__init__(parent)
         self._clipboard = clipboard
+        self._clipboard.dataChanged.connect(self._onClipboardChanged)
+        self._content: List[Note] = []
 
     def _getSelectionMimeData(self, notes: List[Note]) -> QtCore.QMimeData:
         mimeData = QtCore.QMimeData()
@@ -42,6 +44,19 @@ class ClipboardController(QtCore.QObject):
     def _getMimeData(self) -> QtCore.QMimeData:
         return self._clipboard.mimeData()
 
+    def _onClipboardChanged(self) -> None:
+        """
+        Called when the clipboard content changes, either by a user action or by
+        an external program.
+        """
+
+        try:
+            self._content = self._loadSelectionMimeData(self._clipboard.mimeData())
+        except ValueError:
+            self._content = []
+        self.clipboardChanged.emit(self._content)
+        self.clipboardCountChanged.emit(len(self._content))
+
     @QtCore.pyqtSlot(list)
     def setContent(self, notes: List[Note]) -> None:
         self._setMimeData(self._getSelectionMimeData(notes))
@@ -50,4 +65,4 @@ class ClipboardController(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def getContent(self) -> List[Note]:
-        return self._loadSelectionMimeData(self._getMimeData())
+        return self._content
