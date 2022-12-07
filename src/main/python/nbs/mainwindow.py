@@ -107,6 +107,12 @@ class MainWindow(QtWidgets.QMainWindow):
         Actions.invertSelectionAction.triggered.connect(
             self.noteBlockArea.invertSelection
         )
+        self.noteBlockArea.selectAllLeftActionEnabled.connect(
+            Actions.selectAllLeftAction.setEnabled
+        )
+        self.noteBlockArea.selectAllRightActionEnabled.connect(
+            Actions.selectAllRightAction.setEnabled
+        )
         Actions.selectAllLeftAction.triggered.connect(self.noteBlockArea.selectAllLeft)
         Actions.selectAllRightAction.triggered.connect(
             self.noteBlockArea.selectAllRight

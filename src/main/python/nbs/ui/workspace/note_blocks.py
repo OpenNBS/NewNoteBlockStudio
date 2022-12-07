@@ -11,7 +11,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from nbs.core.context import appctxt
 from nbs.core.data import Instrument, Layer, Note, default_instruments
 from nbs.core.utils import *
-from nbs.ui.actions import Actions  # TODO: remove dependency
 
 from .constants import *
 
@@ -323,6 +322,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     ########## Public slots ##########
     selectionChanged = QtCore.pyqtSignal(int)
     selectionCopied = QtCore.pyqtSignal(list)
+    selectAllLeftActionEnabled = QtCore.pyqtSignal(bool)
+    selectAllRightActionEnabled = QtCore.pyqtSignal(bool)
     blockCountChanged = QtCore.pyqtSignal(int)
     blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
     tickPlayed = QtCore.pyqtSignal(list)
@@ -401,7 +402,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         self.menuClickPos = event.scenePos()
-        self.toggleSelectLeftRightActions(event.scenePos())
+        self.toggleSelectLeftRightActions(event.scenePos().x())
         self.menu.exec(event.screenPos())
         return super().contextMenuEvent(event)
 
@@ -412,18 +413,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def onTriggerMenu(self):
         self.isClosingMenu = False
 
-    def toggleSelectLeftRightActions(self, pos: Union[QtCore.QPoint, QtCore.QPointF]):
+    def toggleSelectLeftRightActions(self, pos: int):
         bbox = self.itemsBoundingRect()
-
-        if pos.x() < bbox.left():
-            Actions.selectAllLeftAction.setEnabled(False)
-        else:
-            Actions.selectAllLeftAction.setEnabled(True)
-
-        if pos.x() > bbox.right():
-            Actions.selectAllRightAction.setEnabled(False)
-        else:
-            Actions.selectAllRightAction.setEnabled(True)
+        self.selectAllLeftActionEnabled.emit(pos > bbox.left())
+        self.selectAllRightActionEnabled.emit(pos < bbox.right())
 
     ########## SLOTS ##########
 
