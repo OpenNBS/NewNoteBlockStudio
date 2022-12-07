@@ -17,7 +17,7 @@ from nbs.ui.actions import (
 )
 from nbs.ui.dialog.instrument_settings import InstrumentSettingsDialog
 from nbs.ui.file import getLoadSongDialog
-from nbs.ui.menus import MenuBar
+from nbs.ui.menus import EditMenu, MenuBar
 from nbs.ui.status_bar import StatusBar
 from nbs.ui.toolbar import ToolBar
 from nbs.ui.workspace import *
@@ -76,7 +76,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.addToolBar(self.instrumentBar)
         self.setStatusBar(self.statusBar)
 
-        self.noteBlockArea = NoteBlockArea(layers=self.layers)
+        self.noteBlockAreaCtxMenu = EditMenu(isFloat=True)
+        self.noteBlockArea = NoteBlockArea(
+            layers=self.layers, menu=self.noteBlockAreaCtxMenu
+        )
         self.layerArea = LayerArea()
         self.timeBar = TimeBar()
         self.piano = PianoWidget(keyCount=88, offset=9, validRange=(33, 57))

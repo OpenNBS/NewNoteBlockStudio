@@ -12,7 +12,6 @@ from nbs.core.context import appctxt
 from nbs.core.data import Instrument, Layer, Note, default_instruments
 from nbs.core.utils import *
 from nbs.ui.actions import Actions  # TODO: remove dependency
-from nbs.ui.menus import EditMenu  # TODO: remove dependency
 
 from .constants import *
 
@@ -328,10 +327,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
     tickPlayed = QtCore.pyqtSignal(list)
 
-    def __init__(self, layers: Sequence[Layer], parent=None):
+    def __init__(self, layers: Sequence[Layer], menu: QtWidgets.QMenu, parent=None):
         super().__init__(parent, objectName=__class__.__name__)
         self.view = NoteBlockView(self)
         self.layers = layers
+        self.menu = menu
         self.selection = QtWidgets.QRubberBand(
             QtWidgets.QRubberBand.Shape.Rectangle, parent=self.view.viewport()
         )
@@ -395,7 +395,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     ########## MENU ##########
 
     def initMenu(self):
-        self.menu = EditMenu(self.view, isFloat=True)
         # Dismissing a menu should "cancel" the next click, but triggering an option should not.
         self.menu.aboutToHide.connect(self.onDismissMenu)
         self.menu.triggered.connect(self.onTriggerMenu)
