@@ -9,7 +9,7 @@ from typing import Generator, List, Optional, Sequence, Tuple, Union
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from nbs.core.context import appctxt
-from nbs.core.data import Instrument, Layer, default_instruments
+from nbs.core.data import Instrument, Layer, Note, default_instruments
 from nbs.core.utils import *
 from nbs.ui.actions import Actions  # TODO: remove dependency
 from nbs.ui.menus import EditMenu  # TODO: remove dependency
@@ -323,7 +323,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## Public slots ##########
     selectionChanged = QtCore.pyqtSignal(int)
-    clipboardChanged = QtCore.pyqtSignal()
+    selectionCopied = QtCore.pyqtSignal(list)
     blockCountChanged = QtCore.pyqtSignal(int)
     blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
     tickPlayed = QtCore.pyqtSignal(list)
@@ -352,7 +352,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.currentInstrument = 0
         self.minimumLayerCount = 0
         self.initUI()
-        self.initClipboard()
         self.initPlayback()
 
     ########## UI ##########
@@ -698,53 +697,54 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## CLIPBOARD ##########
 
-    def getSelectionData(self) -> Generator[Tuple[int, ...], None, None]:
+    def getSelectionData(self) -> Generator[Note, None, None]:
         origin = self.selectionBoundingRect().topLeft()
         for block in self.selectedItems():
             if isinstance(block, NoteBlock):
                 x = (block.x() - origin.x()) // BLOCK_SIZE
                 y = (block.y() - origin.y()) // BLOCK_SIZE
-                data = (x, y, *block.getData())
-                yield data
+                # TODO: Use composition and make a Note a member of NoteBlock
+                note = Note(
+                    x,
+                    y,
+                    block.ins,
+                    block.key,
+                    block.vel,
+                    block.pan,
+                    block.pit,
+                )
+                yield note
 
-    def getSelectionDataAsList(self) -> List[Tuple[int, ...]]:
-        return list(self.getSelectionData())
-
-    def getSelectionMimeData(self) -> QtCore.QMimeData:
-        mimeData = QtCore.QMimeData()
-        mimeData.setData(
-            "application/nbs-noteblock-selection",
-            QtCore.QByteArray(pickle.dumps(self.getSelectionDataAsList())),
-        )
-        return mimeData
-
-    def loadSelectionMimeData(self, mimeData: QtCore.QMimeData):
-        if mimeData.hasFormat("application/nbs-noteblock-selection"):
-            data = pickle.loads(mimeData.data("application/nbs-noteblock-selection"))
-            for x, y, *data in data:
-                block = self.addBlock(x, y, *data)
-                block.setSelected(True)
-            self.updateBlockCount()
-            self.updateSelectionStatus()
-            self.selectionChanged.emit(self.selectionStatus)
-
-    def initClipboard(self):
-        self.clipboard = QtWidgets.QApplication.clipboard()
-        self.clipboard.dataChanged.connect(self.clipboardChanged)
+    @QtCore.pyqtSlot()
+    def loadSelection(self, notes: List[Note]) -> None:
+        for note in notes:
+            block = self.addBlock(
+                note.tick,
+                note.layer,
+                note.key,
+                note.instrument,
+                note.velocity,
+                note.panning,
+                note.pitch,
+            )
+            block.setSelected(True)
+        self.updateBlockCount()
+        self.updateSelectionStatus()
+        self.selectionChanged.emit(self.selectionStatus)
 
     @QtCore.pyqtSlot()
     def copySelection(self):
-        self.clipboard.setMimeData(self.getSelectionMimeData())
+        self.selectionCopied.emit(list(self.getSelectionData()))
 
     @QtCore.pyqtSlot()
     def cutSelection(self):
         self.copySelection()
         self.deleteSelection()
 
-    @QtCore.pyqtSlot()
-    def pasteSelection(self):
+    @QtCore.pyqtSlot(list)
+    def pasteSelection(self, notes: List[Note]):
         self.deselectAll()
-        self.loadSelectionMimeData(self.clipboard.mimeData())
+        self.loadSelection(notes)
         self.retrieveSelection()
 
     def retrieveSelection(self):

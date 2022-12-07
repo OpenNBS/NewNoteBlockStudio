@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
+from nbs.controller.clipboard import ClipboardController
 from nbs.controller.instrument import InstrumentController
 from nbs.controller.layer import LayerController
 from nbs.controller.playback import PlaybackController
@@ -34,6 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.layers = []
+        self.clipboard = QtGui.QGuiApplication.clipboard()
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
         self.initAudio()
@@ -61,6 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.playbackController = PlaybackController()
         self.instrumentController = InstrumentController(default_instruments)
         self.layerManager = LayerController(self.layers)
+        self.clipboardManager = ClipboardController(self.clipboard)
 
     def initUI(self):
         self.menuBar = MenuBar()
@@ -95,7 +98,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         Actions.cutAction.triggered.connect(self.noteBlockArea.cutSelection)
         Actions.copyAction.triggered.connect(self.noteBlockArea.copySelection)
-        Actions.pasteAction.triggered.connect(self.noteBlockArea.pasteSelection)
         Actions.deleteAction.triggered.connect(self.noteBlockArea.deleteSelection)
 
         Actions.selectAllAction.triggered.connect(self.noteBlockArea.selectAll)
@@ -112,6 +114,14 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         Actions.compressSelectionAction.triggered.connect(
             self.noteBlockArea.compressSelection
+        )
+
+        # Clipboard
+        self.noteBlockArea.selectionCopied.connect(self.clipboardManager.setContent)
+        Actions.pasteAction.triggered.connect(
+            lambda: self.noteBlockArea.pasteSelection(
+                self.clipboardManager.getContent()
+            )
         )
 
         # Playback
