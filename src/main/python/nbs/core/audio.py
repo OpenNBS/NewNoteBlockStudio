@@ -183,7 +183,7 @@ class ResamplingCache:
         return samples.copy()
 
     def add_samples(self, sound_index: int, pitch: float, samples: np.ndarray) -> None:
-        self.cache[(sound_index, pitch)] = samples
+        self.cache[(sound_index, pitch)] = samples.copy()
         print(len(self.cache))
 
     def reset(self):
