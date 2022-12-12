@@ -199,10 +199,14 @@ class MainWindow(QtWidgets.QMainWindow):
         lm.layerSoloChanged.connect(nba.setLayerSolo)
 
     def initTimeBar(self):
-        self.timeBar.tempoChanged.connect(self.playbackController.setTempo)
-        self.playbackController.playbackPositionChanged.connect(
-            self.timeBar.currentTimeChanged
-        )
+        tb = self.timeBar
+        pc = self.playbackController
+
+        tb.tempoChangeRequested.connect(pc.setTempo)
+        pc.tempoChanged.connect(tb.setTempo)
+        pc.playbackPositionChanged.connect(tb.setCurrentTime)
+        pc.songLengthChanged.connect(tb.setSongLength)
+        pc.tempoChanged.connect(self.noteBlockArea.view.setTempo)
 
     def initPiano(self):
         # Set active workspace key

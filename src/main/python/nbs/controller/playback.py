@@ -8,7 +8,9 @@ MSPT = 1000 / TPS
 
 class PlaybackController(QtCore.QObject):
 
+    tempoChanged = QtCore.pyqtSignal(float)
     playbackPositionChanged = QtCore.pyqtSignal(float)
+    songLengthChanged = QtCore.pyqtSignal(int)
 
     def __init__(self, parent: QtCore.QObject = None):
         super().__init__(parent)
@@ -67,3 +69,8 @@ class PlaybackController(QtCore.QObject):
     @QtCore.pyqtSlot(float)
     def setTempo(self, tempo: float):
         self.tempo = tempo
+        self.tempoChanged.emit(tempo)
+
+    def setSongLength(self, ticks: int):
+        self.songLength = ticks
+        self.songLengthChanged.emit(ticks)

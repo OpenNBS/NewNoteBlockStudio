@@ -203,7 +203,6 @@ class ScrollMode(Enum):
 class NoteBlockView(QtWidgets.QGraphicsView):
 
     scaleChanged = QtCore.pyqtSignal(float)
-    tempoChanged = QtCore.pyqtSignal(float)
     playbackPositionChanged = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
@@ -230,7 +229,9 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         self.ruler.clicked.connect(self.playbackPositionChanged)
         self.marker.moved.connect(self.playbackPositionChanged)
 
-        self.tempoChanged.connect(self.ruler.setTempo)
+    @QtCore.pyqtSlot(float)
+    def setTempo(self, tempo: float) -> None:
+        self.ruler.setTempo(tempo)
 
     @QtCore.pyqtSlot(float)
     def setPlaybackPosition(self, tick):

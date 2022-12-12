@@ -48,7 +48,6 @@ class Workspace(QtWidgets.QSplitter):
         self.noteBlockWidget.view.scaleChanged.connect(
             lambda x: self.layerWidget.updateLayerHeight(x * BLOCK_SIZE)
         )
-        self.timeBar.tempoChanged.connect(self.noteBlockWidget.view.tempoChanged)
 
     def resetWorkspace(self):
         self.layerWidget.initUI()
