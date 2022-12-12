@@ -15,6 +15,7 @@ sounddevice = "^0.4.4"
 numpy = "^1.22.4"
 fbs = {git = "https://github.com/Bentroen/fbs.git"}
 samplerate = "^0.1.0"
+python-openal = "^0.4.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.3.0"

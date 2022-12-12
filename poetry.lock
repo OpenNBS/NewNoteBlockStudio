@@ -595,6 +595,14 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "python-openal"
+version = "0.4.1"
+description = "Python OpenAL bindings"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "qtawesome"
 version = "1.2.3"
 description = "FontAwesome icons in PyQt and PySide applications"
