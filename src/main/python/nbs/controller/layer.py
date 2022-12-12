@@ -81,13 +81,16 @@ class LayerController(QtCore.QObject):
 
     @QtCore.pyqtSlot(int, str)
     def loadLayers(self, layers: Sequence[Layer]) -> None:
-        for layer in layers:
-            self.addLayer(layer=layer)
-
-    @QtCore.pyqtSlot()
-    def resetLayers(self) -> None:
-        while len(self.layers) > 0:
-            self.removeLayer(0)
+        for i, layer in enumerate(layers):
+            if i < len(self.layers):
+                self.layers[i] = layer
+                self.layerNameChanged.emit(i, layer.name)
+                self.layerVolumeChanged.emit(i, layer.volume)
+                self.layerPanningChanged.emit(i, layer.panning)
+                self.layerLockChanged.emit(i, layer.lock)
+                self.layerSoloChanged.emit(i, layer.solo)
+            else:
+                self.addLayer(layer=layer)
 
     @QtCore.pyqtSlot()
     @QtCore.pyqtSlot(int)

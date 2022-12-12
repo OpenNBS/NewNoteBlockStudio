@@ -283,7 +283,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         song = Song.from_file(filename)
         self.noteBlockArea.loadNoteData(song.notes)
-        self.layerManager.resetLayers()
         self.layerManager.loadLayers(song.layers)
         self.setCurrentInstrumentActionsManager.currentInstrument = 0
 
