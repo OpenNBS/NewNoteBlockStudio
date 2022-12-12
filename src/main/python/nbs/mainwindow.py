@@ -208,6 +208,8 @@ class MainWindow(QtWidgets.QMainWindow):
         pc.songLengthChanged.connect(tb.setSongLength)
         pc.tempoChanged.connect(self.noteBlockArea.view.setTempo)
 
+        self.noteBlockArea.songLengthChanged.connect(pc.setSongLength)
+
     def initPiano(self):
         # Set active workspace key
         self.piano.activeKeyChanged.connect(self.noteBlockArea.setActiveKey)

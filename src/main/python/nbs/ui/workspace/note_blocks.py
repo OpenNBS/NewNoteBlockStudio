@@ -318,6 +318,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## Private slots ##########
     sceneSizeChanged = QtCore.pyqtSignal(int, int)
+    songHeightChanged = QtCore.pyqtSignal(int)
+    songLengthChanged = QtCore.pyqtSignal(int)
     playbackPositionChanged = QtCore.pyqtSignal(int)
 
     ########## Public slots ##########
@@ -444,6 +446,13 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.setSceneRect(QtCore.QRectF(0, 0, width * BLOCK_SIZE, height * BLOCK_SIZE))
         self.sceneSizeChanged.emit(width, height)
         print(f"Scene size changed to {width}x{height}")
+
+        # left edge of the rightmost block
+        songHeight = max((bbox.bottom() // BLOCK_SIZE) - 1, 0)
+        # top edge of the bottommost block
+        songLength = max((bbox.right() // BLOCK_SIZE) - 1, 0)
+        self.songHeightChanged.emit(songHeight)
+        self.songLengthChanged.emit(songLength)
 
     def getGridPos(self, point):
         """
@@ -793,7 +802,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         y1 = id * BLOCK_SIZE
         y2 = BLOCK_SIZE
         region = QtCore.QRectF(0, y1, self.width(), y2)
-        print(0, y1, self.width(), y2)
         return region
 
     def getRegionBelowLayer(self, id: int) -> QtCore.QRectF:
