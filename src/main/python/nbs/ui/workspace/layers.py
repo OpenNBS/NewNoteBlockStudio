@@ -131,18 +131,18 @@ class LayerBar(QtWidgets.QFrame):
 
         # self.addAction(self.icons["volume"], "Volume")
         # self.addAction(self.icons["stereo"], "Stereo panning")
-        lockAction = self.toolbar.addAction(self.icons["lock"], "Lock this layer")
-        lockAction.setCheckable(True)
-        lockAction.triggered.connect(
+        self.lockAction = self.toolbar.addAction(self.icons["lock"], "Lock this layer")
+        self.lockAction.setCheckable(True)
+        self.lockAction.triggered.connect(
             lambda checked: self.lockChanged.emit(self.id, checked)
         )
 
-        soloAction = self.toolbar.addAction(
+        self.soloAction = self.toolbar.addAction(
             self.icons["solo"],
             "Solo this layer",
         )
-        soloAction.setCheckable(True)
-        soloAction.triggered.connect(
+        self.soloAction.setCheckable(True)
+        self.soloAction.triggered.connect(
             lambda checked: self.soloChanged.emit(self.id, checked)
         )
 
@@ -199,11 +199,11 @@ class LayerBar(QtWidgets.QFrame):
 
     def setLock(self, lock: bool):
         self.lock = lock
-        self.toolbar.actions()[0].setChecked(lock)
+        self.lockAction.setChecked(lock)
 
     def setSolo(self, solo: bool):
         self.solo = solo
-        self.toolbar.actions()[1].setChecked(solo)
+        self.soloAction.setChecked(solo)
 
     # def setSelected(self, selected: bool):
     #    self.selected = selected
