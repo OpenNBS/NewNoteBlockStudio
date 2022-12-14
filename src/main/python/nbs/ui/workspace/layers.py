@@ -299,9 +299,11 @@ class LayerArea(VerticalScrollArea):
         layerBar.selectAllClicked.connect(self.layerSelectRequested)
         layerBar.addClicked.connect(self.layerAddRequested)
         layerBar.removeClicked.connect(self.layerRemoveRequested)
-        layerBar.shiftUpClicked.connect(lambda *a: self.layerMoveRequested.emit(*a, -1))
+        layerBar.shiftUpClicked.connect(
+            lambda id: self.layerMoveRequested.emit(id, id - 1)
+        )
         layerBar.shiftDownClicked.connect(
-            lambda *a: self.layerMoveRequested.emit(*a, +1)
+            lambda id: self.layerMoveRequested.emit(id, id + 1)
         )
 
     def deleteLayer(self, pos: Optional[int] = None):
@@ -340,23 +342,26 @@ class LayerArea(VerticalScrollArea):
         self.deleteLayer(id)
         self.updateLayerIds()
 
-    def moveLayer(self, id, newPos):
-        layer = self.layers[id]
-        self.layout.removeWidget(layer)
-        self.layout.insertWidget(newPos, layer)
-        self.updateLayerIds()
-
-    @QtCore.pyqtSlot(int)
-    def shiftLayerUp(self, id):
-        if id == 0:
-            return
-        self.moveLayer(id, id - 1)
-
-    @QtCore.pyqtSlot(int)
-    def shiftLayerDown(self, id):
-        if id == len(self.layers) - 1:
-            return
-        self.moveLayer(id, id + 1)
+    @QtCore.pyqtSlot(int, int)
+    def swapLayers(self, id1: int, id2: int) -> None:
+        layer1 = self.layout.itemAt(id1).widget()
+        layer2 = self.layout.itemAt(id2).widget()
+        # TODO: replace with setData method receiving a layer
+        tempName = layer1.name
+        tempVolume = layer1.volume
+        tempPanning = layer1.panning
+        tempLock = layer1.locked
+        tempSolo = layer1.solo
+        layer1.setName(layer2.name)
+        layer1.setVolume(layer2.volume)
+        layer1.setPanning(layer2.panning)
+        layer1.setLock(layer2.locked)
+        layer1.setSolo(layer2.solo)
+        layer2.setName(tempName)
+        layer2.setVolume(tempVolume)
+        layer2.setPanning(tempPanning)
+        layer2.setLock(tempLock)
+        layer2.setSolo(tempSolo)
 
     @QtCore.pyqtSlot(int, str)
     def changeLayerName(self, id, name):

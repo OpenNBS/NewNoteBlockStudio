@@ -143,10 +143,6 @@ class LayerController(QtCore.QObject):
         self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, int)
-    def moveLayer(self, id: int, offset: int) -> None:
-        self.swapLayers(id, id + offset)
-
-    @QtCore.pyqtSlot(int, int)
     def swapLayers(self, id1: int, id2: int) -> None:
         self.layers[id1], self.layers[id2] = self.layers[id2], self.layers[id1]
         self.layerSwapped.emit(id1, id2)

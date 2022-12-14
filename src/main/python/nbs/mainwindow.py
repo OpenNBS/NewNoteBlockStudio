@@ -175,7 +175,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect widget to manager
         la.layerAddRequested.connect(lm.addLayer)
         la.layerRemoveRequested.connect(lm.removeLayer)
-        la.layerMoveRequested.connect(lm.moveLayer)
+        la.layerMoveRequested.connect(lm.swapLayers)
         la.layerNameChangeRequested.connect(lm.setLayerName)
         la.layerVolumeChangeRequested.connect(lm.setLayerVolume)
         la.layerPanningChangeRequested.connect(lm.setLayerPanning)
@@ -190,6 +190,7 @@ class MainWindow(QtWidgets.QMainWindow):
         lm.layerSoloChanged.connect(la.changeLayerSolo)
         lm.layerVolumeChanged.connect(la.changeLayerVolume)
         lm.layerPanningChanged.connect(la.changeLayerPanning)
+        lm.layerSwapped.connect(la.swapLayers)
 
         # Connect manager to note block area
         lm.layerAdded.connect(nba.addLayer)
