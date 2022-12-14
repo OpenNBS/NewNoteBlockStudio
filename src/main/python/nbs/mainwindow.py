@@ -195,7 +195,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect manager to note block area
         lm.layerAdded.connect(nba.addLayer)
         lm.layerRemoved.connect(nba.removeLayer)
-        lm.layerSwapped.connect(nba.shiftLayers)
+        lm.layerSwapped.connect(nba.swapLayers)
         lm.layerLockChanged.connect(nba.setLayerLock)
         lm.layerSoloChanged.connect(nba.setLayerSolo)
 

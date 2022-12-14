@@ -854,7 +854,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.deselectAll()
         self.setAreaSelected(self.getLayerRegion(id))
 
-    def shiftLayers(self, id1: int, id2: int):
+    @QtCore.pyqtSlot(int, int)
+    def swapLayers(self, id1: int, id2: int):
         id1, id2 = min(id1, id2), max(id1, id2)
 
         blocks1 = self.getBlocksInLayer(id1)
