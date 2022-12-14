@@ -144,6 +144,8 @@ class LayerController(QtCore.QObject):
 
     @QtCore.pyqtSlot(int, int)
     def swapLayers(self, id1: int, id2: int) -> None:
+        if id1 < 0 or id2 < 0:
+            raise ValueError("Can't swap layers with negative IDs")
         self.layers[id1], self.layers[id2] = self.layers[id2], self.layers[id1]
         self.layerSwapped.emit(id1, id2)
         self.updatePopulatedLayerCount()
