@@ -1,7 +1,7 @@
 import colorsys
 import os
+import random
 from dataclasses import dataclass, field
-from random import randint
 from typing import Any, List, Optional, Sequence, Tuple, Union
 from uuid import UUID, uuid4
 
@@ -15,10 +15,13 @@ PathLike = Union[str, bytes, os.PathLike]
 
 
 def random_color() -> Color:
-    return colorsys.hsv_to_rgb(
-        randint(0, 359),
-        randint(50, 100),
-        randint(50, 100),
+    return tuple(
+        round(x * 255)
+        for x in colorsys.hsv_to_rgb(
+            random.uniform(0, 1),
+            random.uniform(0.5, 1),
+            random.uniform(0.5, 1),
+        )
     )
 
 
@@ -37,7 +40,7 @@ def load_custom_icon(id: int) -> QtGui.QIcon:
 def loadBlockPixmap(color: Color) -> QtGui.QPixmap:
     pixmap = QtGui.QPixmap(32, 32)
     painter = QtGui.QPainter(pixmap)
-    painter.setBrush(QtGui.QColor(*color))
+    painter.setBrush(QtGui.QColor(color[0], color[1], color[2]))
     painter.drawRect(0, 0, pixmap.width(), pixmap.height())
     painter.end()
     return pixmap
@@ -51,7 +54,7 @@ class InstrumentInstance:
             self.icon = load_default_icon(self.__instrument.icon_path)
         else:
             self.icon = load_custom_icon(self.id)
-        self.blockPixmap = loadBlockPixmap(self.__instrument.color)
+        self.blockPixmap = loadBlockPixmap(self.__instrument.color or random_color())
         self.blockCount = 0
         self.loaded = False
         self.isDefault = False
@@ -82,7 +85,13 @@ class InstrumentController(QtCore.QObject):
     instrumentRemoved = QtCore.pyqtSignal(int)
     instrumentSwapped = QtCore.pyqtSignal(int, int)
 
+    instrumentNameChanged = QtCore.pyqtSignal(int, str)
+    instrumentSoundChanged = QtCore.pyqtSignal(int, str)
+    instrumentKeyChanged = QtCore.pyqtSignal(int, int)
+    instrumentPressChanged = QtCore.pyqtSignal(int, bool)
+
     instrumentListUpdated = QtCore.pyqtSignal(list)
+    currentInstrumentChanged = QtCore.pyqtSignal(int)
 
     instrumentSoundLoadRequested = QtCore.pyqtSignal(str)
 
@@ -94,13 +103,13 @@ class InstrumentController(QtCore.QObject):
         self.instruments: List[InstrumentInstance] = []
         if instruments:
             self.loadInstrumentsFromList(instruments)
+        self.currentInstrument = 0
 
     def loadInstrumentsFromList(self, instruments: Sequence[Instrument]) -> None:
-        # TODO: use later for importing instruments from nbs file
         for ins in instruments:
-            self.loadInstrument(ins)
+            self.addInstrument(ins)
 
-    def loadInstrument(self, ins: Instrument) -> InstrumentInstance:
+    def _loadInstrument(self, ins: Instrument) -> InstrumentInstance:
         """Load an instrument into the instrument list, and return the added `InstrumentInstance`."""
         # icon = load_icon(ins.icon_path)
         # iconPixmap = paint_icon(self.noteBlockPixmap, color)
@@ -111,6 +120,7 @@ class InstrumentController(QtCore.QObject):
         self.instruments.append(instrumentInstance)
         return instrumentInstance
 
+    # TODO: clean up this mess of load/add/create
     @QtCore.pyqtSlot()
     def createInstrument(self) -> None:
         customId = len(self.instruments) - len(default_instruments) + 1
@@ -122,7 +132,7 @@ class InstrumentController(QtCore.QObject):
 
     @QtCore.pyqtSlot(Instrument)
     def addInstrument(self, ins: Instrument) -> None:
-        instrumentInstance = self.loadInstrument(ins)
+        instrumentInstance = self._loadInstrument(ins)
         self.instrumentAdded.emit(instrumentInstance)
         self.instrumentSoundLoadRequested.emit(ins.sound_path)
         self.instrumentListUpdated.emit(self.instruments)
@@ -142,9 +152,11 @@ class InstrumentController(QtCore.QObject):
         self.instrumentListUpdated.emit(self.instruments)
 
     def resetInstruments(self) -> None:
-        for instrument in self.instruments:
-            if instrument.isDefault:
-                self.instruments.pop(instrument)
+        first_custom_id = len(default_instruments)
+        while len(self.instruments) > first_custom_id:
+            self.instruments.pop()
+            self.instrumentRemoved.emit(len(self.instruments))
+        self.instrumentListUpdated.emit(self.instruments)
 
     @QtCore.pyqtSlot(int)
     def addBlockToCount(self, id: int) -> None:
@@ -161,14 +173,39 @@ class InstrumentController(QtCore.QObject):
     def setBlockCount(self, id: int, count: int) -> None:
         self.instruments[id].blockCount = count
 
+    @QtCore.pyqtSlot(int)
+    def setCurrentInstrument(self, id: int) -> None:
+        if id > len(self.instruments):
+            raise IndexError(f"Instrument id out of range: {id}")
+        self.currentInstrument = id
+        self.currentInstrumentChanged.emit(id)
+
     @QtCore.pyqtSlot(int, str)
     def setInstrumentName(self, id: int, name: str) -> None:
         self.instruments[id].name = name
+        self.instrumentNameChanged.emit(id, name)
+        self.instrumentChanged.emit(id, self.instruments[id])
+        self.instrumentListUpdated.emit(self.instruments)
 
-    @QtCore.pyqtSlot(int, tuple)
-    def setInstrumentColor(self, id: int, color: Color) -> None:
-        self.instruments[id].color = color
+    @QtCore.pyqtSlot(int, str)
+    def setInstrumentSound(self, id: int, sound: str) -> None:
+        ins = self.instruments[id]
+        ins.sound_path = sound
+        self.instrumentSoundChanged.emit(id, sound)
+        self.instrumentSoundLoadRequested.emit(ins.sound_path)
+        self.instrumentChanged.emit(id, self.instruments[id])
+        self.instrumentListUpdated.emit(self.instruments)
+
+    @QtCore.pyqtSlot(int, int)
+    def setInstrumentKey(self, id: int, key: int) -> None:
+        self.instruments[id].key = key
+        self.instrumentKeyChanged.emit(id, key)
+        self.instrumentChanged.emit(id, self.instruments[id])
+        self.instrumentListUpdated.emit(self.instruments)
 
     @QtCore.pyqtSlot(int, bool)
     def setInstrumentPress(self, id: int, press: bool) -> None:
         self.instruments[id].press = press
+        self.instrumentPressChanged.emit(id, press)
+        self.instrumentChanged.emit(id, self.instruments[id])
+        self.instrumentListUpdated.emit(self.instruments)

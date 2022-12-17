@@ -12,15 +12,6 @@ CURRENT_NBS_VERSION = 5
 
 
 @dataclass
-class Instrument:
-    id: int
-    name: str
-    file: str
-    pitch: int = 45
-    press_key: bool = True
-
-
-@dataclass
 class Note:
     tick: int
     layer: int
@@ -53,7 +44,15 @@ class Song:
             )
             for layer in song.layers
         ]
-        instruments = song.instruments
+        instruments = [
+            Instrument(
+                name=ins.name,
+                sound_path=ins.file,
+                pitch=ins.pitch,
+                press=ins.press_key,
+            )
+            for ins in song.instruments
+        ]
         return cls(header, notes, layers, instruments)
 
     def save(self, path: PathLike, version: int = CURRENT_NBS_VERSION):

@@ -56,7 +56,7 @@ class ToolBar(QtWidgets.QToolBar):
 
         self.addAction("Compatible")
 
-    @QtCore.pyqtSlot(object)
+    @QtCore.pyqtSlot(list)
     def populateInstruments(self):
         for button in self.instrumentButtonGroup.buttons():
             button.deleteLater()

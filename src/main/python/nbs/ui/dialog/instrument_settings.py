@@ -114,20 +114,35 @@ class InstrumentTable(QtWidgets.QTableWidget):
 
         self.resizeRowToContents(row)
 
+    def editRow(self, row: int, instrument: InstrumentInstance):
+        self.item(row, 0).setText(instrument.name)
+        self.item(row, 1).setText(instrument.sound_path)
+        self.cellWidget(row, 2).setValue(instrument.pitch)
+        self.cellWidget(row, 3).setChecked(instrument.press)
+
+    def shiftRows(self, row1: int, row2: int) -> None:
+        for col in range(self.columnCount()):
+            item = self.takeItem(row1, col)
+            self.setItem(row1, col, self.takeItem(row2, col))
+            self.setItem(row2, col, item)
+        self.setCurrentCell(row2, 0)
+
 
 class InstrumentSettingsDialog(QtWidgets.QDialog):
 
     instrumentAddRequested = QtCore.pyqtSignal()
+    instrumentRemoveRequested = QtCore.pyqtSignal(int)
+    instrumentShiftRequested = QtCore.pyqtSignal(int, int)
+    instrumentNameChangeRequested = QtCore.pyqtSignal(int, str)
+    instrumentSoundFileChangeRequested = QtCore.pyqtSignal(int, str)
+    instrumentKeyChangeRequested = QtCore.pyqtSignal(int, int)
+    instrumentPressChangeRequested = QtCore.pyqtSignal(int, bool)
 
     def __init__(self, instruments, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Instrument Settings")
         self.instruments = instruments
         self.initUI()
-
-    def setInstruments(self, instruments: Sequence[InstrumentInstance]):
-        pass
-        # self.instruments = instruments
 
     def initUI(self):
         self.resize(QtCore.QSize(640, 400))
@@ -169,19 +184,21 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
             "Add", clicked=self.onAddInstrument
         )
         self.footer.addWidget(self.addInstrumentButton)
-        self.removeInstrumentButton = QtWidgets.QPushButton("Remove")
-        # self.removeInstrumentButton.clicked.connect(self.onRemoveInstrument)
+        self.removeInstrumentButton = QtWidgets.QPushButton(
+            "Remove", clicked=self.onRemoveInstrument
+        )
         self.footer.addWidget(self.removeInstrumentButton)
-        self.shiftInstrumentUpButton = QtWidgets.QPushButton("Shift up")
-        # self.shiftInstrumentUpButton.clicked.connect(self.onShiftInstrumentUp)
+        self.shiftInstrumentUpButton = QtWidgets.QPushButton(
+            "Shift up", clicked=self.onShiftInstrumentUp
+        )
         self.footer.addWidget(self.shiftInstrumentUpButton)
-        self.shiftInstrumentDownButton = QtWidgets.QPushButton("Shift down")
-        # self.shiftInstrumentDownButton.clicked.connect(self.onShiftInstrumentDown)
+        self.shiftInstrumentDownButton = QtWidgets.QPushButton(
+            "Shift down", clicked=self.onShiftInstrumentDown
+        )
         self.footer.addWidget(self.shiftInstrumentDownButton)
 
         self.okButton = QtWidgets.QPushButton("OK", clicked=self.accept)
         self.footer.addWidget(self.okButton)
-        # self.cancelButton = QtWidgets.QPushButton("Cancel", self, clicked=self.reject)
 
         self.table.currentCellChanged.connect(self.updateSelection)
 
@@ -198,11 +215,44 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
             self.shiftInstrumentUpButton.setEnabled(False)
             self.shiftInstrumentDownButton.setEnabled(False)
 
+    # These signals of request a change that will be handled externally,
+    # which will emit the proper signals so the changes are reflected here.
+
     @QtCore.pyqtSlot()
     def onAddInstrument(self):
         # Request a new instrument be added
         self.instrumentAddRequested.emit()
 
+    def onRemoveInstrument(self):
+        self.instrumentRemoveRequested.emit(self.table.currentRow())
+
+    def onShiftInstrumentUp(self):
+        if self.table.currentRow() < len(self.instruments):
+            return
+        self.instrumentShiftRequested.emit(self.table.currentRow(), -1)
+
+    def onShiftInstrumentDown(self):
+        if self.table.currentRow() > self.table.rowCount() - 1:
+            return
+        self.instrumentShiftRequested.emit(self.table.currentRow(), 1)
+
+    def onInstrumentNameChanged(self, name):
+        self.instrumentNameChanged.emit(self.table.currentRow(), name)
+
+    # These signals do the actual work of visually updating the instrument table.
+
     @QtCore.pyqtSlot(InstrumentInstance)
     def addInstrument(self, instrument: InstrumentInstance):
         self.table.addRow(instrument)
+
+    @QtCore.pyqtSlot(int)
+    def removeInstrument(self, id: int):
+        self.table.removeRow(id)
+
+    @QtCore.pyqtSlot(int, InstrumentInstance)
+    def editInstrument(self, id: int, instrument: InstrumentInstance) -> None:
+        self.table.editRow(id, instrument)
+
+    @QtCore.pyqtSlot(int, int)
+    def shiftInstrument(self, id: int, shift: int):
+        self.table.shiftRows(id, id + shift)

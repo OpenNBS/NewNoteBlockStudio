@@ -41,13 +41,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initAudio()
         self.initControllers()
         self.initUI()
+        self.initDialogs()
         self.initNoteBlocks()
         self.initLayers()
         self.initTimeBar()
         self.initPiano()
         self.initInstruments()
         self.initFile()
-        self.initDialogs()
 
     def initAudio(self):
         self.audioThread = QtCore.QThread()
@@ -228,7 +228,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initInstruments(self):
 
-        self.instrumentController = InstrumentController(default_instruments)
+        self.instruments = [*default_instruments]
+        self.instrumentController = InstrumentController(instruments=self.instruments)
+
+        control = self.instrumentController
+        dialog = self.instrumentSettingsDialog
+        setAction = self.setCurrentInstrumentActionsManager
+        changeAction = self.changeInstrumentActionsManager
 
         sounds = []
         for ins in default_instruments:
@@ -237,13 +243,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.soundLoadRequested.emit(sounds)
 
-        instrumentList = self.instrumentController.instruments
+        # TODO: These ActionManager classes should be more high-level, and
+        # part of a more general 'ActionManager' class
 
         # Set current instrument actions
-        self.setCurrentInstrumentActionsManager.updateActions(instrumentList)
+        self.setCurrentInstrumentActionsManager.updateActions(self.instruments)
         self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
-            # TODO: connect this to future InstrumentManager object that will notify widgets
-            self.noteBlockArea.setCurrentInstrument
+            control.setCurrentInstrument
             # self.centralWidget().workspace.piano.setValidRange(ins)
         )
         self.setCurrentInstrumentActionsManager.currentInstrument = 0
@@ -256,9 +262,35 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         # 'Change instrument...' actions
-        self.changeInstrumentActionsManager.updateActions(instrumentList)
+        self.changeInstrumentActionsManager.updateActions(self.instruments)
         self.changeInstrumentActionsManager.instrumentChanged.connect(
             self.noteBlockArea.changeSelectionInstrument
+        )
+
+        # Toolbars and menus
+        control.instrumentListUpdated.connect(self.toolBar.populateInstruments)
+        control.instrumentListUpdated.connect(self.menuBar.updateInstruments)
+
+        # Instrument Settings dialog
+        dialog.instrumentAddRequested.connect(control.createInstrument)
+        dialog.instrumentRemoveRequested.connect(control.removeInstrument)
+        dialog.instrumentNameChangeRequested.connect(control.setInstrumentName)
+        dialog.instrumentSoundFileChangeRequested.connect(control.setInstrumentSound)
+        dialog.instrumentKeyChangeRequested.connect(control.setInstrumentKey)
+        dialog.instrumentPressChangeRequested.connect(control.setInstrumentPress)
+        dialog.instrumentShiftRequested.connect(control.swapInstruments)
+
+        control.instrumentAdded.connect(dialog.addInstrument)
+        control.instrumentRemoved.connect(dialog.removeInstrument)
+        control.instrumentChanged.connect(dialog.editInstrument)
+        control.instrumentSwapped.connect(dialog.shiftInstrument)
+
+        control.instrumentListUpdated.connect(self.toolBar.populateInstruments)
+        control.instrumentListUpdated.connect(
+            self.changeInstrumentActionsManager.updateActions
+        )
+        control.instrumentListUpdated.connect(
+            self.setCurrentInstrumentActionsManager.updateActions
         )
 
     def initFile(self):
@@ -274,12 +306,6 @@ class MainWindow(QtWidgets.QMainWindow):
         Actions.instrumentSettingsAction.triggered.connect(
             self.instrumentSettingsDialog.show
         )
-        self.instrumentSettingsDialog.instrumentAddRequested.connect(
-            self.instrumentController.createInstrument
-        )
-        self.instrumentController.instrumentAdded.connect(
-            self.instrumentSettingsDialog.addInstrument
-        )
 
     @QtCore.pyqtSlot()
     def loadSong(self):
@@ -291,6 +317,8 @@ class MainWindow(QtWidgets.QMainWindow):
         song = Song.from_file(filename)
         self.noteBlockArea.loadNoteData(song.notes)
         self.layerManager.loadLayers(song.layers)
+        self.instrumentController.resetInstruments()
+        self.instrumentController.loadInstrumentsFromList(song.instruments)
         self.playbackController.setTempo(song.header.tempo)
         self.setCurrentInstrumentActionsManager.currentInstrument = 0
 

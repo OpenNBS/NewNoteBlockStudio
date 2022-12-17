@@ -14,9 +14,9 @@ class Layer:
 @dataclass
 class Instrument:
     name: str
-    color: Tuple[int, int, int]
     pitch: int = 45
     press: bool = False
+    color: Optional[Tuple[int, int, int]] = None
     sound_path: Optional[str] = None
     icon_path: Optional[str] = None
 

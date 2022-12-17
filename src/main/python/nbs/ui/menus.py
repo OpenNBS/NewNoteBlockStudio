@@ -139,7 +139,10 @@ class EditMenu(QtWidgets.QMenu):
         Actions.selectAllButInstrumentAction.setText(
             f"Select all but {instrument.name}"
         )
-        self.changeInstrumentMenu.changeCurrentInstrument(0)
+
+    def updateInstruments(self):
+        pass
+        # self.changeInstrumentMenu.updateInstruments()
 
 
 class SettingsMenu(QtWidgets.QMenu):
@@ -161,6 +164,12 @@ class SettingsMenu(QtWidgets.QMenu):
 
         self.addAction(Actions.deviceManagerAction)
         self.addAction(Actions.preferencesAction)
+
+    def changeCurrentInstrument(self, instrument: Instrument):
+        self.instrumentMenu.changeCurrentInstrument(0)
+
+    def updateInstruments(self):
+        self.instrumentMenu.populateInstruments()
 
 
 class HelpMenu(QtWidgets.QMenu):
@@ -196,3 +205,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.addMenu(self.editMenu)
         self.addMenu(self.settingsMenu)
         self.addMenu(self.helpMenu)
+
+    def updateInstruments(self):
+        self.editMenu.updateInstruments()
+        self.settingsMenu.updateInstruments()
