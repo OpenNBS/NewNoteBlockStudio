@@ -5,6 +5,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from nbs.controller.instrument import InstrumentInstance
 
 
+def openSoundFileDialog() -> str:
+    filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+        None,
+        "Select sound file",
+        "",
+        "Sound files (*.wav *.mp3 *.ogg *.flac)",
+    )
+    return filename
+
+
 class InstrumentKeySpinBox(QtWidgets.QSpinBox):
     def __init__(self, value: int = 45, disabled: bool = False, parent=None):
         super().__init__()
@@ -20,6 +30,16 @@ class InstrumentKeySpinBox(QtWidgets.QSpinBox):
 
     def valueFromText(self, text: str) -> int:
         return super().valueFromText(text)
+
+
+class InstrumentNameCell(QtWidgets.QTableWidgetItem):
+    def __init__(self, value: str = "None", disabled: bool = False, parent=None):
+        super().__init__(parent)
+        self.setText(value)
+        if disabled:
+            self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEnabled)
+            self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+            self.setForeground(QtCore.Qt.GlobalColor.gray)
 
 
 class InstrumentSoundFileCell(QtWidgets.QTableWidgetItem):
@@ -69,10 +89,17 @@ class InstrumentPressCheckBox(QtWidgets.QWidget):
 
 
 class InstrumentTable(QtWidgets.QTableWidget):
+
+    soundNameCellChanged = QtCore.pyqtSignal(int, str)
+    soundFileCellChanged = QtCore.pyqtSignal(int)
+    soundKeyCellChanged = QtCore.pyqtSignal(int, int)
+    soundPressCellChanged = QtCore.pyqtSignal(int, bool)
+
     def __init__(self, instruments: Sequence[InstrumentInstance], parent=None):
         super().__init__(parent)
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(["Name", "Sound file", "Key", "Press"])
+        self.lastAddedRow = 0
 
         # Select one row at a time
         self.setSelectionMode(QtWidgets.QTableWidget.SingleSelection)
@@ -90,20 +117,43 @@ class InstrumentTable(QtWidgets.QTableWidget):
         vHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Fixed)
         vHeader.setHighlightSections(False)
 
-        for row, instrument in enumerate(instruments):
+        for instrument in instruments:
             self.addRow(instrument)
+
+        # Individual cells have no slots to report interactions such as
+        # double-clicking and editing, so we must check for it on the entire table
+        self.cellChanged.connect(self.onChangeCell)
+        self.cellDoubleClicked.connect(self.onDoubleClickCell)
+
+    def onChangeCell(self, row: int, col: int) -> None:
+        # Since the setItem method triggers a cellChanged signal,
+        # adding a new row causes this method to be called. To prevent
+        # this, we check if the row was the last added row
+        if col == 0 and row != self.lastAddedRow:
+            self.soundNameCellChanged.emit(row, self.item(row, col).text())
+
+    def onDoubleClickCell(self, row: int, col: int) -> None:
+        if col == 1:
+            self.soundFileCellChanged.emit(row)
 
     def addRow(self, instrument: InstrumentInstance, row: Optional[int] = None):
         row = row if row is not None else self.rowCount()
+        self.lastAddedRow = row  # Used to prevent triggering onChangeCell on new row
 
-        nameColItem = QtWidgets.QTableWidgetItem(instrument.name)
+        nameColItem = InstrumentNameCell(instrument.name, disabled=instrument.isDefault)
         soundFileColItem = InstrumentSoundFileCell(
             instrument.sound_path, disabled=instrument.isDefault
         )
         keyColItem = InstrumentKeySpinBox(
             value=instrument.pitch, disabled=instrument.isDefault
         )
-        pressColItem = InstrumentPressCheckBox(checked=instrument.press)
+        keyColItem.valueChanged.connect(
+            lambda value: self.soundKeyCellChanged.emit(row, value)
+        )
+        pressColItem = InstrumentPressCheckBox(checked=instrument.press, disabled=False)
+        pressColItem.checked.connect(
+            lambda value: self.soundPressCellChanged.emit(row, value)
+        )
 
         self.insertRow(row)
         self.setItem(row, 0, nameColItem)
@@ -113,6 +163,8 @@ class InstrumentTable(QtWidgets.QTableWidget):
         self.resizeRowToContents(row)
 
     def editRow(self, row: int, instrument: InstrumentInstance):
+        if row > self.rowCount() - 1:
+            return
         self.item(row, 0).setText(instrument.name)
         self.item(row, 1).setText(instrument.sound_path)
         self.cellWidget(row, 2).setValue(instrument.pitch)
@@ -199,12 +251,18 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
         self.footer.addWidget(self.okButton)
 
         self.table.currentCellChanged.connect(self.updateSelection)
+        self.table.soundNameCellChanged.connect(self.onInstrumentNameChanged)
+        self.table.soundFileCellChanged.connect(self.onInstrumentSoundFileChanged)
+        self.table.soundKeyCellChanged.connect(self.onInstrumentKeyChanged)
+        self.table.soundPressCellChanged.connect(self.onInstrumentPressChanged)
 
     @QtCore.pyqtSlot(int, int, int, int)
     def updateSelection(self, selectedRow, *_):
         if self.table.selectedItems():
             self.removeInstrumentButton.setEnabled(True)
-            self.shiftInstrumentUpButton.setEnabled(selectedRow > 0)
+            self.shiftInstrumentUpButton.setEnabled(
+                selectedRow > 16
+            )  # TODO: replace with default instrument count
             self.shiftInstrumentDownButton.setEnabled(
                 selectedRow < self.table.rowCount() - 1
             )
@@ -213,29 +271,40 @@ class InstrumentSettingsDialog(QtWidgets.QDialog):
             self.shiftInstrumentUpButton.setEnabled(False)
             self.shiftInstrumentDownButton.setEnabled(False)
 
-    # These signals of request a change that will be handled externally,
+    # These signals request a change that will be handled externally,
     # which will emit the proper signals so the changes are reflected here.
 
-    @QtCore.pyqtSlot()
     def onAddInstrument(self):
         # Request a new instrument be added
         self.instrumentAddRequested.emit()
 
-    def onRemoveInstrument(self):
-        self.instrumentRemoveRequested.emit(self.table.currentRow())
+    def onRemoveInstrument(self, id: int):
+        self.instrumentRemoveRequested.emit(id)
 
-    def onShiftInstrumentUp(self):
-        if self.table.currentRow() < len(self.instruments):
+    def onShiftInstrumentUp(self, id: int) -> None:
+        if id < len(self.instruments):
             return
-        self.instrumentShiftRequested.emit(self.table.currentRow(), -1)
+        self.instrumentShiftRequested.emit(id, -1)
 
-    def onShiftInstrumentDown(self):
-        if self.table.currentRow() > self.table.rowCount() - 1:
+    def onShiftInstrumentDown(self, id: int) -> None:
+        if id > self.table.rowCount() - 1:
             return
-        self.instrumentShiftRequested.emit(self.table.currentRow(), 1)
+        self.instrumentShiftRequested.emit(id, 1)
 
-    def onInstrumentNameChanged(self, name):
-        self.instrumentNameChanged.emit(self.table.currentRow(), name)
+    def onInstrumentNameChanged(self, id: int, name: str) -> None:
+        self.instrumentNameChangeRequested.emit(id, name)
+
+    def onInstrumentSoundFileChanged(self, id):
+        filename = openSoundFileDialog()
+        if not filename:
+            return
+        self.instrumentSoundFileChangeRequested.emit(id, filename)
+
+    def onInstrumentKeyChanged(self, id, key):
+        self.instrumentKeyChangeRequested.emit(id, key)
+
+    def onInstrumentPressChanged(self, id, press):
+        self.instrumentPressChangeRequested.emit(id, press)
 
     # These signals do the actual work of visually updating the instrument table.
 
