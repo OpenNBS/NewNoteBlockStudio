@@ -26,11 +26,11 @@ class InstrumentSoundFileCell(QtWidgets.QTableWidgetItem):
     def __init__(self, value: str = "None", disabled: bool = False, parent=None):
         super().__init__(parent)
         self.setText(value)
+        self.setLoaded(False)
         if disabled:
             self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEnabled)
+            self.setForeground(QtCore.Qt.GlobalColor.gray)
         self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
-        self.disabled = disabled
-        self.setLoaded(False)
 
     def setLoaded(self, loaded: bool = True) -> None:
         if loaded:
@@ -47,11 +47,13 @@ class InstrumentPressCheckBox(QtWidgets.QWidget):
     def __init__(
         self,
         checked: bool = False,
+        disabled: bool = False,
         parent: QtWidgets.QWidget = None,
     ):
         super().__init__(parent)
         self.checkBox = QtWidgets.QCheckBox()
         self.checkBox.setChecked(checked)
+        self.checkBox.setDisabled(disabled)
         # QCheckBox.CheckState can be 0=unchecked, 1=partially checked, 2=checked
         self.checkBox.stateChanged.connect(lambda state: self.checked.emit(bool(state)))
 
@@ -61,6 +63,9 @@ class InstrumentPressCheckBox(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.setLayout(self.layout)
+
+    def setChecked(self, checked: bool) -> None:
+        self.checkBox.setChecked(checked)
 
 
 class InstrumentTable(QtWidgets.QTableWidget):
@@ -105,13 +110,6 @@ class InstrumentTable(QtWidgets.QTableWidget):
         self.setItem(row, 1, soundFileColItem)
         self.setCellWidget(row, 2, keyColItem)
         self.setCellWidget(row, 3, pressColItem)
-
-        if instrument.isDefault:
-            nameColItem.setFlags(nameColItem.flags() & ~QtCore.Qt.ItemIsEditable)
-            soundFileColItem.setFlags(
-                soundFileColItem.flags() & ~QtCore.Qt.ItemIsEditable
-            )
-
         self.resizeRowToContents(row)
 
     def editRow(self, row: int, instrument: InstrumentInstance):

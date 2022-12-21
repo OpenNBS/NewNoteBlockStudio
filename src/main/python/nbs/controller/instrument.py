@@ -57,7 +57,10 @@ class InstrumentInstance:
         self.blockPixmap = loadBlockPixmap(self.__instrument.color or random_color())
         self.blockCount = 0
         self.loaded = False
-        self.isDefault = False
+
+    @property
+    def isDefault(self) -> bool:
+        return self.id < len(default_instruments)
 
     def __getattr__(self, name: str):
         return getattr(self.__instrument, name)
