@@ -1,7 +1,9 @@
 import colorsys
 import os
 import random
+import shutil
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, List, Optional, Sequence, Tuple, Union
 from uuid import UUID, uuid4
 
@@ -12,6 +14,20 @@ from nbs.core.data import Instrument, default_instruments
 
 Color = Tuple[int, int, int]
 PathLike = Union[str, bytes, os.PathLike]
+
+
+def copy_sound_file(path: Optional[PathLike]) -> str:
+    """Copy a sound file to the Sounds folder, and return the new relative path."""
+    if path is None:
+        return ""
+    try:
+        new_path = appctxt.get_resource(f"sounds/{os.path.basename(path)}")
+    except FileNotFoundError:
+        if path is None:
+            raise FileNotFoundError("Instrument sound path doesn't exist")
+        new_path = Path(appctxt.get_resource(f"sounds"), os.path.basename(path))
+        shutil.copy(path, new_path)
+    return os.path.basename(new_path)
 
 
 def random_color() -> Color:
@@ -116,6 +132,9 @@ class InstrumentController(QtCore.QObject):
         """Load an instrument into the instrument list, and return the added `InstrumentInstance`."""
         # icon = load_icon(ins.icon_path)
         # iconPixmap = paint_icon(self.noteBlockPixmap, color)
+
+        new_path = copy_sound_file(ins.sound_path)
+        ins.sound_path = new_path
         instrumentInstance = InstrumentInstance(
             id=len(self.instruments),
             instrument=ins,
@@ -193,7 +212,7 @@ class InstrumentController(QtCore.QObject):
     @QtCore.pyqtSlot(int, str)
     def setInstrumentSound(self, id: int, sound: str) -> None:
         ins = self.instruments[id]
-        ins.sound_path = sound
+        ins.sound_path = copy_sound_file(sound)
         self.instrumentSoundChanged.emit(id, sound)
         self.instrumentSoundLoadRequested.emit(ins.sound_path)
         self.instrumentChanged.emit(id, self.instruments[id])
