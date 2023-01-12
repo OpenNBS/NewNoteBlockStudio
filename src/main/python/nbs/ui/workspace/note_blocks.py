@@ -18,6 +18,10 @@ __all__ = ["NoteBlockArea"]
 
 
 PIXMAP_CACHE = QtGui.QPixmapCache()
+NOTE_BLOCK_PIXMAP = QtGui.QPixmap(
+    appctxt.get_resource("images/note_block_grayscale.png")
+)
+
 
 instrument_data = default_instruments  # TODO: replace with actual data
 
@@ -1126,12 +1130,8 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         pixmap = QtGui.QPixmap(BLOCK_SIZE, BLOCK_SIZE)
         painter = QtGui.QPainter(pixmap)
 
-        # TODO: Turn this into a QGraphicsPixmapItem and use a single pixmap for all note blocks.
-        base_pixmap = QtGui.QPixmap(
-            appctxt.get_resource("images/note_block_grayscale.png")
-        )
         rect = self.RECT.toAlignedRect()
-        painter.drawPixmap(rect, base_pixmap)
+        painter.drawPixmap(rect, NOTE_BLOCK_PIXMAP)
         painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QBrush(self.overlayColor, QtCore.Qt.SolidPattern))
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_Overlay)
