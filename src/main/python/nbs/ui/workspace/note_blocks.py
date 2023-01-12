@@ -17,6 +17,8 @@ from .constants import *
 __all__ = ["NoteBlockArea"]
 
 
+PIXMAP_CACHE = QtGui.QPixmapCache()
+
 instrument_data = default_instruments  # TODO: replace with actual data
 
 
@@ -1100,9 +1102,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.glow = 0.0
         self.updateOpacity()
 
-        # DRAWING CACHE
-        self.cachePixmap = QtGui.QPixmap()
-
     def boundingRect(self):
         return self.RECT
 
@@ -1111,12 +1110,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.opacityEffect.setOpacity(opacity)
 
     def paint(self, painter, option, widget):
-        if self.cachePixmap.isNull():
-            print("repainting")
-            self.paintCache()
-        else:
-            print("drawing from cache")
-        painter.drawPixmap(0, 0, self.cachePixmap)
+        pixmap = PIXMAP_CACHE.find(self.cacheKey)
+        if pixmap is None:
+            pixmap = self.getPixmap()
+            PIXMAP_CACHE.insert(self.cacheKey, pixmap)
+        painter.drawPixmap(0, 0, pixmap)
 
         selectedColor = QtGui.QColor(255, 255, 255, 180)
         if self.isSelected():
@@ -1124,14 +1122,16 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             painter.setBrush(selectedColor)
             painter.drawRect(self.RECT)
 
-    def paintCache(self) -> None:
-        self.cachePixmap = QtGui.QPixmap(BLOCK_SIZE, BLOCK_SIZE)
-        painter = QtGui.QPainter(self.cachePixmap)
+    def getPixmap(self) -> QtGui.QPixmap:
+        pixmap = QtGui.QPixmap(BLOCK_SIZE, BLOCK_SIZE)
+        painter = QtGui.QPainter(pixmap)
 
-        # Turn this into a QGraphicsPixmapItem and use a single pixmap for all note blocks.
-        pixmap = QtGui.QPixmap(appctxt.get_resource("images/note_block_grayscale.png"))
+        # TODO: Turn this into a QGraphicsPixmapItem and use a single pixmap for all note blocks.
+        base_pixmap = QtGui.QPixmap(
+            appctxt.get_resource("images/note_block_grayscale.png")
+        )
         rect = self.RECT.toAlignedRect()
-        painter.drawPixmap(rect, pixmap)
+        painter.drawPixmap(rect, base_pixmap)
         painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(QtGui.QBrush(self.overlayColor, QtCore.Qt.SolidPattern))
         painter.setCompositionMode(QtGui.QPainter.CompositionMode_Overlay)
@@ -1152,9 +1152,14 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             painter.drawRect(rect)
 
         painter.end()
+        return pixmap
 
     def resetCache(self):
-        self.cachePixmap.swap(QtGui.QPixmap())
+        PIXMAP_CACHE.remove(self.cacheKey)
+
+    @property
+    def cacheKey(self) -> str:
+        return f"note_{self.ins}_{self.key}"
 
     def hoverEnterEvent(self, event):
         self.baseOpacity = 1.0
@@ -1182,7 +1187,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
     def refresh(self):
         self.label = self.getLabel()
         self.clicks = self.getClicks()
-        self.resetCache()
         self.update()
 
     def getLabel(self):
@@ -1221,5 +1225,4 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.ins = id_
         instrument = instrument_data[id_]
         self.overlayColor = QtGui.QColor(*instrument.color)
-        self.resetCache()
         self.update()
