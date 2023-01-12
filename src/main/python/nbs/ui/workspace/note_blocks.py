@@ -41,7 +41,9 @@ class TimeRuler(QtWidgets.QWidget):
         # Calling boundingRect just once returns a wrong size. See:
         # https://stackoverflow.com/a/32078341/9045426
         textRect = fm.boundingRect(text)
-        textRect = fm.boundingRect(textRect, 0, text)
+        textRect = fm.boundingRect(
+            textRect, 0, text
+        )  # TODO: Slow as hell, optimize. Maybe precalculate the bounding rects?
         textRect.moveCenter(QtCore.QPoint(round(x), round(y)))
         # if textRect.left() < 0 and textRect.right() >= (textRect.width() / 2):
         #    textRect.moveLeft(1)
@@ -608,6 +610,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def deselectAll(self):  # clearSelection/placeSelection
         if self.hasSelection():
             self._clearBlocksUnderSelection()
+            # TODO: Collision check takes too long
             self.clearSelection()
             self.updateSceneSize()
 

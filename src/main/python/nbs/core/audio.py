@@ -32,6 +32,10 @@ sd.default.dtype = "float32"
 sd.default.latency = "low"
 
 
+# TODO: use pre-allocation to avoid slow array memory allocation
+# https://stackoverflow.com/questions/33333683/should-i-preallocate-a-numpy-array
+
+
 def get_system_audio_devices():
     return sd.query_devices()
 
@@ -180,7 +184,7 @@ class ResamplingCache:
         samples = self.cache.get((sound_index, pitch))
         if samples is None:
             raise IndexError("Sound not found in cache")
-        return samples.copy()
+        return samples.copy() # TODO: allocation causing slowdown
 
     def add_samples(self, sound_index: int, pitch: float, samples: np.ndarray) -> None:
         self.cache[(sound_index, pitch)] = samples.copy()
