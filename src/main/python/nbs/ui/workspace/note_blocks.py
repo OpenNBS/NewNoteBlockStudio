@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from nbs.core.context import appctxt
 from nbs.core.data import Instrument, Layer, Note, default_instruments
 from nbs.core.utils import *
+from nbs.ui.utils.cache import ScrollingPaintCache
 
 from .constants import *
 
@@ -33,7 +34,8 @@ class TimeRuler(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(32)
-        self.offset = 0
+        self.paintCache = ScrollingPaintCache(self.height(), self.paint)
+        self.offset: int = 0
         self.scale = 1
         self.tempo = 10.00
 
@@ -51,13 +53,13 @@ class TimeRuler(QtWidgets.QWidget):
         #    textRect.moveRight(textRect.width() - 1)
         return textRect
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtGui.QPaintEvent):
         self.resize(self.parent().width(), self.height())
-        rect = self.rect()
+        self.paintCache.paint(self, self.offset, self.width())
+
+    def paint(self, painter: QtGui.QPainter, rect: QtCore.QRect):
         mid = rect.height() // 2
         blocksize = BLOCK_SIZE * self.scale
-        painter = QtGui.QPainter()
-        painter.begin(self)
         fm = painter.fontMetrics()
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtCore.Qt.GlobalColor.white)
@@ -105,7 +107,6 @@ class TimeRuler(QtWidgets.QWidget):
                 QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
                 text,
             )
-        painter.end()
 
     def mouseReleaseEvent(self, event):
         pos = event.pos().x()
@@ -121,11 +122,13 @@ class TimeRuler(QtWidgets.QWidget):
     @QtCore.pyqtSlot(float)
     def setScale(self, value):
         self.scale = value
+        self.paintCache.reset()
         self.update()
 
     @QtCore.pyqtSlot(float)
     def setTempo(self, newTempo: float):
         self.tempo = newTempo
+        self.paintCache.reset()
         self.update()
 
 
