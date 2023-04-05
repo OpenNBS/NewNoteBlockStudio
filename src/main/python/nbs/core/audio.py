@@ -236,7 +236,12 @@ class AudioEngine(QtCore.QObject):
     soundLoaded = QtCore.pyqtSignal(int, bool)
     finished = QtCore.pyqtSignal()
 
-    def __init__(self, parent=None, sample_rate=44100, channels=2):
+    def __init__(
+        self,
+        parent: Optional[QtCore.QObject] = None,
+        sample_rate: int = 44100,
+        channels: int = 2,
+    ):
         super().__init__(parent)
         self.sample_rate = sample_rate
         self.channels = channels
