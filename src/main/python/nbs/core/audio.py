@@ -259,23 +259,27 @@ class AudioEngine(QtCore.QObject):
         self.handler.close()
         self.finished.emit()
 
-    @QtCore.pyqtSlot(list)
-    def loadSounds(self, path_list: List[PathLike]):
-        for path in path_list:
-            sound = AudioSegment.from_file(path)
-            sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
-            if sound.channels < self.channels:
-                sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
+    @QtCore.pyqtSlot(str)
+    def loadSound(self, path: PathLike) -> None:
+        sound = AudioSegment.from_file(path)
+        sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
+        if sound.channels < self.channels:
+            sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
 
-            samples = np.array(sound.get_array_of_samples(), dtype="int16")
-            samples = samples.astype(np.float32, order="C") / 32768.0
-            samples = np.reshape(
-                samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
-            )
+        samples = np.array(sound.get_array_of_samples(), dtype="int16")
+        samples = samples.astype(np.float32, order="C") / 32768.0
+        samples = np.reshape(
+            samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
+        )
 
-            self.sounds.append(samples)
-            print(f"Loaded {path}")
-            self.soundLoaded.emit(len(self.sounds) - 1, True)
+        self.sounds.append(samples)
+        print(f"Loaded {path}")
+        self.soundLoaded.emit(len(self.sounds) - 1, True)
+
+    @QtCore.pyqtSlot(int)
+    def removeSound(self, index: int) -> None:
+        # TODO: remove from cache
+        del self.sounds[index]
 
     @QtCore.pyqtSlot(int, float, float, float)
     def playSound(self, index: int, volume: float, key: float, panning: float):

@@ -31,7 +31,7 @@ from nbs.ui.workspace.workspace import Workspace
 
 class MainWindow(QtWidgets.QMainWindow):
 
-    soundLoadRequested = QtCore.pyqtSignal(list)
+    soundLoadRequested = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -57,7 +57,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.audioThread.started.connect(self.audioEngine.run)
         QtCore.QCoreApplication.instance().aboutToQuit.connect(self.audioEngine.stop)
         self.audioEngine.finished.connect(self.audioThread.quit)
-        self.soundLoadRequested.connect(self.audioEngine.loadSounds)
+        self.soundLoadRequested.connect(self.audioEngine.loadSound)
         self.audioThread.start()
 
     def initControllers(self):
@@ -240,12 +240,14 @@ class MainWindow(QtWidgets.QMainWindow):
         setAction = self.setCurrentInstrumentActionsManager
         changeAction = self.changeInstrumentActionsManager
 
-        sounds = []
+        # Audio engine
         for ins in default_instruments:
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
-            sounds.append(sound_path)
+            self.soundLoadRequested.emit(sound_path)
 
-        self.soundLoadRequested.emit(sounds)
+        self.instrumentController.instrumentSoundChanged.connect(
+            lambda id, sound: self.soundLoadRequested.emit(sound)
+        )
 
         # TODO: These ActionManager classes should be more high-level, and
         # part of a more general 'ActionManager' class
