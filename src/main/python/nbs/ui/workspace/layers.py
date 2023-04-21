@@ -322,14 +322,6 @@ class LayerArea(VerticalScrollArea):
         for i, layer in enumerate(self.layers):
             layer.setId(i)
 
-    ####### SONG ########
-
-    def getLayerData(self) -> List[Layer]:
-        layers = []
-        for layer in self.layers:
-            layers.append(Layer())
-        return layers
-
     ######## FEATURES ########
 
     @QtCore.pyqtSlot(int, Layer)

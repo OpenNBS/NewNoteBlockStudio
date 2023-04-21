@@ -10,14 +10,14 @@ from nbs.controller.song import SongController
 from nbs.core.audio import AudioEngine
 from nbs.core.context import appctxt
 from nbs.core.data import Song, default_instruments
-from nbs.core.file import load_song
+from nbs.core.file import load_song, save_song
 from nbs.ui.actions import (
     Actions,
     ChangeInstrumentActionsManager,
     SetCurrentInstrumentActionsManager,
 )
 from nbs.ui.dialog.instrument_settings import InstrumentSettingsDialog
-from nbs.ui.file import getLoadSongDialog
+from nbs.ui.file import getLoadSongDialog, getSaveSongDialog
 from nbs.ui.menus import EditMenu, MenuBar
 from nbs.ui.status_bar import StatusBar
 from nbs.ui.toolbar import ToolBar
@@ -320,18 +320,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         song = load_song(filename)
         self.noteBlockArea.loadNoteData(song.notes)
-        self.layerManager.loadLayers(song.layers)
-        self.instrumentController.resetInstruments()
-        self.instrumentController.loadInstrumentsFromList(song.instruments)
-        self.playbackController.setTempo(song.header.tempo)
+        self.songController.loadSong(song)
         self.setCurrentInstrumentActionsManager.currentInstrument = 0
 
     @QtCore.pyqtSlot()
     def saveSong(self):
-        header = {}
-        notes = self.noteBlockArea.getNoteData()
-        layers = self.layerArea.getLayerData()
-        instruments = []
+        filename = getSaveSongDialog()
+        if not filename:
+            return
+        save_song(self.songController.song, filename)
 
-        song = Song(header, notes, layers, instruments)
-        song.save()

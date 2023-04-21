@@ -93,6 +93,11 @@ class LayerController(QtCore.QObject):
                 self.addLayer(layer=layer)
 
     @QtCore.pyqtSlot()
+    def resetLayers(self) -> None:
+        while self.layers:
+            self.removeLayer(0)
+
+    @QtCore.pyqtSlot()
     @QtCore.pyqtSlot(int)
     @QtCore.pyqtSlot(int, Layer)
     def addLayer(
