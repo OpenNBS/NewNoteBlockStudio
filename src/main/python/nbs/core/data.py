@@ -32,6 +32,35 @@ class Note:
     pitch: int = 0
 
 
+@dataclass
+class SongHeader:
+    version: int
+    default_instruments: int
+    title: str = ""
+    author: str = ""
+    original_author: str = ""
+    description: str = ""
+    tempo: float = 10
+    time_signature: int = 4
+    minutes_spent: int = 0
+    left_clicks: int = 0
+    right_clicks: int = 0
+    blocks_added: int = 0
+    blocks_removed: int = 0
+    song_origin: str = ""
+    loop: bool = False
+    max_loop_count: int = 0
+    loop_start_tick: int = 0
+
+
+@dataclass
+class Song:
+    header: SongHeader
+    notes: list[Note]
+    layers: list[Layer]
+    instruments: list[Instrument]
+
+
 default_instruments = [
     Instrument(
         name="Harp",

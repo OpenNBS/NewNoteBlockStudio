@@ -8,8 +8,8 @@ from nbs.controller.layer import LayerController
 from nbs.controller.playback import PlaybackController
 from nbs.core.audio import AudioEngine
 from nbs.core.context import appctxt
-from nbs.core.data import default_instruments
-from nbs.core.song import Song
+from nbs.core.data import Song, default_instruments
+from nbs.core.file import load_song
 from nbs.ui.actions import (
     Actions,
     ChangeInstrumentActionsManager,
@@ -314,7 +314,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not filename:
             return
 
-        song = Song.from_file(filename)
+        song = load_song(filename)
         self.noteBlockArea.loadNoteData(song.notes)
         self.layerManager.loadLayers(song.layers)
         self.instrumentController.resetInstruments()
