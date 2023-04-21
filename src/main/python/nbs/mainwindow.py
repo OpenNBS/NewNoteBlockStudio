@@ -6,6 +6,7 @@ from nbs.controller.clipboard import ClipboardController
 from nbs.controller.instrument import InstrumentController
 from nbs.controller.layer import LayerController
 from nbs.controller.playback import PlaybackController
+from nbs.controller.song import SongController
 from nbs.core.audio import AudioEngine
 from nbs.core.context import appctxt
 from nbs.core.data import Song, default_instruments
@@ -63,6 +64,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.playbackController = PlaybackController()
         self.instrumentController = InstrumentController(default_instruments)
         self.layerManager = LayerController(self.layers)
+        self.songController = SongController(
+            self.layerManager, self.instrumentController, self.playbackController
+        )
         self.clipboardManager = ClipboardController(self.clipboard)
 
     def initUI(self):
