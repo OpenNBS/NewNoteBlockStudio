@@ -8,18 +8,16 @@ from typing import Sequence, Union
 
 import pynbs
 
-from nbs.core.data import Instrument, Layer, Note, Song, SongHeader
+from nbs.core.data import NBS_VERSION, Instrument, Layer, Note, Song, SongHeader
 
 PathLike = Union[str, bytes, os.PathLike]
-
-CURRENT_NBS_VERSION = 5
 
 
 def load_song(path: PathLike) -> Song:
     return convert_file_to_song(pynbs.read(path))
 
 
-def save_song(song: Song, path: PathLike, version: int = CURRENT_NBS_VERSION):
+def save_song(song: Song, path: PathLike, version: int = NBS_VERSION):
     """Save a song to a file."""
     convert_song_to_file(song).save(path, version=version)
 

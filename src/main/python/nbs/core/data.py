@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+NBS_VERSION = 5
+
 
 @dataclass
 class Layer:
@@ -34,8 +36,8 @@ class Note:
 
 @dataclass
 class SongHeader:
-    version: int
-    default_instruments: int
+    version: int = NBS_VERSION
+    default_instruments: int = 16
     title: str = ""
     author: str = ""
     original_author: str = ""
