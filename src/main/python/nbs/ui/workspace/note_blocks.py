@@ -4,7 +4,7 @@ import math
 import pickle
 from dataclasses import dataclass
 from enum import Enum
-from typing import Generator, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Generator, List, Optional, Sequence, Union
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -369,6 +369,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.initUI()
         self.initPlayback()
 
+        self.tickIndex: Dict[int, List[NoteBlock]] = {}
+
     ########## UI ##########
 
     def initUI(self):
@@ -526,19 +528,57 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             blocks.append(note)
         return blocks
 
+    ########## ATOMIC OPERATIONS ##########
+
+    # These methods are used to perform operations on the scene that must be done
+    # through these methods. This is to ensure that the scene is always in a valid
+    # state, and that the index is always up to date.
+
+    def _doAddBlock(self, block: NoteBlock):
+        """Add a note block at the specified position. This operation must always
+        be called when adding a block."""
+        self.addItem(block)
+        tick = block.tick
+        if tick not in self.tickIndex:
+            self.tickIndex[tick] = []
+        self.tickIndex[tick].append(block)
+
+    def _doMoveBlock(self, block: NoteBlock, x: int, y: int):
+        """Move a note block by the specified number of grid spaces. This operation must always
+        be called when moving a block."""
+        prevTick = block.tick
+        block.moveBy(x * BLOCK_SIZE, y * BLOCK_SIZE)
+        if x != 0:
+            self.tickIndex[prevTick].remove(block)
+            nextTick = block.tick
+            if nextTick not in self.tickIndex:
+                self.tickIndex[nextTick] = []
+            self.tickIndex[nextTick].append(block)
+
+    def _doRemoveBlock(self, block: NoteBlock):
+        """Remove a note block from the scene. This operation must always
+        be called when removing a block."""
+        self.removeItem(block)
+        tick = block.tick
+        self.tickIndex[tick].remove(block)
+
     ########## NOTE BLOCKS ##########
+
+    # These methods are meant to be called externally to perform operations on the
+    # scene. They will call the atomic operations above to ensure that the scene is
+    # always in a valid state.
 
     def clear(self):
         """Clear all note blocks in the scene."""
         for item in self.items():
-            self.removeItem(item)
+            self._doRemoveBlock(item)
 
     def addBlock(self, x: int, y: int, *args, **kwargs):
         """Add a note block at the specified position."""
         blockPos = self.getScenePos(x, y)
         block = NoteBlock(x, y, *args, **kwargs)
         block.setPos(blockPos)
-        self.addItem(block)
+        self._doAddBlock(block)
         return block
 
     def addBlockManual(self, x, y, *args, **kwargs):
@@ -548,7 +588,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.blockAdded.emit(block.ins, block.key, block.vel, block.pan, block.pit)
 
     def removeBlock(self, block: NoteBlock) -> None:
-        self.removeItem(block)
+        self._doRemoveBlock(block)
         self.updateBlockCount()
         # TODO: self.blockRemoved.emit()
 
@@ -557,7 +597,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         pos = self.getScenePos(x, y)
         itemAtPos = self.itemAt(pos, self.view.transform())
         if itemAtPos is not None:
-            self.removeItem(itemAtPos)
+            self._doRemoveBlock(itemAtPos)
 
     def removeBlockManual(self, x: int, y: int) -> None:
         self.removeBlockAt(x, y)
@@ -641,7 +681,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def moveSelection(self, x: int, y: int):
         for block in self.selectedItems():
-            block.moveBy(x * BLOCK_SIZE, y * BLOCK_SIZE)
+            self._doMoveBlock(block, x, y)
 
     def setSelectionTopLeft(self, point: Union[QtCore.QPoint, QtCore.QPointF]):
         tl = self.selectionBoundingRect().topLeft()
@@ -675,8 +715,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         origin = bbox.topLeft()
 
         for block in self.selectedItems():
-            relativePosX = block.x() - origin.x()
-            block.moveBy(relativePosX, 0)
+            relativePosX = int(block.x() - origin.x() // BLOCK_SIZE)
+            self._doMoveBlock(block, relativePosX, 0)
 
     def compressSelection(self):
         bbox = self.selectionBoundingRect()
@@ -684,12 +724,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
         for block in self.selectedItems():
             relativePosX = block.x() - origin.x()
-            distance = (-relativePosX / 2) // BLOCK_SIZE * BLOCK_SIZE
-            block.moveBy(distance, 0)
+            distance = int((-relativePosX / 2) // BLOCK_SIZE)
+            self._doMoveBlock(block, distance, 0)
 
         for block in self.selectedItems():
             while block.collidingItems():
-                block.moveBy(0, BLOCK_SIZE)
+                self._doMoveBlock(block, 0, 1)
 
     @QtCore.pyqtSlot()
     def deleteSelection(self):
@@ -848,7 +888,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def addLayer(self, id: int):
         blocksToShift = self.getBlocksBelowLayer(id)
         for block in blocksToShift:
-            block.moveBy(0, BLOCK_SIZE)
+            self._doMoveBlock(block, 0, 1)
         self.updateSceneSize()
 
     @QtCore.pyqtSlot(int)
@@ -857,7 +897,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.removeBlock(block)
         blocksToShift = self.getBlocksBelowLayer(id)
         for block in blocksToShift:
-            block.moveBy(0, -BLOCK_SIZE)
+            self._doMoveBlock(block, 0, -1)
         self.updateSceneSize()
 
     @QtCore.pyqtSlot(int)
@@ -875,12 +915,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
         origin1 = self.getLayerRegion(id1).topLeft().y()
         origin2 = self.getLayerRegion(id2).topLeft().y()
-        distance = abs(origin2 - origin1)
+        distance = int(abs(origin2 - origin1) // BLOCK_SIZE)
 
         for block in blocks1:
-            block.moveBy(0, distance)
+            self._doMoveBlock(block, 0, distance)
         for block in blocks2:
-            block.moveBy(0, -distance)
+            self._doMoveBlock(block, 0, distance)
 
     ########## PLAYBACK ##########
 
@@ -899,16 +939,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.previousPlaybackPosition = currentPlaybackPosition
         self.updateBlockGlowEffect()
 
-    def getTickRegion(self, tick: int) -> QtCore.QRectF:
-        x1 = tick * BLOCK_SIZE
-        x2 = BLOCK_SIZE
-        region = QtCore.QRectF(x1, 0, x2, self.sceneRect().height())
-        return region
-
     def getBlocksInTick(self, tick: int) -> List[NoteBlock]:
-        region = self.getTickRegion(tick)
-        blocks = self.items(region)
-        return blocks
+        return self.tickIndex.get(tick) or []
 
     def playBlocks(self, blocks: Sequence[NoteBlock]) -> None:
         payload = []
@@ -928,7 +960,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def playTick(self, tick: int) -> None:
         blocks = self.getBlocksInTick(tick)
-        self.playBlocks(blocks)
+        if blocks:
+            self.playBlocks(blocks)
 
     def updateBlockGlowEffect(self) -> None:
         toBeRemoved = set()
@@ -1032,7 +1065,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             if any(item.y() + dy < 0 for item in self.selectedItems()):
                 movey = 0
             for item in self.selectedItems():
-                item.moveBy(movex, movey)
+                self._doMoveBlock(
+                    item, int(movex // BLOCK_SIZE), int(movey // BLOCK_SIZE)
+                )
         elif (
             event.buttons() == QtCore.Qt.LeftButton
             or event.buttons() == QtCore.Qt.RightButton
@@ -1111,6 +1146,14 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.baseOpacity = 0.6
         self.glow = 0.0
         self.updateOpacity()
+
+    @property
+    def tick(self) -> int:
+        return int(self.x() // BLOCK_SIZE)
+
+    @property
+    def layer(self) -> int:
+        return int(self.y() // BLOCK_SIZE)
 
     def boundingRect(self):
         return self.RECT
