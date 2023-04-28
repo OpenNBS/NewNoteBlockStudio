@@ -92,6 +92,9 @@ class LayerController(QtCore.QObject):
             else:
                 self.addLayer(layer=layer)
 
+        # TODO: make "updateLayers"/"setLayers" slots in note block area/layer area
+        # (or the workspace) to update layers more efficiently
+
     @QtCore.pyqtSlot()
     def resetLayers(self) -> None:
         while self.layers:

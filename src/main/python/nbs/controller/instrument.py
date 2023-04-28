@@ -180,6 +180,15 @@ class InstrumentController(QtCore.QObject):
             self.instrumentRemoved.emit(len(self.instruments))
         self.instrumentListUpdated.emit(self.instruments)
 
+    # TODO: It's probably better to have a single method that takes a dict of
+    #       attributes to change, and then emit a signal for each attribute
+    #       that changed. This would allow for more flexibility in the future.
+
+    # TODO: It's weird that the main window should be responsible for updating
+    #       the instrument block count. It would be better if the instrument controller
+    #       was tied to a SongController that had methods to add/remove blocks,
+    #       and took care of it for the MainWindow, hiding the complexity (a Facade pattern).
+
     @QtCore.pyqtSlot(int)
     def addBlockToCount(self, id: int) -> None:
         self.instruments[id].blockCount += 1
