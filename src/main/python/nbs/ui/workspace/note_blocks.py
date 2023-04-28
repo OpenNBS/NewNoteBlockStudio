@@ -366,6 +366,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.previousPlaybackPosition = 0
         self.currentInstrument = 0
         self.minimumLayerCount = 0
+        # A value of 12 will generate segments of approximately 4x4 grid spaces,
+        # which can be guaranteed to contain 0-10 notes on average.
+        # See: https://doc.qt.io/qt-6/qgraphicsscene.html#bspTreeDepth-prop
+        self.setBspTreeDepth(12)
         self.initUI()
         self.initPlayback()
 
