@@ -1,6 +1,0 @@
-{
-    "executionEnvironments": [
-        {"root": "src/main/python"}
-    ],
-    "typeCheckingMode": "basic",
-}
