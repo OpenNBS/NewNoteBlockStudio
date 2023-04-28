@@ -71,6 +71,7 @@ class PlaybackController(QtCore.QObject):
         self.tempo = tempo
         self.tempoChanged.emit(tempo)
 
+    @QtCore.pyqtSlot(int)
     def setSongLength(self, ticks: int):
         self.songLength = ticks
         self.songLengthChanged.emit(ticks)
