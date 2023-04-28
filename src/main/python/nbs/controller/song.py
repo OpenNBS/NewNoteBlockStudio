@@ -27,6 +27,7 @@ class SongController(QtCore.QObject):
         # TODO: A NoteController should exist and be here as well
         self.layerController = layerController
         self.instrumentController = instrumentController
+        self.playbackController = playbackController
         self.song = Song(
             header=SongHeader(),
             notes=[],
