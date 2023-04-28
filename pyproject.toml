@@ -25,7 +25,7 @@ snakeviz = "^2.1.1"
 
 [tool.pyright]
 root = "src/main/python"
-typeCheckingMode = "basic"
+typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
