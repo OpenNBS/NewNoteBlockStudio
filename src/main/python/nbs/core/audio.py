@@ -1,6 +1,6 @@
 import math
 import os
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import samplerate as sr
@@ -173,7 +173,7 @@ class AudioOutputHandler:
 
 class ResamplingCache:
     def __init__(self, max_size: Optional[int] = None) -> None:
-        self.cache = {}
+        self.cache: Dict[Tuple[int, float], Tuple[np.ndarray, np.ndarray]] = {}
         self.max_size = max_size
         # TODO: implement cache entry cleanup
 
