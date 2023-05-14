@@ -21,7 +21,9 @@ class PlaybackController(QtCore.QObject):
 
         self.timer = QtCore.QTimer()
         self.timer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
-        self.timer.setInterval(round(MSPT))
+        # An interval of 0 means that the timer will fire as often as possible.
+        # See: https://doc.qt.io/qt-5/qtimer.html#interval-prop
+        self.timer.setInterval(0)
         self.timer.timeout.connect(self.tickPlayback)
 
     @QtCore.pyqtSlot()
