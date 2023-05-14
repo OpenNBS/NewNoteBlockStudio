@@ -17,6 +17,7 @@ class PlaybackController(QtCore.QObject):
         self.tempo = 10.00
         self.currentTick = 0
         self.lastTickTimestamp = None
+        self.callback = lambda currentTick: None
 
         self.timer = QtCore.QTimer()
         self.timer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
@@ -49,6 +50,7 @@ class PlaybackController(QtCore.QObject):
     def setPlaybackPosition(self, tick: float):
         self.currentTick = max(0, tick)
         self.playbackPositionChanged.emit(self.currentTick)
+        self.callback(self.currentTick)
 
     @QtCore.pyqtSlot()
     def tickPlayback(self):
@@ -65,6 +67,7 @@ class PlaybackController(QtCore.QObject):
 
         self.currentTick += offset
         self.playbackPositionChanged.emit(self.currentTick)
+        self.callback(self.currentTick)
 
     @QtCore.pyqtSlot(float)
     def setTempo(self, tempo: float):

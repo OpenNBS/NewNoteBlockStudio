@@ -143,9 +143,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Actions.playPauseAction.triggered.connect(self.playbackController.setPlaying)
         Actions.stopAction.triggered.connect(self.playbackController.stop)
 
-        self.playbackController.playbackPositionChanged.connect(
-            self.noteBlockArea.view.setPlaybackPosition
-        )
+        self.playbackController.callback = self.noteBlockArea.view.setPlaybackPosition
         self.noteBlockArea.view.playbackPositionChanged.connect(
             self.playbackController.setPlaybackPosition
         )
