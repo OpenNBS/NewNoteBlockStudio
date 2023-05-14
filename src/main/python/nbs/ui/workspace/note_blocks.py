@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import pickle
+import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Generator, List, Optional, Sequence, Union
@@ -373,6 +374,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.initUI()
         self.initPlayback()
 
+        self.fps = QtWidgets.QLabel(parent=self.view)
+        self.fps.setFixedWidth(100)
+        self.fps.move(10, 42)
+
+        self.numFrames = 0
+        self.frameRate = 0
+        self.frameTimes = []
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.updateFrameRate)
+        self.timer.setInterval(250)
+        self.timer.start()
+
         self.tickIndex: Dict[int, List[NoteBlock]] = {}
 
     ########## UI ##########
@@ -388,6 +401,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         )
         self.view.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.startTimer(10)
+
+    def updateFrameRate(self):
+        self.frameTimes = list(
+            filter(lambda x: x > time.monotonic() - 1, self.frameTimes)
+        )
+        self.frameRate = (len(self.frameTimes) + self.numFrames) / 2
+        self.fps.setText(f"{self.frameRate:.1f} FPS")
+        self.numFrames = 0
 
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
@@ -406,6 +427,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             )
 
     def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+        self.numFrames += 1
+        self.frameTimes.append(time.monotonic())
+
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtCore.Qt.GlobalColor.black)
         painter.setOpacity(0.25)
