@@ -941,7 +941,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         ):
             self.playTick(math.floor(currentPlaybackPosition))
         self.previousPlaybackPosition = currentPlaybackPosition
-        self.updateBlockGlowEffect()
 
     def getBlocksInTick(self, tick: int) -> List[NoteBlock]:
         return self.tickIndex.get(tick) or []
