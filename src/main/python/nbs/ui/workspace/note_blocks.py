@@ -531,7 +531,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.updateBlockCount()
         self.view.ensureVisible(0, 0, 0, 0)
 
-    def loadNoteData(self, blocks: Sequence[NoteBlock]) -> None:
+    def loadNoteData(self, blocks: Sequence[Note]) -> None:
         self.reset()
         for block in blocks:
             self.addBlock(
