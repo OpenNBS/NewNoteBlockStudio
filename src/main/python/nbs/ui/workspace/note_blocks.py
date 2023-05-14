@@ -5,7 +5,7 @@ import pickle
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Generator, List, Optional, Sequence, Union
+from typing import Dict, Generator, List, Optional, Sequence, Set, Union
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -368,7 +368,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
         self.activeKey = 45
-        self.playingBlocks = set()
+        self.playingBlocks: Set[NoteBlock] = set()
         self.previousPlaybackPosition = 0
         self.currentInstrument = 0
         self.minimumLayerCount = 0
@@ -996,7 +996,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.playBlocks(blocks)
 
     def updateBlockGlowEffect(self) -> None:
-        toBeRemoved = set()
+        toBeRemoved: Set[NoteBlock] = set()
         for block in self.playingBlocks:
             block.updateGlow()
             if block.glow <= 0:
