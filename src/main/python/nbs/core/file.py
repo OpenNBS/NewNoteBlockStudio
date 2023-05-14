@@ -71,6 +71,8 @@ def _parse_notes(notes: Sequence[pynbs.Note]) -> list[Note]:
             instrument=note.instrument,
             key=note.key,
             velocity=note.velocity,
+            panning=note.panning,
+            pitch=note.pitch,
         )
         for note in notes
     ]
