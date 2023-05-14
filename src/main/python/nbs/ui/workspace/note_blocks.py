@@ -971,7 +971,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         toBeRemoved = set()
         for block in self.playingBlocks:
             block.updateGlow()
-            if block.glow < 0:
+            if block.glow <= 0:
                 toBeRemoved.add(block)
         self.playingBlocks -= toBeRemoved
 
@@ -1257,9 +1257,9 @@ class NoteBlock(QtWidgets.QGraphicsItem):
             return str(self.key - 33)
 
     def updateGlow(self):
-        if self.glow > 0:
+        if self.glow >= 0:
             self.updateOpacity()
-            self.glow -= 0.01
+        self.glow -= 0.01
 
     def play(self):
         self.glow = 1
