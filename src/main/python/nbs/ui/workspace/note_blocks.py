@@ -24,6 +24,11 @@ NOTE_BLOCK_PIXMAP = QtGui.QPixmap(
     appctxt.get_resource("images/note_block_grayscale.png")
 )
 
+BLOCK_GLOW_UPDATES_PER_SEC = 20
+BLOCK_GLOW_DURATION_SECS = 1.0
+BLOCK_GLOW_BASE_OPACITY = 0.6
+BLOCK_GLOW_HOVER_OPACITY = 1.0
+
 
 instrument_data = default_instruments  # TODO: replace with actual data
 
@@ -954,7 +959,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def initPlayback(self):
         self.glowTimer = QtCore.QTimer(self)
-        self.glowTimer.setInterval(1000 // 60)
+        self.glowTimer.setInterval(1000 // BLOCK_GLOW_UPDATES_PER_SEC)
         self.glowTimer.timeout.connect(self.updateBlockGlowEffect)
         self.glowTimer.start()
 
@@ -1170,7 +1175,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         # OPACITY CONTROLS
         self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
         self.setGraphicsEffect(self.opacityEffect)
-        self.baseOpacity = 0.6
         self.glow = 0.0
         self.updateOpacity()
 
@@ -1186,7 +1190,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         return self.RECT
 
     def updateOpacity(self):
-        opacity = self.baseOpacity + self.glow * 0.4
+        opacity = BLOCK_GLOW_BASE_OPACITY + self.glow * (1 - BLOCK_GLOW_BASE_OPACITY)
         self.opacityEffect.setOpacity(opacity)
 
     def paint(self, painter, option, widget):
@@ -1238,11 +1242,11 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         return f"note_{self.ins}_{self.key}"
 
     def hoverEnterEvent(self, event):
-        self.baseOpacity = 1.0
+        self.baseOpacity = BLOCK_GLOW_HOVER_OPACITY
         self.updateOpacity()
 
     def hoverLeaveEvent(self, event):
-        self.baseOpacity = 0.6
+        self.baseOpacity = BLOCK_GLOW_BASE_OPACITY
         self.updateOpacity()
 
     def wheelEvent(self, event):
@@ -1282,7 +1286,7 @@ class NoteBlock(QtWidgets.QGraphicsItem):
     def updateGlow(self):
         if self.glow >= 0:
             self.updateOpacity()
-        self.glow -= 0.01
+        self.glow -= 1.0 / (BLOCK_GLOW_UPDATES_PER_SEC * BLOCK_GLOW_DURATION_SECS)
 
     def play(self):
         self.glow = 1
