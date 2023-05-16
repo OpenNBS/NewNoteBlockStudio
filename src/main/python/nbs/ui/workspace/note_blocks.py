@@ -984,8 +984,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             if layer.panning == 0:
                 panning = block.pan / 100
             else:
-            block.play()
                 panning = ((block.pan / 100) + (layer.panning / 100)) / 2
+            block.play()
             payload.append((instrument, key, volume, panning))
         self.playingBlocks.update(blocks)
         self.tickPlayed.emit(payload)
