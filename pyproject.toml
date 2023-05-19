@@ -23,6 +23,9 @@ pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 snakeviz = "^2.1.1"
 
+[tool.poetry.group.dev.dependencies]
+pyqt5-stubs = "^5.15.6.0"
+
 [tool.pyright]
 root = "src/main/python"
 typeCheckingMode = "strict"

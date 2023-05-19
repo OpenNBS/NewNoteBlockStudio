@@ -538,6 +538,21 @@ files = [
 ]
 
 [[package]]
+name = "pyqt5-stubs"
+version = "5.15.6.0"
+description = "PEP561 stub files for the PyQt5 framework"
+category = "dev"
+optional = false
+python-versions = ">= 3.5"
+files = [
+    {file = "PyQt5-stubs-5.15.6.0.tar.gz", hash = "sha256:91270ac23ebf38a1dc04cd97aa852cd08af82dc839100e5395af1447e3e99707"},
+    {file = "PyQt5_stubs-5.15.6.0-py3-none-any.whl", hash = "sha256:7fb8177c72489a8911f021b7bd7c33f12c87f6dba92dcef3fdcdb5d9400f0f3f"},
+]
+
+[package.extras]
+dev = ["mypy (==0.930)", "pytest", "pytest-xvfb"]
+
+[[package]]
 name = "pytest"
 version = "7.3.0"
 description = "pytest: simple powerful testing with Python"
@@ -717,4 +732,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "63a7dbf6902090622ba3a015c41c6ed7aa747b84046d12bf084dd29ce822a4c7"
+content-hash = "332895fb24d0a706a50b859dd8c6b911af17a0fd0f6dd32953808054befc244e"
