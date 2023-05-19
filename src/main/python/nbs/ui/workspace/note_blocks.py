@@ -79,7 +79,7 @@ class TimeRuler(QtWidgets.QWidget):
         x = -startPos
         y = (mid + rect.bottom()) / 2 - 1
         while x <= rect.width():
-            painter.drawLine(x, rect.bottom() - 2, x, rect.bottom())
+            painter.drawLine(int(x), rect.bottom() - 2, int(x), rect.bottom())
             currentTick = startTick + round((startPos + x) / blocksize)
             if currentTick % 4 == 0:
                 text = str(int(currentTick))
