@@ -24,8 +24,8 @@ NOTE_BLOCK_PIXMAP = QtGui.QPixmap(
     appctxt.get_resource("images/note_block_grayscale.png")
 )
 
-BLOCK_GLOW_UPDATES_PER_SEC = 20
 BLOCK_GLOW_DURATION_SECS = 1.0
+BLOCK_GLOW_MAX_OPACITY = 1.0
 BLOCK_GLOW_BASE_OPACITY = 0.6
 BLOCK_GLOW_HOVER_OPACITY = 1.0
 
@@ -218,7 +218,6 @@ class ScrollMode(Enum):
 
 
 class NoteBlockView(QtWidgets.QGraphicsView):
-
     scaleChanged = QtCore.pyqtSignal(float)
     playbackPositionChanged = QtCore.pyqtSignal(float)
 
@@ -957,12 +956,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     ########## PLAYBACK ##########
 
-    def initPlayback(self):
-        self.glowTimer = QtCore.QTimer(self)
-        self.glowTimer.setInterval(1000 // BLOCK_GLOW_UPDATES_PER_SEC)
-        self.glowTimer.timeout.connect(self.updateBlockGlowEffect)
-        self.glowTimer.start()
-
     @QtCore.pyqtSlot(float)
     def doPlayback(self, currentPlaybackPosition: float):
         if math.floor(self.previousPlaybackPosition) != math.floor(
@@ -985,23 +978,14 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 panning = block.pan / 100
             else:
                 panning = ((block.pan / 100) + (layer.panning / 100)) / 2
-            block.play()
+            block.triggerPlaybackAnimation()
             payload.append((instrument, key, volume, panning))
-        self.playingBlocks.update(blocks)
         self.tickPlayed.emit(payload)
 
     def playTick(self, tick: int) -> None:
         blocks = self.getBlocksInTick(tick)
         if blocks:
             self.playBlocks(blocks)
-
-    def updateBlockGlowEffect(self) -> None:
-        toBeRemoved: Set[NoteBlock] = set()
-        for block in self.playingBlocks:
-            block.updateGlow()
-            if block.glow <= 0:
-                toBeRemoved.add(block)
-        self.playingBlocks -= toBeRemoved
 
     ########## EVENTS ##########
 
@@ -1135,8 +1119,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return False
 
 
-class NoteBlock(QtWidgets.QGraphicsItem):
 
+class NoteBlock(QtWidgets.QGraphicsObject):
     # Geometry
     RECT = QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
     TOP_RECT = QtCore.QRect(0, 0, BLOCK_SIZE, BLOCK_SIZE // 2)
@@ -1173,10 +1157,8 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         self.setCacheMode(QtWidgets.QGraphicsItem.ItemCoordinateCache)
 
         # OPACITY CONTROLS
-        self.opacityEffect = QtWidgets.QGraphicsOpacityEffect()
-        self.setGraphicsEffect(self.opacityEffect)
-        self.glow = 0.0
-        self.updateOpacity()
+        self.animation = QtCore.QPropertyAnimation(self, b"opacity")
+        self.animation.setDuration(round(BLOCK_GLOW_DURATION_SECS * 1000))
 
     @property
     def tick(self) -> int:
@@ -1188,10 +1170,6 @@ class NoteBlock(QtWidgets.QGraphicsItem):
 
     def boundingRect(self):
         return self.RECT
-
-    def updateOpacity(self):
-        opacity = BLOCK_GLOW_BASE_OPACITY + self.glow * (1 - BLOCK_GLOW_BASE_OPACITY)
-        self.opacityEffect.setOpacity(opacity)
 
     def paint(self, painter, option, widget):
         pixmap = PIXMAP_CACHE.find(self.cacheKey)
@@ -1242,12 +1220,10 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         return f"note_{self.ins}_{self.key}"
 
     def hoverEnterEvent(self, event):
-        self.baseOpacity = BLOCK_GLOW_HOVER_OPACITY
-        self.updateOpacity()
+        self.setOpacity(BLOCK_GLOW_HOVER_OPACITY)
 
     def hoverLeaveEvent(self, event):
-        self.baseOpacity = BLOCK_GLOW_BASE_OPACITY
-        self.updateOpacity()
+        self.setOpacity(BLOCK_GLOW_BASE_OPACITY)
 
     def wheelEvent(self, event):
         if event.delta() > 0:
@@ -1283,14 +1259,12 @@ class NoteBlock(QtWidgets.QGraphicsItem):
         else:
             return str(self.key - 33)
 
-    def updateGlow(self):
-        if self.glow >= 0:
-            self.updateOpacity()
-        self.glow -= 1.0 / (BLOCK_GLOW_UPDATES_PER_SEC * BLOCK_GLOW_DURATION_SECS)
-
-    def play(self):
-        self.glow = 1
-        self.updateOpacity()
+    def triggerPlaybackAnimation(self):
+        if self.animation.state() == QtCore.QAbstractAnimation.State.Running:
+            self.animation.stop()
+        self.animation.setStartValue(BLOCK_GLOW_MAX_OPACITY)
+        self.animation.setEndValue(BLOCK_GLOW_BASE_OPACITY)
+        self.animation.start(QtCore.QAbstractAnimation.DeletionPolicy.KeepWhenStopped)
 
     def getData(self):
         return (
