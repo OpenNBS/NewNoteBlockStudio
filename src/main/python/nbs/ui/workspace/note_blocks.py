@@ -376,7 +376,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         # See: https://doc.qt.io/qt-6/qgraphicsscene.html#bspTreeDepth-prop
         self.setBspTreeDepth(12)
         self.initUI()
-        self.initPlayback()
 
         self.fps = QtWidgets.QLabel(parent=self.view)
         self.fps.setFixedWidth(100)
