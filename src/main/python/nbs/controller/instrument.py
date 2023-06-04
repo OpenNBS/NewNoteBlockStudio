@@ -137,7 +137,10 @@ class InstrumentController(QtCore.QObject):
             self.addInstrument(ins)
 
     def _loadInstrument(self, ins: Instrument) -> InstrumentInstance:
-        """Load an instrument into the instrument list, and return the added `InstrumentInstance`."""
+        """
+        Load the data for instrument `ins` and add it to the instrument list.
+        Return the added `InstrumentInstance`.
+        """
         # icon = load_icon(ins.icon_path)
         # iconPixmap = paint_icon(self.noteBlockPixmap, color)
 
@@ -152,6 +155,10 @@ class InstrumentController(QtCore.QObject):
     # TODO: clean up this mess of load/add/create
     @QtCore.pyqtSlot()
     def createInstrument(self) -> None:
+        """
+        Create a new custom instrument with default values, and add it to the instrument list.
+        """
+        # TODO: change sequential id to UUID
         customId = len(self.instruments) - len(default_instruments) + 1
         instrument = Instrument(
             name=f"Custom Instrument #{customId}",
@@ -161,6 +168,9 @@ class InstrumentController(QtCore.QObject):
 
     @QtCore.pyqtSlot(Instrument)
     def addInstrument(self, ins: Instrument) -> None:
+        """
+        Adds the instrument `ins` to the instrument list, and emits the appropriate signals.
+        """
         instrumentInstance = self._loadInstrument(ins)
         self.instrumentSoundLoadRequested.emit(str(instrumentInstance.absSoundPath))
         self.instrumentAdded.emit(instrumentInstance)
@@ -168,11 +178,19 @@ class InstrumentController(QtCore.QObject):
 
     @QtCore.pyqtSlot(int)
     def removeInstrument(self, id: int) -> None:
+        """
+        Remove the instrument with ID `id` from the instrument list,
+        emitting the appropriate signals.
+        """
         self.instruments.pop(id)
         self.instrumentRemoved.emit(id)
         self.instrumentListUpdated.emit(self.instruments)
 
     def swapInstruments(self, id1: int, id2: int) -> None:
+        """
+        Swap the instruments with IDs `id1` and `id2` in the instrument list,
+        emitting the appropriate signals.
+        """
         self.instruments[id1], self.instruments[id2] = (
             self.instruments[id2],
             self.instruments[id1],
@@ -181,6 +199,9 @@ class InstrumentController(QtCore.QObject):
         self.instrumentListUpdated.emit(self.instruments)
 
     def resetInstruments(self) -> None:
+        """
+        Clears all custom instruments from the instrument list and emit the appropriate signals.
+        """
         first_custom_id = len(default_instruments)
         while len(self.instruments) > first_custom_id:
             self.instruments.pop()
