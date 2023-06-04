@@ -5,6 +5,9 @@
 .tmp/
 *.prof
 
+# Custom instrument sound files
+src/main/resources/base/sounds/
+
 # Editors
 .idea/
 
