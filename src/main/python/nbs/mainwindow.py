@@ -36,6 +36,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.layers = []
+        self.instruments = [*default_instruments]
         self.clipboard = QtGui.QGuiApplication.clipboard()
         self.setWindowTitle("Minecraft Note Block Studio")
         self.setMinimumSize(854, 480)
@@ -62,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initControllers(self):
         self.playbackController = PlaybackController()
-        self.instrumentController = InstrumentController(default_instruments)
+        self.instrumentController = InstrumentController(self.instruments)
         self.layerManager = LayerController(self.layers)
         self.songController = SongController(
             self.layerManager, self.instrumentController, self.playbackController
@@ -229,10 +230,6 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def initInstruments(self):
-
-        self.instruments = [*default_instruments]
-        self.instrumentController = InstrumentController(instruments=self.instruments)
-
         control = self.instrumentController
         dialog = self.instrumentSettingsDialog
         setAction = self.setCurrentInstrumentActionsManager
