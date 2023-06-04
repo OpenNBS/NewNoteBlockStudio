@@ -240,8 +240,8 @@ class MainWindow(QtWidgets.QMainWindow):
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
             self.soundLoadRequested.emit(sound_path)
 
-        self.instrumentController.instrumentSoundChanged.connect(
-            lambda id, sound: self.soundLoadRequested.emit(sound)
+        self.instrumentController.instrumentSoundLoadRequested.connect(
+            self.soundLoadRequested
         )
 
         # TODO: These ActionManager classes should be more high-level, and

@@ -1139,7 +1139,6 @@ class NoteBlock(QtWidgets.QGraphicsObject):
         self.yy = yy
         self.key = key
         self.ins = ins
-        self.ins = min(ins, 15)
         self.vel = vel
         self.pan = pan
         self.pit = pit

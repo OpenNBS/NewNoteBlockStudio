@@ -16,18 +16,25 @@ Color = Tuple[int, int, int]
 PathLike = Union[str, bytes, os.PathLike]
 
 
-def copy_sound_file(path: Optional[PathLike]) -> str:
-    """Copy a sound file to the Sounds folder, and return the new relative path."""
+def copy_sound_file(path: Optional[PathLike]) -> Path:
+    """
+    Copy a sound file to the Sounds folder, and return the new absolute path."""
+    print("PATH:", path)
     if path is None:
-        return ""
+        return Path("")
     try:
-        new_path = appctxt.get_resource(f"sounds/{os.path.basename(path)}")
+        new_path = appctxt.get_resource(str(Path("sounds", path)))
     except FileNotFoundError:
         if path is None:
             raise FileNotFoundError("Instrument sound path doesn't exist")
-        new_path = Path(appctxt.get_resource(f"sounds"), os.path.basename(path))
-        shutil.copy(path, new_path)
-    return os.path.basename(new_path)
+        new_path = Path(appctxt.get_resource("sounds"), path)
+        print("NEW PATH:", new_path)
+        os.makedirs(os.path.dirname(new_path), exist_ok=True)
+        shutil.copy(
+            "C:\\Users\\Bernardo\\Minecraft Note Block Studio\\Data\\Sounds\\" + path,
+            new_path,
+        )
+    return new_path
 
 
 def random_color() -> Color:
@@ -73,6 +80,7 @@ class InstrumentInstance:
         self.blockPixmap = loadBlockPixmap(self.__instrument.color or random_color())
         self.blockCount = 0
         self.loaded = False
+        self.absSoundPath: Optional[Path] = None
 
     @property
     def isDefault(self) -> bool:
@@ -134,11 +142,10 @@ class InstrumentController(QtCore.QObject):
         # iconPixmap = paint_icon(self.noteBlockPixmap, color)
 
         new_path = copy_sound_file(ins.sound_path)
-        ins.sound_path = new_path
         instrumentInstance = InstrumentInstance(
-            id=len(self.instruments),
-            instrument=ins,
+            id=len(self.instruments), instrument=ins
         )
+        instrumentInstance.absSoundPath = new_path
         self.instruments.append(instrumentInstance)
         return instrumentInstance
 
@@ -155,8 +162,8 @@ class InstrumentController(QtCore.QObject):
     @QtCore.pyqtSlot(Instrument)
     def addInstrument(self, ins: Instrument) -> None:
         instrumentInstance = self._loadInstrument(ins)
+        self.instrumentSoundLoadRequested.emit(str(instrumentInstance.absSoundPath))
         self.instrumentAdded.emit(instrumentInstance)
-        self.instrumentSoundLoadRequested.emit(ins.sound_path)
         self.instrumentListUpdated.emit(self.instruments)
 
     @QtCore.pyqtSlot(int)
