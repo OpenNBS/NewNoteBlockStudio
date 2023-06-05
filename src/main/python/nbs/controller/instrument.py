@@ -48,6 +48,12 @@ def random_color() -> Color:
     )
 
 
+def id_to_color(id: int) -> Color:
+    color_index = id % 16
+    hue = color_index / 16
+    return tuple(round(x * 255) for x in colorsys.hsv_to_rgb(hue, 0.5, 1))
+
+
 def load_default_icon(path: PathLike) -> QtGui.QIcon:
     try:
         return QtGui.QIcon(appctxt.get_resource(f"images/instruments/{path}"))
@@ -57,7 +63,26 @@ def load_default_icon(path: PathLike) -> QtGui.QIcon:
 
 def load_custom_icon(id: int) -> QtGui.QIcon:
     # TODO: generate custom icon based on id
-    return load_default_icon("harp.png")
+    pixmap = QtGui.QPixmap(appctxt.get_resource("images/instruments/harp.png"))
+    painter = QtGui.QPainter(pixmap)
+    painter.setPen(QtCore.Qt.GlobalColor.black)
+    painter.setBrush(QtGui.QColor(*id_to_color(id)))
+    painter.drawRect(6, 6, 17, 17)
+
+    id_padded = str(id + 1).rjust(2, "0")
+
+    # draw semi-transparent black text as shadow
+    painter.setOpacity(0.9)
+    painter.setFont(QtGui.QFont("Arial", 9, QtGui.QFont.Bold))
+    painter.setBrush(QtCore.Qt.GlobalColor.black)
+    painter.drawText(7, 7, 17, 17, QtCore.Qt.AlignCenter, id_padded)
+
+    # draw white text on top
+    painter.setOpacity(1)
+    painter.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.white))
+    painter.drawText(6, 6, 17, 17, QtCore.Qt.AlignCenter, id_padded)
+    painter.end()
+    return QtGui.QIcon(pixmap)
 
 
 def loadBlockPixmap(color: Color) -> QtGui.QPixmap:
@@ -76,7 +101,8 @@ class InstrumentInstance:
         if self.__instrument.icon_path is not None:
             self.icon = load_default_icon(self.__instrument.icon_path)
         else:
-            self.icon = load_custom_icon(self.id)
+            custom_id = self.id - len(default_instruments)
+            self.icon = load_custom_icon(custom_id)
         self.blockPixmap = loadBlockPixmap(self.__instrument.color or random_color())
         self.blockCount = 0
         self.loaded = False
