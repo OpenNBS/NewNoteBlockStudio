@@ -20,7 +20,7 @@ from nbs.ui.dialog.instrument_settings import InstrumentSettingsDialog
 from nbs.ui.file import getLoadSongDialog, getSaveSongDialog
 from nbs.ui.menus import EditMenu, MenuBar
 from nbs.ui.status_bar import StatusBar
-from nbs.ui.toolbar import ToolBar
+from nbs.ui.toolbar import InstrumentToolBar, ToolBar
 from nbs.ui.workspace import *
 from nbs.ui.workspace.layers import LayerArea
 from nbs.ui.workspace.note_blocks import NoteBlockArea
@@ -73,12 +73,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def initUI(self):
         self.menuBar = MenuBar()
         self.toolBar = ToolBar()
-        # self.instrumentBar = InstrumentToolBar()
+        self.instrumentBar = InstrumentToolBar()
         self.statusBar = StatusBar()
 
         self.setMenuBar(self.menuBar)
         self.addToolBar(self.toolBar)
-        # self.addToolBar(self.instrumentBar)
+        self.addToolBar(self.instrumentBar)
         self.setStatusBar(self.statusBar)
 
         self.noteBlockAreaCtxMenu = EditMenu(isFloat=True)
@@ -255,8 +255,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.setCurrentInstrumentActionsManager.currentInstrument = 0
 
-        self.toolBar.populateInstruments()
-        self.toolBar.instrumentButtonPressed.connect(
+        self.instrumentBar.populateInstruments()
+        self.instrumentBar.instrumentButtonPressed.connect(
             lambda id_: self.audioEngine.playSound(
                 id_, 1.0, self.piano.activeKey - 45, 0
             )
@@ -269,7 +269,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         # Toolbars and menus
-        control.instrumentListUpdated.connect(self.toolBar.populateInstruments)
+        control.instrumentListUpdated.connect(self.instrumentBar.populateInstruments)
         control.instrumentListUpdated.connect(self.menuBar.updateInstruments)
 
         # Instrument Settings dialog
@@ -286,7 +286,7 @@ class MainWindow(QtWidgets.QMainWindow):
         control.instrumentChanged.connect(dialog.editInstrument)
         control.instrumentSwapped.connect(dialog.shiftInstrument)
 
-        control.instrumentListUpdated.connect(self.toolBar.populateInstruments)
+        control.instrumentListUpdated.connect(self.instrumentBar.populateInstruments)
         control.instrumentListUpdated.connect(
             self.changeInstrumentActionsManager.updateActions
         )
