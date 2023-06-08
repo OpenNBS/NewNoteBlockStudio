@@ -31,6 +31,7 @@ class Actions(QtCore.QObject):
             "record": qta.icon("mdi.record"),
             "loop": qta.icon("mdi.repeat"),
             "loop_off": qta.icon("mdi.repeat-off"),
+            "metronome": qta.icon("mdi.timer"),
             "undo": qta.icon("mdi.undo"),
             "redo": qta.icon("mdi.redo"),
             "cut": qta.icon("mdi.content-cut"),
@@ -51,6 +52,7 @@ class Actions(QtCore.QObject):
             "donate": qta.icon("mdi.heart"),
             "changelog": qta.icon("mdi.text-box"),
             "about": qta.icon("mdi.information"),
+            "compatibility_compatible": qta.icon("mdi.check-circle-outline"),
             "": QIcon(),
         }
 
@@ -79,7 +81,7 @@ class Actions(QtCore.QObject):
         cls.rewindAction = QAction(icons["rewind"], "Rewind song")
         cls.loopAction = QAction(icons["loop"], "Toggle looping")
         cls.loopAction.setCheckable(True)
-        cls.metronomeAction = QAction(icons[""], "Toggle metronome")
+        cls.metronomeAction = QAction(icons["metronome"], "Toggle metronome")
         cls.metronomeAction.setCheckable(True)
 
         # Edit
@@ -135,7 +137,7 @@ class Actions(QtCore.QObject):
         )
         cls.preferencesAction = QAction(icons["settings"], "Preferences...")
         cls.compatibilityAction = QAction(
-            icons[""], "Compatible"
+            icons["compatibility_compatible"], "Compatible"
         )
 
         # About

@@ -58,7 +58,7 @@ class EditToolBar(QtWidgets.QToolBar):
         )
         self.addWidget(spacer)
 
-        self.compatibilityAction = self.addAction("Compatible")
+        self.compatibilityAction = self.addAction(Actions.compatibilityAction)
 
 
 class InstrumentToolBar(QtWidgets.QToolBar):
