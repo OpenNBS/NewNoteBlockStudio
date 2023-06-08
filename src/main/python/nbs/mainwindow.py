@@ -30,7 +30,6 @@ from nbs.ui.workspace.workspace import Workspace
 
 
 class MainWindow(QtWidgets.QMainWindow):
-
     soundLoadRequested = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -313,7 +312,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot()
     def loadSong(self):
-
         filename = getLoadSongDialog()
         if not filename:
             return
@@ -329,4 +327,3 @@ class MainWindow(QtWidgets.QMainWindow):
         if not filename:
             return
         save_song(self.songController.song, filename)
-

@@ -13,7 +13,6 @@ from nbs.core.data import Instrument
 class Actions(QtCore.QObject):
     @classmethod
     def initActions(cls):
-
         # qta.icon can't be on the top level of the module, so we must
         # put everything into a method and call it after QApplication
         # is created. See https://github.com/spyder-ide/qtawesome/issues/144
@@ -21,40 +20,38 @@ class Actions(QtCore.QObject):
         # TODO: There's probably a better way to do this...
 
         icons = {
-            # fmt: off
-            "new_song":         qta.icon('mdi.file-plus'),
-            "open_song":        qta.icon('mdi.folder-open'),
-            "save_song":        qta.icon('mdi.content-save'),
-            "save_song_as":     qta.icon('mdi.content-save-all'),
-            "rewind":           qta.icon('mdi.rewind'),
-            "fast_forward":     qta.icon('mdi.fast-forward'),
-            "play_pause":       qta.icon('mdi.play', selected='mdi.pause'),
-            "stop":             qta.icon('mdi.stop'),
-            "record":           qta.icon('mdi.record'),
-            "loop":             qta.icon('mdi.repeat'),
-            "loop_off":         qta.icon('mdi.repeat-off'),
-            "undo":             qta.icon('mdi.undo'),
-            "redo":             qta.icon('mdi.redo'),
-            "cut":              qta.icon('mdi.content-cut'),
-            "copy":             qta.icon('mdi.content-copy'),
-            "paste":            qta.icon('mdi.content-paste'),
-            "delete":           qta.icon('mdi.delete'),
-            "select_all":       qta.icon('mdi.select-all'),
-            "song_instruments": qta.icon('mdi.piano'),
-            "song_info":        qta.icon('mdi.information'),
-            "song_properties":  qta.icon('mdi.label'),
-            "song_stats":       qta.icon('mdi.file-document-edit'),
-            "midi_devices":     qta.icon('mdi.usb'),
-            "settings":         qta.icon('mdi.cog'),
-            "website":          qta.icon('mdi.web'),
-            "github":           qta.icon('mdi.github'),
-            "discord":          qta.icon('mdi.discord'),
-            "report_bug":       qta.icon('mdi.bug'),
-            "donate":           qta.icon('mdi.heart'),
-            "changelog":        qta.icon('mdi.text-box'),
-            "about":            qta.icon('mdi.information'),
-            "":                 QIcon()
-            # fmt: on
+            "new_song": qta.icon("mdi.file-plus"),
+            "open_song": qta.icon("mdi.folder-open"),
+            "save_song": qta.icon("mdi.content-save"),
+            "save_song_as": qta.icon("mdi.content-save-all"),
+            "rewind": qta.icon("mdi.rewind"),
+            "fast_forward": qta.icon("mdi.fast-forward"),
+            "play_pause": qta.icon("mdi.play", selected="mdi.pause"),
+            "stop": qta.icon("mdi.stop"),
+            "record": qta.icon("mdi.record"),
+            "loop": qta.icon("mdi.repeat"),
+            "loop_off": qta.icon("mdi.repeat-off"),
+            "undo": qta.icon("mdi.undo"),
+            "redo": qta.icon("mdi.redo"),
+            "cut": qta.icon("mdi.content-cut"),
+            "copy": qta.icon("mdi.content-copy"),
+            "paste": qta.icon("mdi.content-paste"),
+            "delete": qta.icon("mdi.delete"),
+            "select_all": qta.icon("mdi.select-all"),
+            "song_instruments": qta.icon("mdi.piano"),
+            "song_info": qta.icon("mdi.information"),
+            "song_properties": qta.icon("mdi.label"),
+            "song_stats": qta.icon("mdi.file-document-edit"),
+            "midi_devices": qta.icon("mdi.usb"),
+            "settings": qta.icon("mdi.cog"),
+            "website": qta.icon("mdi.web"),
+            "github": qta.icon("mdi.github"),
+            "discord": qta.icon("mdi.discord"),
+            "report_bug": qta.icon("mdi.bug"),
+            "donate": qta.icon("mdi.heart"),
+            "changelog": qta.icon("mdi.text-box"),
+            "about": qta.icon("mdi.information"),
+            "": QIcon(),
         }
 
         # File
