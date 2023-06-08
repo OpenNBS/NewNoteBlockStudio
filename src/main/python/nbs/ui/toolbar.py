@@ -4,25 +4,41 @@ import nbs.ui.actions as actions
 from nbs.ui.actions import Actions
 
 
-class ToolBar(QtWidgets.QToolBar):
+class PlaybackToolBar(QtWidgets.QToolBar):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setMovable(False)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred
+        )
         self.addActions()
 
     def addActions(self):
-        self.newSongAction = self.addAction(Actions.newSongAction)
-        self.openSongAction = self.addAction(Actions.openSongAction)
-        self.saveSongAction = self.addAction(Actions.saveSongAction)
+        self.newAction = self.addAction(Actions.newSongAction)
+        self.openAction = self.addAction(Actions.openSongAction)
+        self.saveAction = self.addAction(Actions.saveSongAction)
+        self.saveAsAction = self.addAction(Actions.saveSongAsAction)
         self.addSeparator()
-
         self.playPauseAction = self.addAction(Actions.playPauseAction)
         self.stopAction = self.addAction(Actions.stopAction)
         self.rewindAction = self.addAction(Actions.rewindAction)
         self.fastForwardAction = self.addAction(Actions.fastForwardAction)
         self.recordAction = self.addAction(Actions.rewindAction)
         self.loopAction = self.addAction(Actions.loopAction)
-        self.addSeparator()
+        self.metronomeAction = self.addAction(Actions.metronomeAction)
 
+
+class EditToolBar(QtWidgets.QToolBar):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMovable(False)
+        self.setMinimumWidth(450)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred
+        )
+        self.addActions()
+
+    def addActions(self):
         self.undoAction = self.addAction(Actions.undoAction)
         self.redoAction = self.addAction(Actions.redoAction)
         self.cutAction = self.addAction(Actions.cutAction)
@@ -30,15 +46,11 @@ class ToolBar(QtWidgets.QToolBar):
         self.pasteAction = self.addAction(Actions.pasteAction)
         self.deleteAction = self.addAction(Actions.deleteAction)
         self.addSeparator()
-
         self.songInfoAction = self.addAction(Actions.songInfoAction)
         self.songPropertiesAction = self.addAction(Actions.songPropertiesAction)
         self.instrumentSettingsAction = self.addAction(Actions.instrumentSettingsAction)
         self.deviceManagerAction = self.addAction(Actions.deviceManagerAction)
         self.preferencesAction = self.addAction(Actions.preferencesAction)
-        self.addSeparator()
-
-        self.websiteAction = self.addAction(Actions.websiteAction)
 
         spacer = QtWidgets.QWidget()
         spacer.setSizePolicy(
@@ -46,7 +58,7 @@ class ToolBar(QtWidgets.QToolBar):
         )
         self.addWidget(spacer)
 
-        self.addAction("Compatible")
+        self.compatibilityAction = self.addAction("Compatible")
 
 
 class InstrumentToolBar(QtWidgets.QToolBar):
@@ -55,6 +67,8 @@ class InstrumentToolBar(QtWidgets.QToolBar):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.buttonGroup = QtWidgets.QButtonGroup(self)
+        self.setMovable(True)
+        self.setFloatable(False)
         self.buttonGroup.idClicked.connect(self.instrumentButtonPressed)
 
     @QtCore.pyqtSlot(list)

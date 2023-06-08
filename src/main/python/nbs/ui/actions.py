@@ -137,6 +137,9 @@ class Actions(QtCore.QObject):
             icons["midi_devices"], "MIDI device manager..."
         )
         cls.preferencesAction = QAction(icons["settings"], "Preferences...")
+        cls.compatibilityAction = QAction(
+            icons[""], "Compatible"
+        )
 
         # About
         cls.websiteAction = QAction(icons["website"], "Website...")
