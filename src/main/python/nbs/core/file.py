@@ -9,8 +9,7 @@ from typing import Sequence, Union
 import pynbs
 
 from nbs.core.data import NBS_VERSION, Instrument, Layer, Note, Song, SongHeader
-
-PathLike = Union[str, bytes, os.PathLike]
+from nbs.utils.file import PathLike
 
 
 def load_song(path: PathLike) -> Song:

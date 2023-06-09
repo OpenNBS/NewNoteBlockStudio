@@ -8,7 +8,7 @@ import sounddevice as sd
 from pydub import AudioSegment
 from PyQt5 import QtCore
 
-PathLike = Union[str, bytes, os.PathLike]
+from nbs.utils.file import PathLike
 
 
 def key_to_pitch(key: float) -> float:
