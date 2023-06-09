@@ -1,7 +1,5 @@
 import colorsys
-import os
 import random
-import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, List, Optional, Sequence, Tuple, Union
@@ -11,16 +9,16 @@ from PyQt5 import QtCore, QtGui
 
 from nbs.core.context import appctxt
 from nbs.core.data import Instrument, default_instruments
+from nbs.utils.file import PathLike, copy_file
 
 Color = Tuple[int, int, int]
-PathLike = Union[str, bytes, os.PathLike]
 
 
 def copy_sound_file(path: Optional[PathLike]) -> Path:
     """
-    Copy a sound file to the Sounds folder, and return the new absolute path."""
-    print("PATH:", path)
-    if path is None:
+    Copy a sound file to the Sounds folder, and return the new absolute path.
+    """
+    if path is None or path == "":
         return Path("")
     try:
         new_path = appctxt.get_resource(str(Path("sounds", path)))
@@ -28,13 +26,8 @@ def copy_sound_file(path: Optional[PathLike]) -> Path:
         if path is None:
             raise FileNotFoundError("Instrument sound path doesn't exist")
         new_path = Path(appctxt.get_resource("sounds"), path)
-        print("NEW PATH:", new_path)
-        os.makedirs(os.path.dirname(new_path), exist_ok=True)
-        shutil.copy(
-            "C:\\Users\\Bernardo\\Minecraft Note Block Studio\\Data\\Sounds\\" + path,
-            new_path,
-        )
-    return new_path
+        copy_file(path, new_path)
+    return Path(new_path)
 
 
 def random_color() -> Color:
