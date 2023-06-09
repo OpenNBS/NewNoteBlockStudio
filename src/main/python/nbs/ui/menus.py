@@ -1,6 +1,7 @@
+from typing import List, Optional
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import nbs.ui.actions as actions
 from nbs.core.data import Instrument
 from nbs.ui.actions import Actions
 
@@ -45,50 +46,58 @@ class FileMenu(QtWidgets.QMenu):
 
 
 class InstrumentEditSubMenu(QtWidgets.QMenu):
-
     instrumentChanged = QtCore.pyqtSignal(int)
 
-    def __init__(self, parent=None, title=None):
-        super().__init__(parent)
+    def __init__(
+        self,
+        actionList: List[QtWidgets.QAction],
+        parent: Optional[QtWidgets.QWidget] = None,
+    ):
+        super().__init__(parent=parent)
+        self.actionList = actionList
         self.setTitle("Change instrument...")
-        self.aboutToShow.connect(self.populateInstruments)
+        self.aboutToShow.connect(self.populateActions)
 
-    def populateInstruments(self) -> None:
+    def populateActions(self) -> None:
         self.clear()
-        for action in actions.changeInstrumentActions:
+        for action in self.actionList:
             self.addAction(action)
 
 
 class InstrumentSettingsSubMenu(QtWidgets.QMenu):
-
     instrumentChanged = QtCore.pyqtSignal(int)
 
-    def __init__(self, parent=None, title=None):
+    def __init__(
+        self,
+        actionList: List[QtWidgets.QAction],
+        parent: Optional[QtWidgets.QWidget] = None,
+    ):
         super().__init__(parent)
+        self.actionList = actionList
         self.setTitle("Instrument")
-        self.aboutToShow.connect(self.populateInstruments)
+        self.aboutToShow.connect(self.populateActions)
 
-    def populateInstruments(self) -> None:
+    def populateActions(self) -> None:
         self.clear()
-        for action in actions.setCurrentInstrumentActions:
+        for action in self.actionList:
             self.addAction(action)
 
 
 class EditMenu(QtWidgets.QMenu):
     def __init__(
         self,
-        parent=None,
-        isFloat: bool = False,
-        selection: int = 0,
-        clipboard: bool = True,
+        instrumentActions: List[QtWidgets.QAction] = [],
+        parent: Optional[QtWidgets.QWidget] = None,
+        isContextMenu: bool = False,
     ):
         super().__init__(parent)
-        self.isFloat = isFloat
+        self.instrumentActions = instrumentActions
+        self.isContextMenu = isContextMenu
         self.setTitle("Edit")
         self.addEntries()
 
     def addEntries(self):
-        if self.isFloat:
+        if self.isContextMenu:
             self.addAction(Actions.cutAction)
             self.addAction(Actions.copyAction)
             self.addAction(Actions.pasteAction)
@@ -109,7 +118,7 @@ class EditMenu(QtWidgets.QMenu):
         self.addAction(Actions.invertSelectionAction)
         self.addSeparator()
 
-        if self.isFloat:
+        if self.isContextMenu:
             self.addAction(Actions.selectAllLeftAction)
             self.addAction(Actions.selectAllRightAction)
             self.addSeparator()
@@ -122,7 +131,9 @@ class EditMenu(QtWidgets.QMenu):
         self.addAction(Actions.decreaseOctaveAction)
         self.addAction(Actions.increaseKeyAction)
         self.addAction(Actions.decreaseKeyAction)
-        self.changeInstrumentMenu = InstrumentEditSubMenu(self)
+        self.changeInstrumentMenu = InstrumentEditSubMenu(
+            actionList=self.instrumentActions, parent=self
+        )
         self.addMenu(self.changeInstrumentMenu)
         self.addSeparator()
 
@@ -140,19 +151,22 @@ class EditMenu(QtWidgets.QMenu):
             f"Select all but {instrument.name}"
         )
 
-    def updateInstruments(self):
-        pass
-        # self.changeInstrumentMenu.updateInstruments()
-
 
 class SettingsMenu(QtWidgets.QMenu):
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        instrumentActions: List[QtWidgets.QAction],
+        parent: Optional[QtWidgets.QWidget] = None,
+    ):
         super().__init__(parent)
+        self.instrumentActions = instrumentActions
         self.setTitle("Settings")
         self.addEntries()
 
     def addEntries(self):
-        self.instrumentMenu = InstrumentSettingsSubMenu(self)
+        self.instrumentMenu = InstrumentSettingsSubMenu(
+            actionList=self.instrumentActions, parent=self
+        )
         self.addMenu(self.instrumentMenu)
         self.addAction(Actions.instrumentSettingsAction)
         self.addSeparator()
@@ -164,12 +178,6 @@ class SettingsMenu(QtWidgets.QMenu):
 
         self.addAction(Actions.deviceManagerAction)
         self.addAction(Actions.preferencesAction)
-
-    def changeCurrentInstrument(self, instrument: Instrument):
-        self.instrumentMenu.changeCurrentInstrument(0)
-
-    def updateInstruments(self):
-        self.instrumentMenu.populateInstruments()
 
 
 class HelpMenu(QtWidgets.QMenu):
@@ -191,21 +199,28 @@ class HelpMenu(QtWidgets.QMenu):
 
 
 class MenuBar(QtWidgets.QMenuBar):
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        setCurrentInstrumentActions: List[QtWidgets.QAction],
+        changeInstrumentActions: List[QtWidgets.QAction],
+        parent: Optional[QtWidgets.QWidget] = None,
+    ):
         super().__init__(parent)
+        self.setCurrentInstrumentActions = setCurrentInstrumentActions
+        self.changeInstrumentActions = changeInstrumentActions
         self.initUI()
 
     def initUI(self):
         self.fileMenu = FileMenu()
-        self.editMenu = EditMenu(isFloat=False)
-        self.settingsMenu = SettingsMenu()
+        self.editMenu = EditMenu(
+            instrumentActions=self.changeInstrumentActions, isContextMenu=False
+        )
+        self.settingsMenu = SettingsMenu(
+            instrumentActions=self.setCurrentInstrumentActions
+        )
         self.helpMenu = HelpMenu()
 
         self.addMenu(self.fileMenu)
         self.addMenu(self.editMenu)
         self.addMenu(self.settingsMenu)
         self.addMenu(self.helpMenu)
-
-    def updateInstruments(self):
-        self.editMenu.updateInstruments()
-        self.settingsMenu.updateInstruments()

@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Dict, List, Optional, Sequence
 
 import qtawesome as qta
 from PyQt5 import QtCore
@@ -6,8 +6,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup
 
 from nbs.controller.instrument import InstrumentInstance
-from nbs.core.context import appctxt
-from nbs.core.data import Instrument
+
+IconDictKey = str
 
 
 class Actions(QtCore.QObject):
@@ -19,7 +19,7 @@ class Actions(QtCore.QObject):
 
         # TODO: There's probably a better way to do this...
 
-        icons = {
+        icons: Dict[IconDictKey, QIcon] = {
             "new_song": qta.icon("mdi.file-plus"),
             "open_song": qta.icon("mdi.folder-open"),
             "save_song": qta.icon("mdi.content-save"),
@@ -150,17 +150,23 @@ class Actions(QtCore.QObject):
         cls.aboutAction = QAction(icons["about"], "About...")
 
         cls.setClipboard(False)
-        cls.setBlockCount(0)
-        cls.setSelectionStatus(-2)
+        cls.setBlockCount(cls, 0)
+        cls.setSelectionStatus(cls, -2)
 
     @classmethod
     def setClipboard(cls, hasClipboard: bool) -> None:
-        """Set actions that should only be enabled when there is something in the clipboard."""
+        """
+        Set the status of all actions that should only be enabled when there is something
+        in the clipboard.
+        """
         cls.pasteAction.setEnabled(hasClipboard)
 
     @classmethod
     def setEmptyActionsEnabled(cls, enabled: bool = True):
-        """Set actions that should only be enabled when at least one note block exists."""
+        """
+        Set the status of all actions that should only be enabled when at least
+        one note block exists.
+        """
         cls.saveSongAction.setEnabled(enabled)
         cls.saveSongAsAction.setEnabled(enabled)
         cls.saveOptionsAction.setEnabled(enabled)
@@ -173,7 +179,9 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setSelectionActionsEnabled(cls, enabled: bool = True):
-        """Set actions that should only be enabled when there is a selection."""
+        """
+        Set the status of all actions that should only be enabled when there is a selection.
+        """
         cls.cutAction.setEnabled(enabled)
         cls.copyAction.setEnabled(enabled)
         cls.deleteAction.setEnabled(enabled)
@@ -190,7 +198,9 @@ class Actions(QtCore.QObject):
 
     @classmethod
     def setFullSelectionActionsEnabled(cls, enabled: bool = False):
-        """Set actions that should be disabled when all note blocks are selected."""
+        """
+        Set the status of all actions that should be disabled when all note blocks are selected.
+        """
         cls.selectAllAction.setEnabled(enabled)
         cls.selectAllLeftAction.setEnabled(enabled)
         cls.selectAllRightAction.setEnabled(enabled)
@@ -198,8 +208,10 @@ class Actions(QtCore.QObject):
         cls.selectAllButInstrumentAction.setEnabled(enabled)
 
     @QtCore.pyqtSlot(int)
-    def setSelectionStatus(selection: int) -> None:
-        """Enable or disable the necessary actions according to the given selection status."""
+    def setSelectionStatus(cls, selection: int) -> None:
+        """
+        Enable or disable the necessary actions according to the given selection status.
+        """
         if selection == -1:
             Actions.setNoneSelected()
         elif selection == 0:
@@ -208,7 +220,7 @@ class Actions(QtCore.QObject):
             Actions.setAllSelected()
 
     @QtCore.pyqtSlot(int)
-    def setBlockCount(blockCount: int) -> None:
+    def setBlockCount(cls, blockCount: int) -> None:
         if blockCount == 0:
             Actions.setEmpty()
         else:
@@ -241,28 +253,28 @@ class Actions(QtCore.QObject):
         cls.setFullSelectionActionsEnabled(True)
 
 
-setCurrentInstrumentActions = []
-changeInstrumentActions = []
+class SetCurrentInstrumentActionManager(QtCore.QObject):
+    """
+    Manage actions responsible for changing the currently active instrument.
+    """
 
+    currentInstrumentChangeRequested = QtCore.pyqtSignal(int)
 
-class SetCurrentInstrumentActionsManager(QtCore.QObject):
-    """Handle actions responsible for changing the currently active instrument."""
-
-    instrumentChanged = QtCore.pyqtSignal(int)
-
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(parent)
+        self.actions: List[QAction] = []
         self.actionGroup = QActionGroup(self)
         self.actionGroup.setExclusive(True)
         self.actionGroup.triggered.connect(
-            lambda action: self.instrumentChanged.emit(action.data())
+            lambda action: self.currentInstrumentChangeRequested.emit(action.data())
         )
 
     @QtCore.pyqtSlot(list)
-    def updateActions(self, instruments: Sequence[InstrumentInstance]):
-        """Update the list of instruments."""
-        global setCurrentInstrumentActions
-        setCurrentInstrumentActions = []
+    def updateInstruments(self, instruments: Sequence[InstrumentInstance]):
+        """
+        Update the list of instrument actions to match the given list of instruments.
+        """
+        self.actions.clear()
 
         for id_, instrument in enumerate(instruments):
             action = QAction(f"{instrument.name}")
@@ -274,25 +286,19 @@ class SetCurrentInstrumentActionsManager(QtCore.QObject):
             action.setIconVisibleInMenu(False)
 
             self.actionGroup.addAction(action)
-            setCurrentInstrumentActions.append(action)
+            self.actions.append(action)
 
-    @property
-    def currentInstrument(self):
-        return self.actionGroup.checkedAction().data()
-
-    @currentInstrument.setter
-    def currentInstrument(self, id_: int):
-        global setCurrentInstrumentActions
-        if id_ < 0 or id_ >= len(setCurrentInstrumentActions):
-            raise ValueError(f"Invalid instrument ID: {id}")
-        setCurrentInstrumentActions[id_].setChecked(True)
-        self.instrumentChanged.emit(id_)
+    @QtCore.pyqtSlot(int)
+    def setCurrentInstrument(self, id: int):
+        self.actions[id].setChecked(True)
 
 
-class ChangeInstrumentActionsManager(QtCore.QObject):
-    """Handle actions responsible for changing the instrument of a selection."""
+class ChangeInstrumentActionManager(QtCore.QObject):
+    """
+    Manage actions responsible for changing the instrument of a selection.
+    """
 
-    instrumentChanged = QtCore.pyqtSignal(int)
+    instrumentChangeRequested = QtCore.pyqtSignal(int)
 
     # TODO: Perhaps here we should have individual add/remove/swapInstrument slots,
     # because populating an entire menu when it's about to show is acceptable, but creating new
@@ -300,20 +306,22 @@ class ChangeInstrumentActionsManager(QtCore.QObject):
     # Or, instead, updateInstruments could be smart about which actions to keep or remove by detecting
     # what changed in the list of instruments.
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: Optional[QtCore.QObject] = None) -> None:
         super().__init__(parent)
+        self.actions: List[QAction] = []
         self.actionGroup = QActionGroup(self)
         self.actionGroup.triggered.connect(
-            lambda action: self.instrumentChanged.emit(action.data())
+            lambda action: self.instrumentChangeRequested.emit(action.data())
         )
 
     @QtCore.pyqtSlot(list)
-    def updateActions(self, instruments: Sequence[Instrument]):
-        """Update the list of instruments."""
-        global changeInstrumentActions
-        changeInstrumentActions = []
+    def updateInstruments(self, instruments: Sequence[InstrumentInstance]):
+        """
+        Update the list of instrument actions to match the given list of instruments.
+        """
+        self.actions.clear()
         for id_, instrument in enumerate(instruments):
             action = QAction(f"...to {instrument.name}")
             action.setData(id_)
             self.actionGroup.addAction(action)
-            changeInstrumentActions.append(action)
+            self.actions.append(action)

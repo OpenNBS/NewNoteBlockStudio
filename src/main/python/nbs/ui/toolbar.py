@@ -1,19 +1,20 @@
+from typing import List, Optional
+
 from PyQt5 import QtCore, QtWidgets
 
-import nbs.ui.actions as actions
 from nbs.ui.actions import Actions
 
 
 class PlaybackToolBar(QtWidgets.QToolBar):
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent)
         self.setMovable(False)
         self.setSizePolicy(
             QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred
         )
-        self.addActions()
+        self.initActions()
 
-    def addActions(self):
+    def initActions(self):
         self.newAction = self.addAction(Actions.newSongAction)
         self.openAction = self.addAction(Actions.openSongAction)
         self.saveAction = self.addAction(Actions.saveSongAction)
@@ -29,16 +30,16 @@ class PlaybackToolBar(QtWidgets.QToolBar):
 
 
 class EditToolBar(QtWidgets.QToolBar):
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent)
         self.setMovable(False)
         self.setMinimumWidth(450)
         self.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred
         )
-        self.addActions()
+        self.initActions()
 
-    def addActions(self):
+    def initActions(self):
         self.undoAction = self.addAction(Actions.undoAction)
         self.redoAction = self.addAction(Actions.redoAction)
         self.cutAction = self.addAction(Actions.cutAction)
@@ -64,7 +65,7 @@ class EditToolBar(QtWidgets.QToolBar):
 class InstrumentToolBar(QtWidgets.QToolBar):
     instrumentButtonPressed = QtCore.pyqtSignal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent)
         self.buttonGroup = QtWidgets.QButtonGroup(self)
         self.setMovable(True)
@@ -72,9 +73,9 @@ class InstrumentToolBar(QtWidgets.QToolBar):
         self.buttonGroup.idClicked.connect(self.instrumentButtonPressed)
 
     @QtCore.pyqtSlot(list)
-    def populateInstruments(self):
+    def populateInstruments(self, actions: List[QtWidgets.QAction]):
         self.clear()
-        for id_, action in enumerate(actions.setCurrentInstrumentActions):
+        for id_, action in enumerate(actions):
             button = QtWidgets.QToolButton(parent=self)
             button.setDefaultAction(action)
 

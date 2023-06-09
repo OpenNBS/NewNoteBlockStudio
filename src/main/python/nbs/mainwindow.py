@@ -13,8 +13,8 @@ from nbs.core.data import Song, default_instruments
 from nbs.core.file import load_song, save_song
 from nbs.ui.actions import (
     Actions,
-    ChangeInstrumentActionsManager,
-    SetCurrentInstrumentActionsManager,
+    ChangeInstrumentActionManager,
+    SetCurrentInstrumentActionManager,
 )
 from nbs.ui.dialog.instrument_settings import InstrumentSettingsDialog
 from nbs.ui.file import getLoadSongDialog, getSaveSongDialog
@@ -70,20 +70,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.clipboardManager = ClipboardController(self.clipboard)
 
     def initUI(self):
-        self.menuBar = MenuBar()
+        self.currentInstrumentActionManager = SetCurrentInstrumentActionManager()
+        self.changeInstrumentActionManager = ChangeInstrumentActionManager()
+
+        self.menuBar_ = MenuBar(
+            changeInstrumentActions=self.changeInstrumentActionManager.actions,
+            setCurrentInstrumentActions=self.currentInstrumentActionManager.actions,
+        )
         self.playbackToolBar = PlaybackToolBar()
         self.instrumentBar = InstrumentToolBar()
         self.editToolBar = EditToolBar()
 
         self.statusBar = StatusBar()
 
-        self.setMenuBar(self.menuBar)
+        self.setMenuBar(self.menuBar_)
         self.addToolBar(self.playbackToolBar)
         self.addToolBar(self.instrumentBar)
         self.addToolBar(self.editToolBar)
         self.setStatusBar(self.statusBar)
 
-        self.noteBlockAreaCtxMenu = EditMenu(isFloat=True)
+        self.noteBlockAreaCtxMenu = EditMenu(isContextMenu=True)
         self.noteBlockArea = NoteBlockArea(
             layers=self.layers, menu=self.noteBlockAreaCtxMenu
         )
@@ -94,9 +100,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.workspace = Workspace(self.noteBlockArea, self.layerArea, self.timeBar)
         self.centralArea = CentralArea(self.workspace, self.piano, self.pianoContainer)
-
-        self.setCurrentInstrumentActionsManager = SetCurrentInstrumentActionsManager()
-        self.changeInstrumentActionsManager = ChangeInstrumentActionsManager()
 
         self.setCentralWidget(self.centralArea)
 
@@ -224,7 +227,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Sounds
         self.piano.activeKeyChanged.connect(
             lambda key: self.audioEngine.playSound(
-                self.setCurrentInstrumentActionsManager.currentInstrument,
+                self.instrumentController.currentInstrument,
                 1.0,
                 key - 45,
                 0,
@@ -234,45 +237,48 @@ class MainWindow(QtWidgets.QMainWindow):
     def initInstruments(self):
         control = self.instrumentController
         dialog = self.instrumentSettingsDialog
-        setAction = self.setCurrentInstrumentActionsManager
-        changeAction = self.changeInstrumentActionsManager
+        setInsManager = self.currentInstrumentActionManager
+        changeInsManager = self.changeInstrumentActionManager
 
         # Audio engine
         for ins in default_instruments:
             sound_path = appctxt.get_resource(Path("sounds", ins.sound_path))
             self.soundLoadRequested.emit(sound_path)
 
-        self.instrumentController.instrumentSoundLoadRequested.connect(
-            self.soundLoadRequested
-        )
+        control.instrumentSoundLoadRequested.connect(self.soundLoadRequested)
 
-        # TODO: These ActionManager classes should be more high-level, and
-        # part of a more general 'ActionManager' class
+        # Set up initial state
+        control.setCurrentInstrument(0)
+        setInsManager.updateInstruments(self.instruments)
+
+        self.instrumentBar.populateInstruments(setInsManager.actions)
 
         # Set current instrument actions
-        self.setCurrentInstrumentActionsManager.updateActions(self.instruments)
-        self.setCurrentInstrumentActionsManager.instrumentChanged.connect(
+        setInsManager.currentInstrumentChangeRequested.connect(
             control.setCurrentInstrument
-            # self.centralWidget().workspace.piano.setValidRange(ins)
         )
-        self.setCurrentInstrumentActionsManager.currentInstrument = 0
+        control.instrumentListUpdated.connect(setInsManager.updateInstruments)
 
-        self.instrumentBar.populateInstruments()
+        # 'Change instrument...' actions
+        changeInsManager.instrumentChangeRequested.connect(control.setCurrentInstrument)
+        control.currentInstrumentChanged.connect(setInsManager.setCurrentInstrument)
+
+        # Instrument bar
         self.instrumentBar.instrumentButtonPressed.connect(
             lambda id_: self.audioEngine.playSound(
                 id_, 1.0, self.piano.activeKey - 45, 0
             )
         )
-
-        # 'Change instrument...' actions
-        self.changeInstrumentActionsManager.updateActions(self.instruments)
-        self.changeInstrumentActionsManager.instrumentChanged.connect(
-            self.noteBlockArea.changeSelectionInstrument
+        control.instrumentListUpdated.connect(
+            lambda: self.instrumentBar.populateInstruments(setInsManager.actions)
         )
 
-        # Toolbars and menus
-        control.instrumentListUpdated.connect(self.instrumentBar.populateInstruments)
-        control.instrumentListUpdated.connect(self.menuBar.updateInstruments)
+        # Menus are populated on demand
+
+        # Note block area
+        control.currentInstrumentChanged.connect(
+            self.noteBlockArea.setCurrentInstrument
+        )
 
         # Instrument Settings dialog
         dialog.instrumentAddRequested.connect(control.createInstrument)
@@ -282,19 +288,10 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.instrumentKeyChangeRequested.connect(control.setInstrumentKey)
         dialog.instrumentPressChangeRequested.connect(control.setInstrumentPress)
         dialog.instrumentShiftRequested.connect(control.swapInstruments)
-
         control.instrumentAdded.connect(dialog.addInstrument)
         control.instrumentRemoved.connect(dialog.removeInstrument)
         control.instrumentChanged.connect(dialog.editInstrument)
         control.instrumentSwapped.connect(dialog.shiftInstrument)
-
-        control.instrumentListUpdated.connect(self.instrumentBar.populateInstruments)
-        control.instrumentListUpdated.connect(
-            self.changeInstrumentActionsManager.updateActions
-        )
-        control.instrumentListUpdated.connect(
-            self.setCurrentInstrumentActionsManager.updateActions
-        )
 
     def initFile(self):
         Actions.openSongAction.triggered.connect(self.loadSong)
@@ -319,7 +316,7 @@ class MainWindow(QtWidgets.QMainWindow):
         song = load_song(filename)
         self.noteBlockArea.loadNoteData(song.notes)
         self.songController.loadSong(song)
-        self.setCurrentInstrumentActionsManager.currentInstrument = 0
+        self.instrumentController.setCurrentInstrument(0)
 
     @QtCore.pyqtSlot()
     def saveSong(self):
