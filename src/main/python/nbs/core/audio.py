@@ -261,6 +261,10 @@ class AudioEngine(QtCore.QObject):
 
     @QtCore.pyqtSlot(str)
     def loadSound(self, path: PathLike) -> None:
+        # TODO: use unique ID as sound identifier instead of index
+        if not os.path.exists(path) or not os.path.isfile(path):
+            self.sounds.append(None)
+            return
         sound = AudioSegment.from_file(path)
         sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
         if sound.channels < self.channels:
@@ -284,6 +288,8 @@ class AudioEngine(QtCore.QObject):
     @QtCore.pyqtSlot(int, float, float, float)
     def playSound(self, index: int, volume: float, key: float, panning: float):
         samples = self.sounds[index]
+        if samples is None:
+            return
         pitch = key_to_pitch(key)
         volume *= self.master_volume
         resampled = self.resampler.resample(index, samples, pitch)
