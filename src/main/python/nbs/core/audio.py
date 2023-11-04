@@ -262,10 +262,11 @@ class AudioEngine(QtCore.QObject):
     @QtCore.pyqtSlot(str)
     def loadSound(self, path: PathLike) -> None:
         # TODO: use unique ID as sound identifier instead of index
-        if not os.path.exists(path) or not os.path.isfile(path):
+        try:
+            sound = AudioSegment.from_file(path)
+        except (PermissionError, FileNotFoundError):
             self.sounds.append(None)
             return
-        sound = AudioSegment.from_file(path)
         sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
         if sound.channels < self.channels:
             sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
