@@ -2,24 +2,15 @@
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
     "python.analysis.extraPaths": ["./src/main/python"],
     "python.analysis.typeCheckingMode": "basic",
-    "python.formatting.provider": "black",
     "python.languageServer": "Pylance",
-    "python.linting.enabled": false,
-    "python.linting.pylintEnabled": false,
-    "python.linting.banditEnabled": false,
-    "python.linting.flake8Enabled": false,
-    "python.linting.mypyEnabled": false,
-    "python.linting.prospectorEnabled": false,
-    "python.linting.pycodestyleEnabled": false,
-    "python.linting.pydocstyleEnabled": false,
-    "python.linting.pylamaEnabled": false,
     "[python]": {
         "editor.tabSize": 4,
+        "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
         "editor.formatOnType": false,
         "editor.formatOnPaste": false,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true
+            "source.organizeImports.isort": true
         }
     },
     "python.testing.pytestEnabled": true,
