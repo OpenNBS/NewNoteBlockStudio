@@ -10,7 +10,7 @@
         "editor.formatOnType": false,
         "editor.formatOnPaste": false,
         "editor.codeActionsOnSave": {
-            "source.organizeImports.isort": true
+            "source.organizeImports": true
         }
     },
     "python.testing.pytestEnabled": true,
