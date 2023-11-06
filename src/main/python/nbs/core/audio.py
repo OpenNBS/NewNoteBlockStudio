@@ -1,7 +1,6 @@
 import math
-import os
 from datetime import datetime, timedelta
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 from openal.audio import SoundData, SoundSink, SoundSource
@@ -37,7 +36,6 @@ class SoundInstance:
             len(sound.data) / 4 * (1 / pitch) / 44100
         )  # 4 = 2 channels * 2 bytes per sample
         self.end_time = datetime.now() + timedelta(seconds=length_seconds)
-        # print(datetime.now(), self.end_time, length_seconds)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} ({len(self.sound.data)} samples)>"
@@ -49,9 +47,6 @@ class AudioSourcePool:
 
     def get_source(self) -> SoundSource:
         if self.free_sources:
-            # src = self.free_sources.pop()
-            # print("SOURCE:", src.dataproperties)
-            # print(len(self.free_sources))
             return self.free_sources.pop()
         else:
             raise NoSourceAvailableException("No free audio sources available")
@@ -83,18 +78,12 @@ class AudioOutputHandler:
         source.looping = False
         source.queue(samples)
 
-        # self.sink.process_source(source)
-
-        # print(source.dataproperties)
-
         sound = SoundInstance(samples, source, volume, pitch, panning)
         self.active_sounds.insert(0, sound)
 
         self.sink.play(source)
-        # self.update()
 
     def update(self):
-        # self.sink.update()
         # TODO: use a deque instead of a list / it might be possible
         # to avoid checking every single sound, if they're sorted by
         # end time
@@ -102,14 +91,10 @@ class AudioOutputHandler:
             # TODO: test polling the source state instead of using a timer
             # if sound.source["dataproperties"]["source_state"] == al.PLAYING:
             if datetime.now() >= sound.end_time:
-                # print("STOPPING SOUND - ", datetime.now() - sound.end_time)
                 self.active_sounds.remove(sound)
                 self.sink.stop(sound.source)
-                # self.sink.rewind(sound.source)
                 self.source_pool.release_source(sound.source)
                 sound.source.bufferqueue.clear()
-                # self.sink.process_source(sound.source)
-                # self.sink.refresh(sound.source)
         self.sink.update()
 
 
@@ -138,13 +123,10 @@ class AudioEngine(QtCore.QObject):
         self.update_timer.start()
 
     def run(self):
-        # self.handler.start()
         pass
 
     def stop(self):
         print("Stopping audio engine")
-        # self.handler.stop()
-        # self.handler.close()
         self.finished.emit()
 
     @QtCore.pyqtSlot(str)
@@ -174,7 +156,6 @@ class AudioEngine(QtCore.QObject):
         samplerate = sound.frame_rate
 
         data = SoundData(buf, channels, bitrate, len(buf), samplerate)
-        # data = (buf, channels, bitrate, len(buf), samplerate)
         self.sounds.append(data)
 
         print(f"Loaded {path}")
