@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
+import soundfile as sf
 from openal.audio import SoundData, SoundSink, SoundSource
-from pydub import AudioSegment
 from PyQt5 import QtCore
 
 from nbs.utils.file import PathLike
@@ -32,9 +32,10 @@ class SoundInstance:
         self.volume = volume
         self.pitch = pitch
         self.pan = pan
-        length_seconds = (
-            len(sound.data) / 4 * (1 / pitch) / 44100
-        )  # 4 = 2 channels * 2 bytes per sample
+        sample_size = sound.channels * sound.bitrate // 8
+        sample_rate = sound.frequency
+        length_samples = sound.size * (1 / pitch)
+        length_seconds = length_samples / (sample_size * sample_rate)
         self.end_time = datetime.now() + timedelta(seconds=length_seconds)
 
     def __repr__(self) -> str:
@@ -134,32 +135,20 @@ class AudioEngine(QtCore.QObject):
         # TODO: use unique ID as sound identifier instead of index
         print("LOADING:", path)
         try:
-            sound = AudioSegment.from_file(path)
-        except (PermissionError, FileNotFoundError):
+            samples, samplerate = sf.read(path, dtype="int16", always_2d=True)
+        except sf.LibsndfileError:
             self.sounds.append(None)
-            print("LAST ID:", len(self.sounds) - 1)
             print("Failed to load sound")
             return
-        sound = sound.set_frame_rate(self.sample_rate).set_sample_width(2)
-        if sound.channels < self.channels:
-            sound = AudioSegment.from_mono_audiosegments(*[sound] * self.channels)
-
-        samples = np.array(sound.get_array_of_samples(), dtype="int16")
-        samples = samples.astype(np.int16, order="C")
-        samples = np.reshape(
-            samples, (math.ceil(len(samples) / self.channels), self.channels), "C"
-        )
-
         buf = samples.tobytes("C")
-        channels = sound.channels
-        bitrate = sound.sample_width * 8
-        samplerate = sound.frame_rate
+        channels = samples.shape[1]
+        bitrate = samples.dtype.itemsize * 8
 
+        print(channels, bitrate, len(buf), samplerate)
         data = SoundData(buf, channels, bitrate, len(buf), samplerate)
         self.sounds.append(data)
 
         print(f"Loaded {path}")
-        print("LAST ID:", len(self.sounds) - 1)
         self.soundLoaded.emit(len(self.sounds) - 1, True)
 
     @QtCore.pyqtSlot(int)
