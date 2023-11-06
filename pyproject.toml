@@ -10,11 +10,8 @@ python = "^3.10"
 PyQt5 = "^5.15.6"
 pynbs = "^1.1.0"
 QtAwesome = "^1.1.1"
-pydub = "^0.25.1"
-sounddevice = "^0.4.4"
 numpy = "^1.22.4"
 fbs = {git = "https://github.com/Bentroen/fbs.git"}
-samplerate = "^0.1.0"
 python-openal = "^0.4.1"
 soundfile = "^0.12.1"
 

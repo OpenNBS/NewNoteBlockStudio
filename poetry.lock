@@ -419,18 +419,6 @@ files = [
 ]
 
 [[package]]
-name = "pydub"
-version = "0.25.1"
-description = "Manipulate audio with an simple and easy high level interface"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pydub-0.25.1-py2.py3-none-any.whl", hash = "sha256:65617e33033874b59d87db603aa1ed450633288aefead953b30bded59cb599a6"},
-    {file = "pydub-0.25.1.tar.gz", hash = "sha256:980a33ce9949cab2a569606b65674d748ecbca4f0796887fd6f46173a7b0d30f"},
-]
-
-[[package]]
 name = "pyinstaller"
 version = "3.4"
 description = "PyInstaller bundles a Python application and all its dependencies into a single package."
@@ -626,22 +614,6 @@ packaging = "*"
 test = ["pytest (>=6,!=7.0.0,!=7.0.1)", "pytest-cov (>=3.0.0)", "pytest-qt"]
 
 [[package]]
-name = "samplerate"
-version = "0.1.0"
-description = "Python bindings for libsamplerate based on CFFI and NumPy"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "samplerate-0.1.0-py2.py3-none-any.whl", hash = "sha256:f55e5c9d0a8ba3c82a53b7d9c34a2d145439c61166a7f310efaec88f2781b8f8"},
-    {file = "samplerate-0.1.0.tar.gz", hash = "sha256:75ef725e6cd9c4545569caf4c47147beab7b53b2c36e5122e8c285d348f88847"},
-]
-
-[package.dependencies]
-cffi = ">=1.0.0"
-numpy = "*"
-
-[[package]]
 name = "setuptools"
 version = "68.2.2"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -672,27 +644,6 @@ files = [
 
 [package.dependencies]
 tornado = ">=2.0"
-
-[[package]]
-name = "sounddevice"
-version = "0.4.6"
-description = "Play and Record Sound with Python"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "sounddevice-0.4.6-py3-none-any.whl", hash = "sha256:5de768ba6fe56ad2b5aaa2eea794b76b73e427961c95acad2ee2ed7f866a4b20"},
-    {file = "sounddevice-0.4.6-py3-none-macosx_10_6_x86_64.macosx_10_6_universal2.whl", hash = "sha256:8b0b806c205dd3e3cd5a97262b2482624fd21db7d47083b887090148a08051c8"},
-    {file = "sounddevice-0.4.6-py3-none-win32.whl", hash = "sha256:e3ba6e674ffa8f79a591d744a1d4ab922fe5bdfd4faf8b25069a08e051010b7b"},
-    {file = "sounddevice-0.4.6-py3-none-win_amd64.whl", hash = "sha256:7830d4f8f8570f2e5552942f81d96999c5fcd9a0b682d6fc5d5c5529df23be2c"},
-    {file = "sounddevice-0.4.6.tar.gz", hash = "sha256:3236b78f15f0415bdf006a620cef073d0c0522851d66f4a961ed6d8eb1482fe9"},
-]
-
-[package.dependencies]
-CFFI = ">=1.0"
-
-[package.extras]
-numpy = ["NumPy"]
 
 [[package]]
 name = "soundfile"
@@ -754,4 +705,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "114315cb4a7135b1d65bbb49204a01074c3a41c65845ea482006c3aeb5a3ade0"
+content-hash = "8fd16e2ee70df69add665ef9bd47823dfa7ff6cea7b3a1edbf62f62324b057a9"
