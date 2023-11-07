@@ -166,7 +166,7 @@ class InstrumentTable(QtWidgets.QTableWidget):
         if row > self.rowCount() - 1:
             return
         self.item(row, 0).setText(instrument.name)
-        self.item(row, 1).setText(instrument.sound_path)
+        self.item(row, 1).setText(str(instrument.sound_path))
         self.cellWidget(row, 2).setValue(instrument.pitch)
         self.cellWidget(row, 3).setChecked(instrument.press)
 

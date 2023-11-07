@@ -270,7 +270,7 @@ class InstrumentController(QtCore.QObject):
         ins = self.instruments[id]
         ins.sound_path = copy_sound_file(sound)
         self.instrumentSoundChanged.emit(id, sound)
-        self.instrumentSoundLoadRequested.emit(ins.sound_path)
+        self.instrumentSoundLoadRequested.emit(str(ins.sound_path))
         self.instrumentChanged.emit(id, self.instruments[id])
         self.instrumentListUpdated.emit(self.instruments)
 
