@@ -89,7 +89,6 @@ class InstrumentPressCheckBox(QtWidgets.QWidget):
 
 
 class InstrumentTable(QtWidgets.QTableWidget):
-
     soundNameCellChanged = QtCore.pyqtSignal(int, str)
     soundFileCellChanged = QtCore.pyqtSignal(int)
     soundKeyCellChanged = QtCore.pyqtSignal(int, int)
@@ -179,7 +178,6 @@ class InstrumentTable(QtWidgets.QTableWidget):
 
 
 class InstrumentSettingsDialog(QtWidgets.QDialog):
-
     instrumentAddRequested = QtCore.pyqtSignal()
     instrumentRemoveRequested = QtCore.pyqtSignal(int)
     instrumentShiftRequested = QtCore.pyqtSignal(int, int)

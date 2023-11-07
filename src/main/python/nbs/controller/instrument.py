@@ -125,7 +125,6 @@ class InstrumentInstance:
 
 
 class InstrumentController(QtCore.QObject):
-
     instrumentAdded = QtCore.pyqtSignal(InstrumentInstance)
     instrumentChanged = QtCore.pyqtSignal(int, InstrumentInstance)
     instrumentRemoved = QtCore.pyqtSignal(int)

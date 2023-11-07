@@ -34,7 +34,6 @@ instrument_data = default_instruments  # TODO: replace with actual data
 
 
 class TimeRuler(QtWidgets.QWidget):
-
     clicked = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
@@ -139,7 +138,6 @@ class TimeRuler(QtWidgets.QWidget):
 
 
 class Marker(QtWidgets.QWidget):
-
     moved = QtCore.pyqtSignal(float)
 
     def __init__(self, parent: Optional[QtCore.QObject] = None) -> None:
@@ -1116,7 +1114,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                     return True
 
         return False
-
 
 
 class NoteBlock(QtWidgets.QGraphicsObject):

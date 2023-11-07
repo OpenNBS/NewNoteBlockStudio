@@ -7,7 +7,6 @@ MSPT = 1000 / TPS
 
 
 class PlaybackController(QtCore.QObject):
-
     tempoChanged = QtCore.pyqtSignal(float)
     playbackPositionChanged = QtCore.pyqtSignal(float)
     songLengthChanged = QtCore.pyqtSignal(int)
