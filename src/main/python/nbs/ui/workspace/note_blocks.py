@@ -222,7 +222,7 @@ class NoteBlockView(QtWidgets.QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent, objectName=__class__.__name__)
         self.currentScale = 1
-        self.scrollMode = ScrollMode.PAGE_BY_PAGE
+        self.scrollStrategy = self.SCROLL_STRATEGIES[ScrollMode.TICK_BY_TICK]
         self.ruler = TimeRuler(parent=self)
         self.marker = Marker(parent=self)
 
@@ -291,9 +291,34 @@ class NoteBlockView(QtWidgets.QGraphicsView):
 
     ########## Auto-scroll ##########
 
+    SCROLL_STRATEGIES = {
+        ScrollMode.NONE: lambda x: None,
+        ScrollMode.PAGE_BY_PAGE: lambda x: scrollByPage(x),
+        ScrollMode.TICK_BY_TICK: lambda x: scrollByTick(x),
+    }
+
     @QtCore.pyqtSlot(int)
-    def setScrollMode(self, mode: int) -> None:
-        self.scrollMode = mode
+    def setScrollMode(self, mode: ScrollMode) -> None:
+        self.scrollStrategy = self.SCROLL_STRATEGIES[mode]
+
+    def scrollByPage(self, newPos: int) -> None:
+        """If the marker is outside the viewport, scroll the view by one page."""
+        viewport = self.viewport()
+        viewYCenter = round(
+            self.mapToScene(viewport.rect().center()).y() + 1
+        )  # The +1 is to avoid rounding errors
+        point = QtCore.QPoint(newPos, viewYCenter)
+        if not self.mapToScene(viewport.rect()).containsPoint(point, 0):
+            viewWidth = viewport.width()
+            self.ensureVisible(newPos, viewYCenter, viewWidth, 0, xMargin=0, yMargin=0)
+
+    def scrollByTick(self, newPos: int) -> None:
+        """Scroll the view by one tick."""
+        viewport = self.viewport()
+        viewYCenter = round(
+            self.mapToScene(viewport.rect().center()).y() + 1
+        )  # The +1 is to avoid rounding errors
+        self.centerOn(newPos, viewYCenter)
 
     @QtCore.pyqtSlot(int)
     def updateScroll(self, newPos: int) -> None:
@@ -302,27 +327,10 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         according to the view's scroll mode.
         """
 
-        viewport = self.viewport()
-        viewYCenter = round(
-            self.mapToScene(viewport.rect().center()).y() + 1
-        )  # The +1 is to avoid rounding errors
-
         if newPos == 0:
             return  # Don't scroll when stopping playback
 
-        if self.scrollMode == ScrollMode.NONE:
-            return
-
-        elif self.scrollMode == ScrollMode.PAGE_BY_PAGE:
-            point = QtCore.QPoint(newPos, viewYCenter)
-            if not self.mapToScene(viewport.rect()).containsPoint(point, 0):
-                viewWidth = viewport.width()
-                self.ensureVisible(
-                    newPos, viewYCenter, viewWidth, 0, xMargin=0, yMargin=0
-                )
-
-        elif self.scrollMode == ScrollMode.TICK_BY_TICK:
-            self.centerOn(newPos, viewYCenter)
+        self.scrollStrategy(newPos)
 
 
 class NoteBlockArea(QtWidgets.QGraphicsScene):
