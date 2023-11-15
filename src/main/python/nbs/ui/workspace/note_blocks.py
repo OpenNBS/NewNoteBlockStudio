@@ -488,6 +488,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.setSceneRect(QtCore.QRectF(0, 0, width * BLOCK_SIZE, height * BLOCK_SIZE))
         self.sceneSizeChanged.emit(width, height)
         print(f"Scene size changed to {width}x{height}")
+        self.update()
 
         # left edge of the rightmost block
         songHeight = int(max((bbox.bottom() // BLOCK_SIZE) - 1, 0))
