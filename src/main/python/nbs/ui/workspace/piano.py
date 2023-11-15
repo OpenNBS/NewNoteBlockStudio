@@ -40,17 +40,8 @@ class PianoKey(QtWidgets.QWidget):
 
     def initAnimation(self):
         self.animationPress = QtCore.QPropertyAnimation(self, b"pos")
-        self.animationPress.setDuration(100)
-        self.animationPress.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
-
-        self.animationLift = QtCore.QPropertyAnimation(self, b"pos")
-        self.animationLift.setDuration(100)
-        self.animationLift.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
-
-        self.animationGroup = QtCore.QSequentialAnimationGroup(self)
-        self.animationGroup.addAnimation(self.animationPress)
-        self.animationGroup.addAnimation(self.animationLift)
-        self.animationGroup.finished.connect(self.animationGroup.stop)
+        self.animationPress.setDuration(200)
+        self.animationPress.setEasingCurve(QtCore.QEasingCurve.OutInQuad)
 
     def pressKey(self):
         if not self.isPressed:
@@ -70,13 +61,12 @@ class PianoKey(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def play(self):
-        self.animationGroup.setCurrentTime(0)
+        self.animationPress.setCurrentTime(0)
         pressedPos = QtCore.QPoint(self.x(), self.y() + 5)
         self.animationPress.setStartValue(self.pos())
-        self.animationPress.setEndValue(pressedPos)
-        self.animationLift.setStartValue(pressedPos)
-        self.animationLift.setEndValue(self.pos())
-        self.animationGroup.start()
+        self.animationPress.setEndValue(self.pos())
+        self.animationPress.setKeyValueAt(0.5, pressedPos)
+        self.animationPress.start()
 
     @property
     def isActive(self):
