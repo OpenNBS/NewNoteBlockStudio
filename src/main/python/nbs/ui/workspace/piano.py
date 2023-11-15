@@ -194,7 +194,7 @@ class PianoWidget(QtWidgets.QWidget):
         self.activeKey = key
 
     def initUI(self):
-        self.keys = []
+        self.keys: List[PianoKey] = []
         self.whiteKeys: List[PianoKey] = []
         self.blackKeys: List[PianoKey] = []
         self.blackPositions = (1, 3, 6, 8, 10)
