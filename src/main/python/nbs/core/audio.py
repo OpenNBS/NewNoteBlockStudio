@@ -1,8 +1,6 @@
-import math
 from datetime import datetime, timedelta
 from typing import List, Optional, Sequence, Tuple
 
-import numpy as np
 import soundfile as sf
 from openal.audio import SoundData, SoundSink, SoundSource
 from PyQt5 import QtCore
