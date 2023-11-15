@@ -40,7 +40,7 @@ class PianoKey(QtWidgets.QWidget):
 
     def initAnimation(self):
         self.animationPress = QtCore.QPropertyAnimation(self, b"pos")
-        self.animationPress.setDuration(200)
+        self.animationPress.setDuration(300)
         self.animationPress.setEasingCurve(QtCore.QEasingCurve.OutInQuad)
 
         effect = QtWidgets.QGraphicsColorizeEffect(self)
