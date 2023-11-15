@@ -236,6 +236,12 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         )
 
+        # Playback
+        # TODO: NoteBlockArea sends key and pitch combined into a single float. Needs to be split
+        self.noteBlockArea.tickPlayed.connect(
+            lambda sounds: self.piano.playKeys((int(key)) for _, key, _, _ in sounds)
+        )
+
     def initInstruments(self):
         control = self.instrumentController
         dialog = self.instrumentSettingsDialog

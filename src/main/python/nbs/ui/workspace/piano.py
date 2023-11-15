@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -36,6 +36,21 @@ class PianoKey(QtWidgets.QWidget):
         self.currentKey = None
         self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.installEventFilter(self)
+        self.initAnimation()
+
+    def initAnimation(self):
+        self.animationPress = QtCore.QPropertyAnimation(self, b"pos")
+        self.animationPress.setDuration(100)
+        self.animationPress.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
+
+        self.animationLift = QtCore.QPropertyAnimation(self, b"pos")
+        self.animationLift.setDuration(100)
+        self.animationLift.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
+
+        self.animationGroup = QtCore.QSequentialAnimationGroup(self)
+        self.animationGroup.addAnimation(self.animationPress)
+        self.animationGroup.addAnimation(self.animationLift)
+        self.animationGroup.finished.connect(self.animationGroup.stop)
 
     def pressKey(self):
         if not self.isPressed:
@@ -52,6 +67,16 @@ class PianoKey(QtWidgets.QWidget):
             self.keyReleased.emit(self.num)
             self.isPressed = False
             self.update()
+
+    @QtCore.pyqtSlot()
+    def play(self):
+        self.animationGroup.setCurrentTime(0)
+        pressedPos = QtCore.QPoint(self.x(), self.y() + 5)
+        self.animationPress.setStartValue(self.pos())
+        self.animationPress.setEndValue(pressedPos)
+        self.animationLift.setStartValue(pressedPos)
+        self.animationLift.setEndValue(self.pos())
+        self.animationGroup.start()
 
     @property
     def isActive(self):
@@ -249,6 +274,16 @@ class PianoWidget(QtWidgets.QWidget):
 
     def resizeEvent(self, event):
         self.arrangeBlackKeys()
+
+    @QtCore.pyqtSlot(int)
+    def playKey(self, key: int) -> None:
+        print("Playing key", key)
+        self.keys[key].play()
+
+    @QtCore.pyqtSlot(list)
+    def playKeys(self, keys: Sequence[int]) -> None:
+        for key in keys:
+            self.playKey(key)
 
 
 class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
