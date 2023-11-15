@@ -101,6 +101,7 @@ class AudioOutputHandler:
 
 class AudioEngine(QtCore.QObject):
     soundLoaded = QtCore.pyqtSignal(int, bool)
+    soundCountUpdated = QtCore.pyqtSignal(int)
     finished = QtCore.pyqtSignal()
 
     def __init__(
@@ -120,7 +121,7 @@ class AudioEngine(QtCore.QObject):
         self.update_timer = QtCore.QTimer()
         self.update_timer.setTimerType(QtCore.Qt.TimerType.PreciseTimer)
         self.update_timer.setInterval(16)
-        self.update_timer.timeout.connect(self.handler.update)
+        self.update_timer.timeout.connect(self._update)
         self.update_timer.start()
 
     def run(self):
@@ -169,3 +170,8 @@ class AudioEngine(QtCore.QObject):
     def playSounds(self, sounds: Sequence[Tuple[int, float, float, float]]):
         for sound in sounds:
             self.playSound(*sound)
+
+    @QtCore.pyqtSlot()
+    def _update(self):
+        self.handler.update()
+        self.soundCountUpdated.emit(len(self.handler.active_sounds))

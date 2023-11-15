@@ -89,6 +89,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(self.editToolBar)
         self.setStatusBar(self.statusBar)
 
+        self.audioEngine.soundCountUpdated.connect(self.statusBar.setSoundCount)
+
         self.noteBlockAreaCtxMenu = EditMenu(isContextMenu=True)
         self.noteBlockArea = NoteBlockArea(
             layers=self.layers, menu=self.noteBlockAreaCtxMenu

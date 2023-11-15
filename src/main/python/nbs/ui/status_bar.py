@@ -73,7 +73,11 @@ class StatusBar(QtWidgets.QStatusBar):
 
     @QtCore.pyqtSlot(int)
     def setSoundCount(self, sounds: int):
-        self.soundsLabel.setText(f"Selected: {sounds} / 256")
+        if sounds >= 256:
+            self.soundsLabel.setStyleSheet("color: red")
+        else:
+            self.soundsLabel.setStyleSheet("color: black")
+        self.soundsLabel.setText(f"Sounds: {sounds} / 256")
 
     @QtCore.pyqtSlot(list)
     def setMidiDevices(self, devices: List[str]):
