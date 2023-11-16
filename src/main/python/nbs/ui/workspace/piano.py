@@ -103,15 +103,11 @@ class PianoKey(QtWidgets.QWidget):
         self.animationColor.setKeyValueAt(0.66, 1.0)
         self.animationColor.setEndValue(0)
 
-        # Create a sequential animation group to hold both animations
-        self.animationGroup = QtCore.QParallelAnimationGroup()
-        self.animationGroup.addAnimation(self.animationPress)
-        self.animationGroup.addAnimation(self.animationColor)
-
     def pressKey(self):
         if self.isPressed:
             return
         print("Pressed key", self.label)
+        self.animationPress.stop()
         self.move(QtCore.QPoint(self.x(), self.y() + 5))
         self.keyPressed.emit(self.num)
         self.isPressed = True
@@ -121,6 +117,7 @@ class PianoKey(QtWidgets.QWidget):
         if not self.isPressed:
             return
         print("Released key", self.label)
+        self.animationPress.stop()
         self.move(QtCore.QPoint(self.x(), self.y() - 5))
         self.keyReleased.emit(self.num)
         self.isPressed = False
@@ -128,12 +125,19 @@ class PianoKey(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def play(self):
-        self.animationGroup.setCurrentTime(0)
+        self.animationColor.setCurrentTime(0)
+        self.animationColor.start()
+
+        # Don't play the press animation if the key is manually held down
+        if self.isPressed:
+            return
+
+        self.animationPress.setCurrentTime(0)
         pressedPos = QtCore.QPoint(self.x(), self.y() + 5)
         self.animationPress.setStartValue(self.pos())
         self.animationPress.setEndValue(self.pos())
         self.animationPress.setKeyValueAt(0.5, pressedPos)
-        self.animationGroup.start()
+        self.animationPress.start()
 
     @property
     def isActive(self):
