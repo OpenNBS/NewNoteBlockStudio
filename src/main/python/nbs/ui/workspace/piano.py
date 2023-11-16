@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -71,7 +71,14 @@ class PianoKey(QtWidgets.QWidget):
     keyPressed = QtCore.pyqtSignal(int)
     keyReleased = QtCore.pyqtSignal(int)
 
-    def __init__(self, num, label="", isBlack=False, isOutOfRange=False, parent=None):
+    def __init__(
+        self,
+        num: int,
+        label: str = "",
+        isBlack: bool = False,
+        isOutOfRange: bool = False,
+        parent: Optional[QtWidgets.QWidget] = None,
+    ):
         super().__init__(parent)
         self.num = num
         self.label = label
@@ -150,7 +157,7 @@ class PianoKey(QtWidgets.QWidget):
         self._isActive = value
         self.update()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event: QtCore.QEvent):
         # Colors
         if self.isBlack:
             if self.isActive:
@@ -196,12 +203,15 @@ class PianoKey(QtWidgets.QWidget):
         painter.setPen(textColor)
         painter.drawText(
             textRect,
-            QtCore.Qt.AlignmentFlag.AlignCenter | QtCore.Qt.AlignmentFlag.AlignBottom,
+            int(
+                QtCore.Qt.AlignmentFlag.AlignCenter
+                | QtCore.Qt.AlignmentFlag.AlignBottom
+            ),
             self.label,
         )
         painter.end()
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj: QtCore.QObject, event: QtCore.QEvent):
         # Since widgets happens to grab the mouse whenever you click one,
         # in order to allow sliding the mouse over the piano, we install
         # an eventFilter on every piano key to detect when the mouse moves
@@ -245,7 +255,13 @@ class PianoWidget(QtWidgets.QWidget):
 
     activeKeyChanged = QtCore.pyqtSignal(int)
 
-    def __init__(self, keyCount, offset, validRange=(), parent=None):
+    def __init__(
+        self,
+        keyCount: int,
+        offset: int,
+        validRange: Optional[Tuple[int, int]] = None,
+        parent: Optional[QtWidgets.QWidget] = None,
+    ):
         super().__init__(parent)
         self.keyCount = keyCount
         self.offset = offset
@@ -261,7 +277,7 @@ class PianoWidget(QtWidgets.QWidget):
         return self._validRange
 
     @validRange.setter
-    def validRange(self, value):
+    def validRange(self, value: Tuple[int, int]):
         self._validRange = (min(value[0], 0), max(value[1], self.keyCount))
         self.repaint()
 
@@ -270,7 +286,7 @@ class PianoWidget(QtWidgets.QWidget):
         return self._activeKey
 
     @activeKey.setter
-    def activeKey(self, value):
+    def activeKey(self, value: int):
         if self._activeKey is not None:
             self.keys[self._activeKey].isActive = False
         self.keys[value].isActive = True
@@ -278,7 +294,7 @@ class PianoWidget(QtWidgets.QWidget):
         self.activeKeyChanged.emit(value)
 
     @QtCore.pyqtSlot(int)
-    def setActiveKey(self, key):
+    def setActiveKey(self, key: int):
         self.activeKey = key
 
     def initUI(self):
@@ -286,10 +302,10 @@ class PianoWidget(QtWidgets.QWidget):
         self.whiteKeys: List[PianoKey] = []
         self.blackKeys: List[PianoKey] = []
         self.blackPositions = (1, 3, 6, 8, 10)
-        self.layout = QtWidgets.QHBoxLayout()
+        self.layout_ = QtWidgets.QHBoxLayout()
         # Bigger margin on the top to accomodate raised black keys
-        self.layout.setContentsMargins(10, 15, 10, 25)
-        self.layout.setSpacing(1)
+        self.layout_.setContentsMargins(10, 15, 10, 25)
+        self.layout_.setSpacing(1)
 
         for i in range(self.keyCount):
             rangeMin, rangeMax = self._validRange
@@ -302,14 +318,14 @@ class PianoWidget(QtWidgets.QWidget):
                 self.blackKeys.append(key)
             else:
                 self.whiteKeys.append(key)
-                self.layout.addWidget(key)
+                self.layout_.addWidget(key)
             key.keyPressed.connect(self.setActiveKey)
             self.keys.append(key)
 
-        self.setLayout(self.layout)
+        self.setLayout(self.layout_)
         self.resize(40 * len(self.whiteKeys), 160)  # TODO: hardcoded
 
-    def blackKeysInRange(self, min, max):
+    def blackKeysInRange(self, min: int, max: int):
         """Return the number of black keys in a given range."""
         count = 0
         for i in range(min, max):
@@ -335,7 +351,7 @@ class PianoWidget(QtWidgets.QWidget):
             self.blackKeys[i].move(xPos, yPos)
             self.blackKeys[i].raise_()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QtCore.QEvent):
         self.arrangeBlackKeys()
 
     @QtCore.pyqtSlot(int)
@@ -356,7 +372,7 @@ class HorizontalAutoScrollArea(QtWidgets.QScrollArea):
 
     def __init__(
         self,
-        parent=None,
+        parent: Optional[QtWidgets.QWidget] = None,
         updateDelay: int = 10,
         margins: int = 50,
         scrollAmount: int = 3,
