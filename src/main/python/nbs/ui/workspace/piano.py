@@ -338,7 +338,6 @@ class PianoWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot(int)
     def playKey(self, key: int) -> None:
-        print("Playing key", key)
         self.keys[key].play()
 
     @QtCore.pyqtSlot(list)
