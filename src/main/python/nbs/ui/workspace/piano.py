@@ -1,10 +1,57 @@
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .constants import *
 
 __all__ = ["PianoWidget", "HorizontalAutoScrollArea"]
+
+
+class PianoKeyGlowEffect(QtWidgets.QGraphicsEffect):
+    # QGraphicsColorizeEffect uses a hardcoded 'Screen' blend mode, which
+    # doesn't work well with white keys. This is a similar effect that
+    # uses the 'Darken' blend mode instead.
+    # See: https://stackoverflow.com/a/75142608/9045426
+
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
+        super().__init__(parent)
+        self.color = QtGui.QColor(255, 255, 255)
+        self.strength = 0
+
+    @QtCore.pyqtProperty(float)
+    def strength(self) -> float:
+        return self._strength
+
+    @strength.setter
+    def strength(self, value: float) -> None:
+        self._strength = value
+        self.update()
+
+    @QtCore.pyqtProperty(QtGui.QColor)
+    def color(self) -> QtGui.QColor:
+        return self._color
+
+    @color.setter
+    def color(self, value: QtGui.QColor) -> None:
+        self._color = value
+        self.update()
+
+    # TODO: We'd like to make the effect different for black and white keys,
+    # but we can't access the key's properties from here. Maybe we can pass
+    # the key as an argument to the effect's constructor?
+
+    # The red tint on out-of-range keys, blue on active keys might have to
+    # be moved here so we can override them completely when drawing the pressed
+    # glow, without the need to redraw the key completely.
+
+    def draw(self, painter: QtGui.QPainter) -> None:
+        pixmap, offset = self.sourcePixmap()
+        painter.drawPixmap(offset, pixmap)
+        painter.setOpacity(self.strength)
+        painter.setBrush(self.color)
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setCompositionMode(QtGui.QPainter.CompositionMode_Darken)
+        painter.drawRect(pixmap.rect())
 
 
 class PianoKey(QtWidgets.QWidget):
@@ -43,9 +90,9 @@ class PianoKey(QtWidgets.QWidget):
         self.animationPress.setDuration(300)
         self.animationPress.setEasingCurve(QtCore.QEasingCurve.OutInQuad)
 
-        effect = QtWidgets.QGraphicsColorizeEffect(self)
-        effect.setStrength(0)
-        effect.setColor(QtGui.QColor(255, 255, 0, 200))
+        effect = PianoKeyGlowEffect(self)
+        effect.strength = 0.0
+        effect.color = QtGui.QColor(255, 255, 0, 200)
         self.setGraphicsEffect(effect)
 
         # Create a Qt property animation for the color of the key
