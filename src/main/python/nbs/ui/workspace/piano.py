@@ -107,6 +107,7 @@ class PianoKey(QtWidgets.QWidget):
         if self.isPressed:
             return
         print("Pressed key", self.label)
+        self.animationPress.setCurrentTime(0)
         self.animationPress.stop()
         self.move(QtCore.QPoint(self.x(), self.y() + 5))
         self.keyPressed.emit(self.num)
@@ -117,6 +118,7 @@ class PianoKey(QtWidgets.QWidget):
         if not self.isPressed:
             return
         print("Released key", self.label)
+        self.animationPress.setCurrentTime(0)
         self.animationPress.stop()
         self.move(QtCore.QPoint(self.x(), self.y() - 5))
         self.keyReleased.emit(self.num)
