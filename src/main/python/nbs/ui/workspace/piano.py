@@ -109,20 +109,22 @@ class PianoKey(QtWidgets.QWidget):
         self.animationGroup.addAnimation(self.animationColor)
 
     def pressKey(self):
-        if not self.isPressed:
-            print("Pressed key", self.label)
-            self.move(QtCore.QPoint(self.x(), self.y() + 5))
-            self.keyPressed.emit(self.num)
-            self.isPressed = True
-            self.update()
+        if self.isPressed:
+            return
+        print("Pressed key", self.label)
+        self.move(QtCore.QPoint(self.x(), self.y() + 5))
+        self.keyPressed.emit(self.num)
+        self.isPressed = True
+        self.update()
 
     def releaseKey(self):
-        if self.isPressed:
-            print("Released key", self.label)
-            self.move(QtCore.QPoint(self.x(), self.y() - 5))
-            self.keyReleased.emit(self.num)
-            self.isPressed = False
-            self.update()
+        if not self.isPressed:
+            return
+        print("Released key", self.label)
+        self.move(QtCore.QPoint(self.x(), self.y() - 5))
+        self.keyReleased.emit(self.num)
+        self.isPressed = False
+        self.update()
 
     @QtCore.pyqtSlot()
     def play(self):
