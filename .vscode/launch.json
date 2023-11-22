@@ -12,6 +12,17 @@
             }
         },
         {
+            "name": "Python: Run in Player Mode",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main/python/main.py",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src/main/python"
+            },
+            "args": ["--player"]
+        },
+        {
             "name": "Python: Profile",
             "type": "node",
             "request": "launch",
