@@ -1,69 +1,48 @@
 
-import QtQuick 2.15
+import QtQuick 2.15 
 
 Rectangle {
-    width: 400
-    height: 200
-    color: "#f0f0f0"
+    property int key
+    property string label
 
-    property int octaveCount: 2
-    property int whiteKeyCount: octaveCount * 7
-    property int blackKeyCount: (octaveCount - 1) * 5 + 2
-
-    property int keyWidth: width / whiteKeyCount
-    property int keyHeight: height
-
-    property var blackKeyIndices: [1, 2, 4, 5, 6]
+    width: 25
+    height: 70
+    color: "#333333"
+    border.width: 1
+    border.color: Qt.darker(color, 2.0)
+    radius: 3
 
     Rectangle {
-        id: whiteKeys
         width: parent.width
-        height: parent.height
-
-        Repeater {
-            model: whiteKeyCount
-            Rectangle {
-                id: whiteKey
-                x: index * parent.width / whiteKeyCount
-                width: parent.width / whiteKeyCount
-                height: parent.height
-                color: "white"
-                border.width: 1
-                border.color: "black"
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        console.log("White key clicked:", index)
-                    }
-                }
-            }
-        }
+        height: 10
+        color: Qt.darker(parent.color, 1.15)
+        anchors.bottom: parent.bottom
+        border.width: 1
+        border.color: Qt.darker(color, 2.0)
+        radius: 2
     }
 
-    Rectangle {
-        id: blackKeys
-        width: whiteKeys.width - keyWidth / 2
-        height: whiteKeys.height / 2
-        anchors.top: whiteKeys.top
-        anchors.right: whiteKeys.right
+    Text {
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom
+            bottomMargin: 25
+        }
 
-        Repeater {
-            model: blackKeyCount
-            Rectangle {
-                id: blackKey
-                x: blackKeyIndices[index] * keyWidth  // Use the indices to calculate the x position
-                width: keyWidth / 2
-                height: keyHeight / 2
-                color: "black"
-                border.width: 1
-                border.color: "black"
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        console.log("Black key clicked:", index)
-                    }
-                }
-            }
+        text: parent.label
+        color: "white"
+        font.pixelSize: 12
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        onPressed: {
+            blackKey.y = blackKey.y + 5
+            console.log("Black key clicked:", index)
+        }
+        onReleased: {
+            blackKey.y = blackKey.y - 5
+            console.log("Black key released:", index)
         }
     }
 }
