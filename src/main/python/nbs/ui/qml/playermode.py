@@ -43,7 +43,7 @@ class NoteManager(QtCore.QObject):
                 "instrument": note.instrument,
                 "key": note.key,
             }
-            for note in song.notes[:100]
+            for note in song.notes
         ]
         print("New notes: ", len(new_notes))
 

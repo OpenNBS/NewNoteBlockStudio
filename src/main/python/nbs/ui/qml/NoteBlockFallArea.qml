@@ -21,18 +21,18 @@ ScrollView {
     //    font.pixelSize: 500
     //}
 
-    Repeater {
-        id: list
+    ListView {
+        id: listView
         width: parent.width
         height: parent.height
-        model: noteManager.notes.length
+        model: noteManager.notes
 
-        delegate: NoteBlock {
-            id: noteBlock
-            color: "red"
-            x: noteManager.notes[index].key * 8
-            y: fallArea.contentHeight - noteManager.notes[index].tick * 8
-            //label: noteManager.notes[index].instrument
+        delegate: Loader {
+            sourceComponent: NoteBlock {
+                color: "red"
+                x: modelData.key * 8
+                y: fallArea.contentHeight - modelData.tick * 8
+                //label: noteManager.notes[index].instrument
+            }
         }
-    }
 }
