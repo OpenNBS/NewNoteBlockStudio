@@ -5,7 +5,9 @@ from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QGuiApplication
-from PyQt5.QtQml import QQmlApplicationEngine
+from PyQt5.QtQml import QQmlApplicationEngine, qmlRegisterType
+
+from nbs.ui.qml.playermode import NoteManager
 
 
 class App(QGuiApplication):
@@ -31,5 +33,13 @@ class AppContext(ApplicationContext):
     def run(self):
         engine = QQmlApplicationEngine()
         engine.quit.connect(self.app.quit)
+
+        noteManager = NoteManager()
+
+        context = engine.rootContext()
+        context.setContextProperty("noteManager", noteManager)
+        qmlRegisterType(NoteManager, "NoteBlockStudio", 1, 0, "NoteManager")
+
         engine.load("src/main/python/nbs/ui/qml/main.qml")
+
         return self.app.exec_()

@@ -32,21 +32,32 @@ ApplicationWindow {
 
     }
 
+    NoteBlockFallArea {
+        anchors {
+            bottom: parent.bottom
+            bottomMargin: 12
+            right: parent.right
+            rightMargin: 12
+        }
+    }
+
     Piano {
         anchors {
-            top: parent.top
-            topMargin: 12
+            bottom: parent.bottom
+            bottomMargin: 12
             horizontalCenter: parent.horizontalCenter
         }
     }
 
-    NoteBlock {
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: 12
-            left: parent.left
-            leftMargin: 12
+    Button {
+        id: button
+        text: qsTr("Load song")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        onClicked: {
+            console.log(noteManager.notes.length)
+            noteManager.loadSong("songs/celeste.nbs")
+            console.log(noteManager.notes.length)
         }
     }
-
 }
