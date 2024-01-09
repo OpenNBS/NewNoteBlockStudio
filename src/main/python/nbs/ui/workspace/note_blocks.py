@@ -5,7 +5,7 @@ import pickle
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Generator, List, Optional, Sequence, Set, Union
+from typing import Callable, Dict, Generator, List, Optional, Sequence, Set, Union
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -369,6 +369,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.previousPlaybackPosition = 0
         self.currentInstrument = 0
         self.minimumLayerCount = 0
+        self.soloLayerCount = 0
         # A value of 12 will generate segments of approximately 4x4 grid spaces,
         # which can be guaranteed to contain 0-10 notes on average.
         # See: https://doc.qt.io/qt-6/qgraphicsscene.html#bspTreeDepth-prop
@@ -434,8 +435,15 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtCore.Qt.GlobalColor.black)
         painter.setOpacity(0.25)
+
+        lockedCheck: Callable[[Layer], bool] 
+        if self.soloLayerCount > 0:
+           lockedCheck = lambda layer: not layer.solo
+        else:
+           lockedCheck = lambda layer: layer.lock
+
         for id, layer in enumerate(self.layers):
-            if layer.lock:
+            if lockedCheck(layer):
                 painter.drawRect(self.getLayerRegion(id))
 
     ########## MENU ##########
@@ -912,6 +920,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool):
+        if solo:
+            self.soloLayerCount += 1
+        else:
+            self.soloLayerCount -= 1
         self.update()
 
     @QtCore.pyqtSlot(int)
