@@ -140,12 +140,16 @@ class LayerController(QtCore.QObject):
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerLock(self, id: int, lock: bool) -> None:
+        if lock and self.layers[id].solo:
+            self.setLayerSolo(id, False)
         self.layers[id].lock = lock
         self.layerLockChanged.emit(id, lock)
         self.updatePopulatedLayerCount()
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool) -> None:
+        if solo and self.layers[id].lock:
+            self.setLayerLock(id, False)
         self.layers[id].solo = solo
         self.layerSoloChanged.emit(id, solo)
         self.updatePopulatedLayerCount()
