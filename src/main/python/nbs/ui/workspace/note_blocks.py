@@ -348,7 +348,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def __init__(self, layers: List[Layer], menu: QtWidgets.QMenu, parent=None):
         super().__init__(parent, objectName=__class__.__name__)
         self.view = NoteBlockView(self)
-        self.layers = layers
+        self.layers = layers  # read-only!
         self.menu = menu
         self.selection = QtWidgets.QRubberBand(
             QtWidgets.QRubberBand.Shape.Rectangle, parent=self.view.viewport()
@@ -888,6 +888,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.setSelectionTopLeft(selectionPos)
 
     ########## LAYERS ##########
+
+    # The list of layers, stored in the `layers` attribute, isn't managed by this class,
+    # and should never be modified here. We only use it here to read the layer properties
+    # (once commanded by a signal) and change stuff in the scene accordingly.
 
     @QtCore.pyqtSlot(int)
     def setMinimumLayerCount(self, count: int) -> None:
