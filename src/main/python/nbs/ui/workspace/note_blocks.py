@@ -1010,8 +1010,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def playBlocks(self, blocks: Sequence[NoteBlock]) -> None:
         payload = []
+        lockedCheck = self._getLayerLockedCheck()
         for block in blocks:
             layer = self.layers[int(block.y() // BLOCK_SIZE)]
+            if lockedCheck(layer):
+                continue
             instrument = block.ins
             key = block.key + block.pit / 100
             volume = (block.vel / 100) * (layer.volume / 100)
