@@ -441,14 +441,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             if lockedCheck(layer):
                 painter.drawRect(self.getLayerRegion(id))
 
-        if self.isDraggingSelection:
-            selectableArea = self.getSelectableArea(
-                QtCore.QRectF(self.selection.geometry())
-            )
-            painter.setOpacity(0.5)
-            painter.setBrush(QtCore.Qt.GlobalColor.green)
-            painter.drawPath(selectableArea)
-
     ########## MENU ##########
 
     def initMenu(self):
