@@ -1101,6 +1101,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.isDraggingSelection = True
             selectionRect = QtCore.QRectF(self.selectionStart, event.scenePos())
             selectionRect = self.view.mapFromScene(selectionRect).boundingRect()
+            # Clip to scene rect
+            selectionRect = selectionRect.intersected(self.sceneRect().toRect())
             self.selection.setGeometry(selectionRect)
         else:
             # call the parent's mouseMoveEvent to allow
