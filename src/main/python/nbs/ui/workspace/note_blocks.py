@@ -337,7 +337,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     playbackPositionChanged = QtCore.pyqtSignal(int)
 
     ########## Public slots ##########
-    selectionChanged = QtCore.pyqtSignal(int)
+    selectionChanged_ = QtCore.pyqtSignal(int)
     selectionCopied = QtCore.pyqtSignal(list)
     selectAllLeftActionEnabled = QtCore.pyqtSignal(bool)
     selectAllRightActionEnabled = QtCore.pyqtSignal(bool)
@@ -682,7 +682,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.selectionStatus = 0
         else:
             self.selectionStatus = -1
-        self.selectionChanged.emit(self.selectionStatus)
+        self.selectionChanged_.emit(self.selectionStatus)
 
     def selectionBoundingRect(self) -> QtCore.QRectF:
         rect = QtCore.QRectF()
@@ -854,7 +854,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             block.setSelected(True)
         self.updateBlockCount()
         self.updateSelectionStatus()
-        self.selectionChanged.emit(self.selectionStatus)
+        self.selectionChanged_.emit(self.selectionStatus)
 
     @QtCore.pyqtSlot()
     def copySelection(self):
