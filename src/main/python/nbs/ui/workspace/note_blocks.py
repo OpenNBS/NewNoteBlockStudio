@@ -345,7 +345,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
     tickPlayed = QtCore.pyqtSignal(list)
 
-    def __init__(self, layers: Sequence[Layer], menu: QtWidgets.QMenu, parent=None):
+    def __init__(self, layers: List[Layer], menu: QtWidgets.QMenu, parent=None):
         super().__init__(parent, objectName=__class__.__name__)
         self.view = NoteBlockView(self)
         self.layers = layers
@@ -436,15 +436,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         painter.setBrush(QtCore.Qt.GlobalColor.black)
         painter.setOpacity(0.25)
 
-        lockedCheck: Callable[[Layer], bool] 
-        if self.soloLayerCount > 0:
-           lockedCheck = lambda layer: not layer.solo
-        else:
-           lockedCheck = lambda layer: layer.lock
-
+        lockedCheck = self._getLayerLockedCheck()
         for id, layer in enumerate(self.layers):
             if lockedCheck(layer):
                 painter.drawRect(self.getLayerRegion(id))
+
+        if self.isDraggingSelection:
+            selectableArea = self.getSelectableArea(
+                QtCore.QRectF(self.selection.geometry())
+            )
+            painter.setOpacity(0.5)
+            painter.setBrush(QtCore.Qt.GlobalColor.green)
+            painter.drawPath(selectableArea)
 
     ########## MENU ##########
 
@@ -651,13 +654,25 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             block.setSelected(selected)
         self.updateSelectionStatus()
 
-    def setAreaSelected(self, area: QtCore.QRectF, selected: bool = True):
+    def setAreaSelected(
+        self,
+        area: QtCore.QRectF | QtGui.QPolygonF | QtGui.QPainterPath,
+        selected: bool = True,
+    ):
         # There's no native way of subtracting an area from the current selection, so we use
         # Qt's native implementation to add items (faster), but remove items individually.
         if selected:
             path = QtGui.QPainterPath()
-            path.addRect(QtCore.QRectF(area))
-            self.setSelectionArea(path, selected)
+            if isinstance(area, QtCore.QRectF):
+                path.addRect(area)
+            elif isinstance(area, QtGui.QPolygonF):
+                path.addPolygon(area)
+            elif isinstance(area, QtGui.QPainterPath):
+                path = area
+            else:
+                raise TypeError("Invalid type for area:", type(area))
+            selectionType = QtCore.Qt.ItemSelectionMode.IntersectsItemShape
+            self.setSelectionArea(path, selectionType)
         else:
             self.setBlocksSelected(self.items(area), False)
         self.updateSelectionStatus()
@@ -682,6 +697,31 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for selectedItem in self.selectedItems():
             rect = rect.united(selectedItem.sceneBoundingRect())
         return rect
+
+    def getSelectableArea(self, area: QtCore.QRectF) -> QtGui.QPainterPath:
+        """Return the selectable area in the scene, excluding the area of locked layers."""
+
+        selectableArea = QtGui.QPainterPath()
+        selectableArea.addRect(area)
+
+        firstLayerInArea = int(area.top() // BLOCK_SIZE)
+        startLayer = max(firstLayerInArea, 0)
+        lastLayerInArea = int(area.bottom() // BLOCK_SIZE)
+        endLayer = min(lastLayerInArea, len(self.layers))
+
+        lockedCheck = self._getLayerLockedCheck()
+
+        for id, layer in enumerate(self.layers[startLayer : endLayer + 1], startLayer):
+            if lockedCheck(layer):
+                layerRegion = self.getLayerRegion(id)
+                # Blocks touching an unlocked layer are still selected. We expand the
+                # region by 1px in each vertical direction to account for this.
+                layerRegion = layerRegion.adjusted(0, -1, 0, 1)
+                layerPath = QtGui.QPainterPath()
+                layerPath.addRect(layerRegion)
+                selectableArea = selectableArea.subtracted(layerPath)
+
+        return selectableArea
 
     @QtCore.pyqtSlot()
     def selectAll(self):
@@ -868,25 +908,18 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             self.minimumLayerCount = count
             self.updateSceneSize()
 
-    def updateBlocksSelectableStatus(
-        self, blocks: Optional[Sequence[NoteBlock]] = None
-    ) -> None:
-        """
-        Update the selectable status of all note blocks in the scene according to
-        their layer's lock status. If `blocks` is given and not empty, only those
-        blocks will be updated.
-        """
-        # TODO: This might become a costly operation with a lot of note blocks on the scene.
-        # Perhaps update it on addBlock, deselectAll etc. (only where new blocks may be placed under a locked layer)
-        if not blocks:
-            blocks = self.items()
+    def _getLayerLockedCheck(self) -> Callable[[Layer], bool]:
+        """Returns a function that checks if a layer is locked according to the scene's
+        current solo state."""
 
-        for block in blocks:
-            layer = block.y() // BLOCK_SIZE
-            if self.layers[layer].lock:
-                block.setSelectable(True)
-            else:
-                block.setSelectable(False)
+        # Having this as a separate function instead of i.e. a ternary expression
+        # avoids the need to check the soloLayerCount every time a layer is checked.
+        if self.soloLayerCount > 0:
+            # If there are solo layers, only return layers that are not solo
+            return lambda layer: not layer.solo
+        else:
+            # If there are no solo layers, return all layers except locked ones
+            return lambda layer: layer.lock
 
     def getLayerRegion(self, id: int) -> QtCore.QRectF:
         y1 = id * BLOCK_SIZE
@@ -911,11 +944,6 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot(int, bool)
     def setLayerLock(self, id: int, lock: bool) -> None:
-        # self.updateBlocksSelectableStatus()
-        for block in self.getBlocksInLayer(id):
-            block.setFlag(
-                QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, not lock
-            )
         self.update()
 
     @QtCore.pyqtSlot(int, bool)
@@ -1033,10 +1061,11 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 self.selection.geometry()
             ).boundingRect()
             # TODO: Update selection as the selection box is dragged
+            unlockedArea = self.getSelectableArea(selectionArea)
             if event.button() == QtCore.Qt.LeftButton:
-                self.setAreaSelected(selectionArea, True)
+                self.setAreaSelected(unlockedArea, True)
             elif event.button() == QtCore.Qt.RightButton:
-                self.setAreaSelected(selectionArea, False)
+                self.setAreaSelected(unlockedArea, False)
             self.selection.hide()
             self.selection.setGeometry(0, 0, 0, 0)
             self.isDraggingSelection = False
@@ -1240,11 +1269,6 @@ class NoteBlock(QtWidgets.QGraphicsObject):
             self.changeKey(1)
         else:
             self.changeKey(-1)
-
-    def setSelectable(self, selectable: bool = True) -> None:
-        self.setFlag(
-            QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, selectable
-        )
 
     def changeKey(self, steps):
         self.key += steps
