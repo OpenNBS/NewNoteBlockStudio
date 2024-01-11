@@ -369,7 +369,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.previousPlaybackPosition = 0
         self.currentInstrument = 0
         self.minimumLayerCount = 0
-        self.soloLayerCount = 0
+        self.soloLayerIds: Set[int] = set()
         # A value of 12 will generate segments of approximately 4x4 grid spaces,
         # which can be guaranteed to contain 0-10 notes on average.
         # See: https://doc.qt.io/qt-6/qgraphicsscene.html#bspTreeDepth-prop
@@ -893,6 +893,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     # and should never be modified here. We only use it here to read the layer properties
     # (once commanded by a signal) and change stuff in the scene accordingly.
 
+    @property
+    def isSoloEnabled(self) -> bool:
+        return len(self.soloLayerIds) > 0
+
     @QtCore.pyqtSlot(int)
     def setMinimumLayerCount(self, count: int) -> None:
         """
@@ -908,9 +912,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         """Returns a function that checks if a layer is locked according to the scene's
         current solo state."""
 
-        # Having this as a separate function instead of i.e. a ternary expression
-        # avoids the need to check the soloLayerCount every time a layer is checked.
-        if self.soloLayerCount > 0:
+        # Having this return a separate function instead of i.e. a ternary expression
+        # avoids the need to check the solo status every time a layer is checked.
+        if self.isSoloEnabled:
             # If there are solo layers, only return layers that are not solo
             return lambda layer: not layer.solo
         else:
@@ -945,9 +949,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     @QtCore.pyqtSlot(int, bool)
     def setLayerSolo(self, id: int, solo: bool):
         if solo:
-            self.soloLayerCount += 1
+            self.soloLayerIds.add(id)
         else:
-            self.soloLayerCount -= 1
+            self.soloLayerIds.remove(id)
         self.update()
 
     @QtCore.pyqtSlot(int)
@@ -959,6 +963,9 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     @QtCore.pyqtSlot(int)
     def removeLayer(self, id: int):
+        # Update the solo status before removing the layer
+        if id in self.soloLayerIds:
+            self.soloLayerIds.remove(id)
         for block in self.getBlocksInLayer(id):
             self.removeBlock(block)
         blocksToShift = self.getBlocksBelowLayer(id)
