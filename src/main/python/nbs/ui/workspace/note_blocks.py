@@ -951,7 +951,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         if solo:
             self.soloLayerIds.add(id)
         else:
-            self.soloLayerIds.remove(id)
+            try:
+                self.soloLayerIds.remove(id)
+            except KeyError:
+                pass
         self.update()
 
     @QtCore.pyqtSlot(int)
