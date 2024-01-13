@@ -1,3 +1,5 @@
+from typing import List
+
 import pytest
 
 from nbs.controller.layer import LayerController
@@ -5,7 +7,7 @@ from nbs.core.data import Layer
 
 
 @pytest.fixture
-def layerController() -> None:
+def layerController() -> LayerController:
     layers = [
         Layer(
             name="Layer 1",
@@ -26,7 +28,7 @@ def layerController() -> None:
 
 
 def testAddLayer() -> None:
-    layers = []
+    layers: List[Layer] = []
     layerController = LayerController(layers)
     layerController.addLayer()
     assert len(layers) == 1
