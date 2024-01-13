@@ -97,3 +97,8 @@ def testSwapLayerToSamePosition(layerController: LayerController) -> None:
     layerController.swapLayers(0, 0)
     assert layerController.layers[0].name == "Layer 1"
     assert layerController.layers[1].name == "Layer 2"
+
+
+def testReadNonExistingLayer(layerController: LayerController) -> None:
+    with pytest.raises(IndexError):
+        layerController.layers[3]
