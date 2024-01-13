@@ -829,8 +829,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         origin = self.selectionBoundingRect().topLeft()
         for block in self.selectedItems():
             if isinstance(block, NoteBlock):
-                x = (block.x() - origin.x()) // BLOCK_SIZE
-                y = (block.y() - origin.y()) // BLOCK_SIZE
+                x = int(block.x() - origin.x()) // BLOCK_SIZE
+                y = int(block.y() - origin.y()) // BLOCK_SIZE
                 # TODO: Use composition and make a Note a member of NoteBlock
                 note = Note(
                     x,
