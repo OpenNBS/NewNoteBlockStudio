@@ -58,11 +58,15 @@ class Actions(QtCore.QObject):
 
         # File
         cls.newSongAction = QAction(icons["new_song"], "New song")
+        cls.newSongAction.setShortcut("Ctrl+N")
         cls.openSongAction = QAction(icons["open_song"], "Open song...")
+        cls.openSongAction.setShortcut("Ctrl+O")
         cls.saveSongAction = QAction(icons["save_song"], "Save song")
+        cls.saveSongAction.setShortcut("Ctrl+S")
         cls.saveSongAsAction = QAction(
             icons["save_song_as"], "Save song as a new file..."
         )
+        cls.saveSongAsAction.setShortcut("Ctrl+Shift+S")
         cls.saveOptionsAction = QAction("Save options...")
         cls.importPatternAction = QAction("Import pattern...")
         cls.exportPatternAction = QAction("Export pattern...")
@@ -72,13 +76,20 @@ class Actions(QtCore.QObject):
         cls.exportAudioAction = QAction("Export as audio file...")
         cls.exportDatapackAction = QAction("Export as data pack...")
         cls.exitAction = QAction("Exit")
+        cls.exitAction.setShortcut("Alt+F4")
 
         # Playback
         cls.playPauseAction = QAction(icons["play_pause"], "Play/Pause song")
         cls.playPauseAction.setCheckable(True)
+        cls.playPauseAction.setShortcut("Space")
         cls.stopAction = QAction(icons["stop"], "Stop song")
+        cls.stopAction.setShortcut("Ctrl+Space")
         cls.fastForwardAction = QAction(icons["fast_forward"], "Fast-forward song")
+        cls.fastForwardAction.setAutoRepeat(True)
+        cls.fastForwardAction.setShortcut("Right")
         cls.rewindAction = QAction(icons["rewind"], "Rewind song")
+        cls.rewindAction.setAutoRepeat(True)
+        cls.rewindAction.setShortcut("Left")
         cls.loopAction = QAction(icons["loop"], "Toggle looping")
         cls.loopAction.setCheckable(True)
         cls.metronomeAction = QAction(icons["metronome"], "Toggle metronome")
@@ -86,22 +97,35 @@ class Actions(QtCore.QObject):
 
         # Edit
         cls.undoAction = QAction(icons["undo"], "Undo")
+        cls.undoAction.setShortcut("Ctrl+Z")
         cls.redoAction = QAction(icons["redo"], "Redo")
+        cls.redoAction.setShortcut("Ctrl+Y")
         cls.copyAction = QAction(icons["copy"], "Copy")
+        cls.copyAction.setShortcut("Ctrl+C")
         cls.cutAction = QAction(icons["cut"], "Cut")
+        cls.cutAction.setShortcut("Ctrl+X")
         cls.pasteAction = QAction(icons["paste"], "Paste")
+        cls.pasteAction.setShortcut("Ctrl+V")
         cls.deleteAction = QAction(icons["delete"], "Delete")
+        cls.deleteAction.setShortcut("Del")
         cls.selectAllAction = QAction(icons["select_all"], "Select all")
+        cls.selectAllAction.setShortcut("Ctrl+A")
         cls.deselectAllAction = QAction(icons[""], "Deselect all")
+        cls.deselectAllAction.setShortcut("Ctrl+Shift+A")
         cls.invertSelectionAction = QAction(icons[""], "Invert selection")
+        cls.invertSelectionAction.setShortcut("Ctrl+I")
         cls.selectAllLeftAction = QAction(icons[""], "Select all to the left <-")
         cls.selectAllRightAction = QAction(icons[""], "Select all to the right ->")
         cls.selectAllInstrumentAction = QAction(icons[""], "Select all {}")
         cls.selectAllButInstrumentAction = QAction(icons[""], "Select all but {}")
         cls.increaseOctaveAction = QAction(icons[""], "Increase octave")
+        cls.increaseOctaveAction.setShortcut("Ctrl+E")
         cls.decreaseOctaveAction = QAction(icons[""], "Decrease octave")
+        cls.decreaseOctaveAction.setShortcut("Ctrl+D")
         cls.increaseKeyAction = QAction(icons[""], "Increase key")
+        cls.increaseKeyAction.setShortcut("Ctrl+R")
         cls.decreaseKeyAction = QAction(icons[""], "Decrease key")
+        cls.decreaseKeyAction.setShortcut("Ctrl+F")
         cls.expandSelectionAction = QAction(icons[""], "Expand selection")
         cls.compressSelectionAction = QAction(icons[""], "Compress selection")
         cls.transposeNotesAction = QAction(
@@ -136,6 +160,7 @@ class Actions(QtCore.QObject):
             icons["midi_devices"], "MIDI device manager..."
         )
         cls.preferencesAction = QAction(icons["settings"], "Preferences...")
+        cls.preferencesAction.setShortcut("Ctrl+P")
         cls.compatibilityAction = QAction(
             icons["compatibility_compatible"], "Compatible"
         )
