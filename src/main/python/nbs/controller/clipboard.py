@@ -18,10 +18,10 @@ def selectionToMimeData(notes: List[Note]) -> QtCore.QMimeData:
 
 
 def mimeDataToSelection(mimeData: QtCore.QMimeData) -> List[Note]:
-    if mimeData.hasFormat(MIMETYPE):
-        data: List[Note] = pickle.loads(mimeData.data(MIMETYPE))
-        return data
-    raise ValueError("MimeData does not contain a valid selection")
+    if not mimeData.hasFormat(MIMETYPE):
+        raise ValueError("MimeData does not contain a valid selection")
+    data: List[Note] = pickle.loads(mimeData.data(MIMETYPE))
+    return data
 
 
 class ClipboardController(QtCore.QObject):
