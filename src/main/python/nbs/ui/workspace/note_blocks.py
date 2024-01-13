@@ -884,7 +884,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             selectionPos = self.menuClickPos
             self.isClosingMenu = False
         elif self.view.viewport().geometry().contains(cursorPosition):
-            selectionPos = cursorPosition
+            # subtract scene header height
+            selectionPos = cursorPosition - QtCore.QPoint(0, 32)
         else:
             viewTopLeftCorner = self.view.mapToScene(BLOCK_SIZE - 1, BLOCK_SIZE - 1)
             selectionPos = viewTopLeftCorner
