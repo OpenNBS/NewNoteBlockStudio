@@ -8,8 +8,23 @@ from nbs.core.data import Note
 MIMETYPE = "application/nbs-noteblock-selection"
 
 
-class ClipboardController(QtCore.QObject):
+def selectionToMimeData(notes: List[Note]) -> QtCore.QMimeData:
+    mimeData = QtCore.QMimeData()
+    mimeData.setData(
+        MIMETYPE,
+        QtCore.QByteArray(pickle.dumps(notes)),
+    )
+    return mimeData
 
+
+def mimeDataToSelection(mimeData: QtCore.QMimeData) -> List[Note]:
+    if mimeData.hasFormat(MIMETYPE):
+        data: List[Note] = pickle.loads(mimeData.data(MIMETYPE))
+        return data
+    raise ValueError("MimeData does not contain a valid selection")
+
+
+class ClipboardController(QtCore.QObject):
     clipboardChanged = QtCore.pyqtSignal(list)
     clipboardCountChanged = QtCore.pyqtSignal(int)
 
@@ -20,20 +35,6 @@ class ClipboardController(QtCore.QObject):
         self._clipboard = clipboard
         self._clipboard.dataChanged.connect(self._onClipboardChanged)
         self._content: List[Note] = []
-
-    def _getSelectionMimeData(self, notes: List[Note]) -> QtCore.QMimeData:
-        mimeData = QtCore.QMimeData()
-        mimeData.setData(
-            MIMETYPE,
-            QtCore.QByteArray(pickle.dumps(notes)),
-        )
-        return mimeData
-
-    def _loadSelectionMimeData(self, mimeData: QtCore.QMimeData) -> List[Note]:
-        if mimeData.hasFormat(MIMETYPE):
-            data: List[Note] = pickle.loads(mimeData.data(MIMETYPE))
-            return data
-        raise ValueError("MimeData does not contain a valid selection")
 
     def _setMimeData(self, mimeData: QtCore.QMimeData) -> None:
         if mimeData.hasFormat(MIMETYPE):
@@ -51,7 +52,7 @@ class ClipboardController(QtCore.QObject):
         """
 
         try:
-            self._content = self._loadSelectionMimeData(self._clipboard.mimeData())
+            self._content = mimeDataToSelection(self._clipboard.mimeData())
         except ValueError:
             self._content = []
         self.clipboardChanged.emit(self._content)
@@ -59,7 +60,7 @@ class ClipboardController(QtCore.QObject):
 
     @QtCore.pyqtSlot(list)
     def setContent(self, notes: List[Note]) -> None:
-        self._setMimeData(self._getSelectionMimeData(notes))
+        self._setMimeData(selectionToMimeData(notes))
         self.clipboardChanged.emit(notes)
         self.clipboardCountChanged.emit(len(notes))
 
