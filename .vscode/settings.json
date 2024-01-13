@@ -16,5 +16,9 @@
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.cwd": "${workspaceFolder}/src/main/python",
-    "python.testing.pytestArgs": ["tests"]
+    "python.testing.pytestArgs": [
+        "tests",
+        "--cov-report=html",
+        "--cov-report=xml"
+    ]
 }
