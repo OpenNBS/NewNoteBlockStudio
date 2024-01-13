@@ -390,6 +390,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
         self.tickIndex: Dict[int, List[NoteBlock]] = {}
 
+        # Connect Qt's selectionChanged signal to our own slot
+        # to do stuff when the selection changes
+        self.selectionChanged.connect(self.updateSelectionStatus)
+
     ########## UI ##########
 
     def initUI(self):

@@ -150,8 +150,8 @@ class Actions(QtCore.QObject):
         cls.aboutAction = QAction(icons["about"], "About...")
 
         cls.setClipboard(False)
-        cls.setBlockCount(cls, 0)
-        cls.setSelectionStatus(cls, -2)
+        cls.setBlockCount(0)
+        cls.setSelectionStatus(-2)
 
     @classmethod
     def setClipboard(cls, hasClipboard: bool) -> None:
@@ -208,6 +208,7 @@ class Actions(QtCore.QObject):
         cls.selectAllButInstrumentAction.setEnabled(enabled)
 
     @QtCore.pyqtSlot(int)
+    @classmethod
     def setSelectionStatus(cls, selection: int) -> None:
         """
         Enable or disable the necessary actions according to the given selection status.
@@ -220,6 +221,7 @@ class Actions(QtCore.QObject):
             Actions.setAllSelected()
 
     @QtCore.pyqtSlot(int)
+    @classmethod
     def setBlockCount(cls, blockCount: int) -> None:
         if blockCount == 0:
             Actions.setEmpty()

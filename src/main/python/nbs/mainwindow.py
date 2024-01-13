@@ -108,7 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initNoteBlocks(self):
         # Selection
         self.noteBlockArea.blockCountChanged.connect(Actions.setBlockCount)
-        self.noteBlockArea.selectionChanged.connect(Actions.setSelectionStatus)
+        self.noteBlockArea.selectionChanged_.connect(Actions.setSelectionStatus)
 
         Actions.cutAction.triggered.connect(self.noteBlockArea.cutSelection)
         Actions.copyAction.triggered.connect(self.noteBlockArea.copySelection)
