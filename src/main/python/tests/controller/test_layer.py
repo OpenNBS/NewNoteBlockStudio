@@ -87,13 +87,13 @@ def testSetLayerVolume(layerController: LayerController) -> None:
     assert layerController.layers[0].volume == 50
 
 
-def testMoveLayer(layerController: LayerController) -> None:
-    layerController.moveLayer(0, 1)
+def testSwapLayer(layerController: LayerController) -> None:
+    layerController.swapLayers(0, 1)
     assert layerController.layers[0].name == "Layer 2"
     assert layerController.layers[1].name == "Layer 1"
 
 
-def testMoveLayerToSamePosition(layerController: LayerController) -> None:
-    layerController.moveLayer(0, 0)
+def testSwapLayerToSamePosition(layerController: LayerController) -> None:
+    layerController.swapLayers(0, 0)
     assert layerController.layers[0].name == "Layer 1"
     assert layerController.layers[1].name == "Layer 2"
