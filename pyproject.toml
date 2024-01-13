@@ -20,6 +20,7 @@ black = "^22.3.0"
 isort = "^5.10.1"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
+pytest-qt = "^4.3.1"
 snakeviz = "^2.1.1"
 pyqt5-stubs = "^5.15.6.0"
 

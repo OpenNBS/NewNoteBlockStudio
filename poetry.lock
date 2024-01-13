@@ -570,6 +570,25 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "pytest-qt"
+version = "4.3.1"
+description = "pytest support for PyQt and PySide applications"
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest-qt-4.3.1.tar.gz", hash = "sha256:0256041af78082dfc08e22ccf860aaa878d8029557f03f4bfc2007fc291b1e61"},
+    {file = "pytest_qt-4.3.1-py3-none-any.whl", hash = "sha256:e1bd043a4e460f184657bc3a0eabf289ad5e88a55a2abf0436d248049a331653"},
+]
+
+[package.dependencies]
+pytest = ">=3.0.0"
+
+[package.extras]
+dev = ["pre-commit", "tox"]
+doc = ["sphinx", "sphinx-rtd-theme"]
+
+[[package]]
 name = "python-openal"
 version = "0.4.1"
 description = "Python OpenAL bindings"
@@ -705,4 +724,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "8fd16e2ee70df69add665ef9bd47823dfa7ff6cea7b3a1edbf62f62324b057a9"
+content-hash = "1bbed8245b66aabdb2f615ef9ff76816c2b86388218866986623446aa91f8a20"
