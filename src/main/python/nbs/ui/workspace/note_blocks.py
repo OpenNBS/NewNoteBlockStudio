@@ -1236,6 +1236,9 @@ class NoteBlock(QtWidgets.QGraphicsObject):
         self.animation = QtCore.QPropertyAnimation(self, b"opacity")
         self.animation.setDuration(round(BLOCK_GLOW_DURATION_SECS * 1000))
 
+        # Update initial opacity based on hover status
+        self.hoverCheck()
+
     @property
     def tick(self) -> int:
         return int(self.x() // BLOCK_SIZE)
@@ -1294,6 +1297,16 @@ class NoteBlock(QtWidgets.QGraphicsObject):
     @property
     def cacheKey(self) -> str:
         return f"note_{self.ins}_{self.key}"
+
+    def hoverCheck(self):
+        """Update the opacity of the note block based on its hover status.
+        Useful for setting the appropriate state when the note block is created
+        under the mouse cursor.
+        """
+        if self.isUnderMouse():
+            self.setOpacity(BLOCK_GLOW_HOVER_OPACITY)
+        else:
+            self.setOpacity(BLOCK_GLOW_BASE_OPACITY)
 
     def hoverEnterEvent(self, event):
         self.setOpacity(BLOCK_GLOW_HOVER_OPACITY)
