@@ -483,6 +483,8 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.isTriggeringMenu = True
 
     def toggleSelectLeftRightActions(self, pos: int):
+        if not self.items():
+            return
         bbox = self.itemsBoundingRect()
         self.selectAllLeftActionEnabled.emit(pos > bbox.left())
         self.selectAllRightActionEnabled.emit(pos < bbox.right())
