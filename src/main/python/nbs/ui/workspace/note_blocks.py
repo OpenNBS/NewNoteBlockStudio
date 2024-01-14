@@ -459,7 +459,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
     def contextMenuEvent(self, event: QtWidgets.QGraphicsSceneContextMenuEvent) -> None:
         self.menuClickPos = event.scenePos()
-        self.toggleSelectLeftRightActions(event.scenePos().x())
+        self.toggleSelectLeftRightActions(event.scenePos().toPoint().x())
         self.menu.exec(event.screenPos())
         return super().contextMenuEvent(event)
 
