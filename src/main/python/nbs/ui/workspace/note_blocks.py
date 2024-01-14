@@ -457,7 +457,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.menu.aboutToHide.connect(self.onDismissMenu)
         self.menu.triggered.connect(self.onTriggerMenu)
 
-    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+    def contextMenuEvent(self, event: QtWidgets.QGraphicsSceneContextMenuEvent) -> None:
         self.menuClickPos = event.scenePos()
         self.toggleSelectLeftRightActions(event.scenePos().x())
         self.menu.exec(event.screenPos())
