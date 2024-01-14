@@ -361,6 +361,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.isMovingBlocks = False
         self.isRemovingNote = False
         self.isClosingMenu = False
+        self.isTriggeringMenu = False
         self.menuClickPos = None
         self.scrollSpeedX = 0
         self.scrollSpeedY = 0
@@ -416,6 +417,10 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.fps.setText(f"{self.frameRate:.1f} FPS")
         self.numFrames = 0
 
+        # Reset menu triggering status
+        self.isClosingMenu = False
+        self.isTriggeringMenu = False
+
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(QtGui.QColor(240, 240, 240))
@@ -458,12 +463,24 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.menu.exec(event.screenPos())
         return super().contextMenuEvent(event)
 
+    # onDismissMenu is called when the menu is dismissed, either by clicking outside of it
+    # or by triggering an option. We use this to cancel the next click if the menu was
+    # dismissed by clicking outside of it.
+
+    # Clicking outside of the menu calls onDismissMenu.
+    # Triggering an action from this menu calls onDismissMenu, then onTriggerMenu.
+    # Triggering an action that belongs to this menu *elsewhere* calls onTriggerMenu.
+
+    # To know when a menu was just closed (and not triggered), we check that isClosingMenu is True.
+    # To know when a menu was just triggered, we check that isTriggeringMenu is True AND isClosingMenu is True
+    # (as to only catch the case where the action was triggered from the menu, and not from somewhere else).
+
     @QtCore.pyqtSlot()
     def onDismissMenu(self):
         self.isClosingMenu = True
 
     def onTriggerMenu(self):
-        self.isClosingMenu = False
+        self.isTriggeringMenu = True
 
     def toggleSelectLeftRightActions(self, pos: int):
         bbox = self.itemsBoundingRect()
@@ -878,11 +895,17 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def retrieveSelection(self):
         # If the mouse cursor is over the scene, move the selection to the cursor.
         # Otherwise, move the selection to the top left corner of the view.
+
         cursorPosition = self.view.mapFromGlobal(QtGui.QCursor.pos())
 
-        if self.isClosingMenu:
+        if (
+            self.isClosingMenu
+            and self.isTriggeringMenu
+            and self.menuClickPos is not None
+        ):
             selectionPos = self.menuClickPos
             self.isClosingMenu = False
+            self.isTriggeringMenu = False
         elif self.view.viewport().geometry().contains(cursorPosition):
             # subtract scene header height
             selectionPos = cursorPosition - QtCore.QPoint(0, 32)
