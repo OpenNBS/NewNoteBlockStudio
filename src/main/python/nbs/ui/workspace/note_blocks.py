@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import pickle
 import time
+from copy import copy
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Dict, Generator, List, Optional, Sequence, Set, Union
@@ -342,7 +343,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     selectAllLeftActionEnabled = QtCore.pyqtSignal(bool)
     selectAllRightActionEnabled = QtCore.pyqtSignal(bool)
     blockCountChanged = QtCore.pyqtSignal(int)
-    blockAdded = QtCore.pyqtSignal(int, int, int, int, int)
+    blockAdded = QtCore.pyqtSignal(object)
     tickPlayed = QtCore.pyqtSignal(list)
 
     def __init__(self, layers: List[Layer], menu: QtWidgets.QMenu, parent=None):
@@ -557,31 +558,12 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
     def loadNoteData(self, blocks: Sequence[Note]) -> None:
         self.reset()
         for block in blocks:
-            self.addBlock(
-                block.tick,
-                block.layer,
-                block.key,
-                block.instrument,
-                block.velocity,
-                block.panning,
-                block.pitch,
-            )
+            self.addBlock(block.tick, block.layer, block)
         self.updateBlockCount()
         self.updateSceneSize()
 
     def getNoteData(self) -> List[NoteBlock]:
-        blocks = []
-        for block in self.items():
-            note = NoteBlock(
-                block.tick,
-                block.layer,
-                block.key,
-                block.instrument,
-                block.velocity,
-                block.panning,
-                block.pitch,
-            )
-            blocks.append(note)
+        blocks = [block.note for block in self.items()]
         return blocks
 
     ########## ATOMIC OPERATIONS ##########
@@ -629,19 +611,20 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         for item in self.items():
             self._doRemoveBlock(item)
 
-    def addBlock(self, x: int, y: int, *args, **kwargs):
+    def addBlock(self, x: int, y: int, note: Note) -> NoteBlock:
         """Add a note block at the specified position."""
         blockPos = self.getScenePos(x, y)
-        block = NoteBlock(x, y, *args, **kwargs)
+        block = NoteBlock(note)
         block.setPos(blockPos)
         self._doAddBlock(block)
         return block
 
-    def addBlockManual(self, x, y, *args, **kwargs):
-        block = self.addBlock(x, y, *args, **kwargs)
+    def addBlockManual(self, x: int, y: int, key: int, ins: int) -> None:
+        note = Note(tick=x, layer=y, key=key, instrument=ins)
+        block = self.addBlock(x, y, note)
         self.updateBlockCount()
         self.updateSceneSize()
-        self.blockAdded.emit(block.ins, block.key, block.vel, block.pan, block.pit)
+        self.blockAdded.emit(note)
 
     def removeBlock(self, block: NoteBlock) -> None:
         self._doRemoveBlock(block)
@@ -848,32 +831,15 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         origin = self.selectionBoundingRect().topLeft()
         for block in self.selectedItems():
             if isinstance(block, NoteBlock):
-                x = int(block.x() - origin.x()) // BLOCK_SIZE
-                y = int(block.y() - origin.y()) // BLOCK_SIZE
-                # TODO: Use composition and make a Note a member of NoteBlock
-                note = Note(
-                    x,
-                    y,
-                    block.ins,
-                    block.key,
-                    block.vel,
-                    block.pan,
-                    block.pit,
-                )
+                note = copy(block.note)
+                note.tick = int(block.x() - origin.x()) // BLOCK_SIZE
+                note.layer = int(block.y() - origin.y()) // BLOCK_SIZE
                 yield note
 
     @QtCore.pyqtSlot()
     def loadSelection(self, notes: List[Note]) -> None:
         for note in notes:
-            block = self.addBlock(
-                note.tick,
-                note.layer,
-                note.key,
-                note.instrument,
-                note.velocity,
-                note.panning,
-                note.pitch,
-            )
+            block = self.addBlock(note.tick, note.layer, note)
             block.setSelected(True)
         self.updateBlockCount()
         self.updateSelectionStatus()
@@ -1042,19 +1008,21 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         return self.tickIndex.get(tick) or []
 
     def playBlocks(self, blocks: Sequence[NoteBlock]) -> None:
+        # TODO: business logic should be in a controller
         payload = []
         lockedCheck = self._getLayerLockedCheck()
         for block in blocks:
             layer = self.layers[int(block.y() // BLOCK_SIZE)]
             if lockedCheck(layer):
                 continue
-            instrument = block.ins
-            key = block.key + block.pit / 100
-            volume = (block.vel / 100) * (layer.volume / 100)
+            note = block.note
+            instrument = note.instrument
+            key = note.key + note.pitch / 100
+            volume = (note.velocity / 100) * (layer.volume / 100)
             if layer.panning == 0:
-                panning = block.pan / 100
+                panning = note.panning / 100
             else:
-                panning = ((block.pan / 100) + (layer.panning / 100)) / 2
+                panning = ((note.panning / 100) + (layer.panning / 100)) / 2
             block.triggerPlaybackAnimation()
             payload.append((instrument, key, volume, panning))
         self.tickPlayed.emit(payload)
@@ -1117,9 +1085,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
             x, y = (round(i) for i in self.getGridPos(clickPos))
             if event.button() == QtCore.Qt.LeftButton:
                 self.removeBlockManual(x, y)
-                self.addBlockManual(
-                    x, y, self.activeKey, self.currentInstrument, 100, 0, 0
-                )
+                self.addBlockManual(x, y, self.activeKey, self.currentInstrument)
             elif event.button() == QtCore.Qt.RightButton:
                 if not self.hasSelection():  # Should open the menu otherwise
                     if self.blockAtPos(event.pos()) is not None:
@@ -1213,17 +1179,15 @@ class NoteBlock(QtWidgets.QGraphicsObject):
     FONT = QtGui.QFont()
     FONT.setPointSize(9)
 
-    def __init__(self, xx, yy, key, ins, vel=100, pan=0, pit=0, parent=None):
+    def __init__(self, note: Note, parent: Optional[QtWidgets.QGraphicsItem] = None):
         super().__init__(parent)
-        self.xx = xx
-        self.yy = yy
-        self.key = key
-        self.ins = ins
-        self.vel = vel
-        self.pan = pan
-        self.pit = pit
-        self.overlayColor = QtGui.QColor(*instrument_data[min(ins, 15)].color)
-        self.overlayColor = QtGui.QColor(*instrument_data[min(ins, 15)].color)
+        self.note = note
+        self.overlayColor = QtGui.QColor(
+            *instrument_data[min(note.instrument, 15)].color
+        )
+        self.overlayColor = QtGui.QColor(
+            *instrument_data[min(note.instrument, 15)].color
+        )
         self.label = self.getLabel()
         self.clicks = self.getClicks()
         self.isOutOfRange = False
@@ -1248,6 +1212,15 @@ class NoteBlock(QtWidgets.QGraphicsObject):
     @property
     def layer(self) -> int:
         return int(self.y() // BLOCK_SIZE)
+
+    def moveBy(self, dx: float, dy: float) -> None:
+        """
+        Move the note block to the specified position. This method overrides
+        `QGraphicsItem.moveBy` so that the internal `Note` object is kept up-to-date.
+        """
+        super().moveBy(dx, dy)
+        self.note.tick = int(self.x() // BLOCK_SIZE)
+        self.note.layer = int(self.y() // BLOCK_SIZE)
 
     def boundingRect(self):
         return self.RECT
@@ -1298,7 +1271,7 @@ class NoteBlock(QtWidgets.QGraphicsObject):
 
     @property
     def cacheKey(self) -> str:
-        return f"note_{self.ins}_{self.key}"
+        return f"note_{self.note.instrument}_{self.note.key}"
 
     def hoverCheck(self):
         """Update the opacity of the note block based on its hover status.
@@ -1323,7 +1296,7 @@ class NoteBlock(QtWidgets.QGraphicsObject):
             self.changeKey(-1)
 
     def changeKey(self, steps):
-        self.key += steps
+        self.note.key += steps
         self.refresh()
 
     def refresh(self):
@@ -1332,18 +1305,18 @@ class NoteBlock(QtWidgets.QGraphicsObject):
         self.update()
 
     def getLabel(self):
-        octave, key = divmod(self.key + 9, 12)
+        octave, key = divmod(self.note.key + 9, 12)
         label = KEY_LABELS[key] + str(octave)
         return label
 
     def getClicks(self):
         # TODO: replace hardcoded values with the note instrument's valid range
-        if self.key < 33:
+        if self.note.key < 33:
             return "<"
-        elif self.key > 57:
+        elif self.note.key > 57:
             return ">"
         else:
-            return str(self.key - 33)
+            return str(self.note.key - 33)
 
     def triggerPlaybackAnimation(self):
         if self.animation.state() == QtCore.QAbstractAnimation.State.Running:
@@ -1352,17 +1325,8 @@ class NoteBlock(QtWidgets.QGraphicsObject):
         self.animation.setEndValue(BLOCK_GLOW_BASE_OPACITY)
         self.animation.start(QtCore.QAbstractAnimation.DeletionPolicy.KeepWhenStopped)
 
-    def getData(self):
-        return (
-            self.key,
-            self.ins,
-            self.vel,
-            self.pan,
-            self.pit,
-        )
-
     def setInstrument(self, id_: int):
-        self.ins = id_
+        self.note.instrument = id_
         instrument = instrument_data[id_]
         self.overlayColor = QtGui.QColor(*instrument.color)
         self.update()
