@@ -60,41 +60,50 @@ class AudioOutputHandler:
         self.source_pool = AudioSourcePool()
         self.sink = SoundSink()
         self.sink.activate()
+        self.mutex = QtCore.QMutex()
 
     def push_sound(
         self, samples: SoundData, pitch: float, volume: float, panning: float
     ) -> None:
+        self.mutex.lock()
         try:
-            source = self.source_pool.get_source()
-        except NoSourceAvailableException:
-            # TODO: remove oldest sound from active_sounds and use that source
-            print("Skipping sound, no free sources available")
-            return
+            try:
+                source = self.source_pool.get_source()
+            except NoSourceAvailableException:
+                # TODO: remove oldest sound from active_sounds and use that source
+                print("Skipping sound, no free sources available")
+                return
 
-        source.gain = volume
-        source.pitch = pitch
-        source.position = [panning, 0, 0]
-        source.looping = False
-        source.queue(samples)
+            source.gain = volume
+            source.pitch = pitch
+            source.position = [panning, 0, 0]
+            source.looping = False
+            source.queue(samples)
 
-        sound = SoundInstance(samples, source, volume, pitch, panning)
-        self.active_sounds.insert(0, sound)
+            sound = SoundInstance(samples, source, volume, pitch, panning)
+            self.active_sounds.insert(0, sound)
 
-        self.sink.play(source)
+            self.sink.play(source)
+        finally:
+            self.mutex.unlock()
 
     def update(self):
-        # TODO: use a deque instead of a list / it might be possible
-        # to avoid checking every single sound, if they're sorted by
-        # end time
-        for sound in self.active_sounds:
-            # TODO: test polling the source state instead of using a timer
-            # if sound.source["dataproperties"]["source_state"] == al.PLAYING:
-            if datetime.now() >= sound.end_time:
-                self.active_sounds.remove(sound)
-                self.sink.stop(sound.source)
-                self.source_pool.release_source(sound.source)
-                sound.source.bufferqueue.clear()
-        self.sink.update()
+        self.mutex.lock()
+        try:
+            # TODO: use a deque instead of a list / it might be possible
+            # to avoid checking every single sound, if they're sorted by
+            # end time
+            for sound in self.active_sounds:
+                # TODO: test polling the source state instead of using a timer
+                # if sound.source["dataproperties"]["source_state"] == al.PLAYING:
+                if datetime.now() >= sound.end_time:
+                    self.active_sounds.remove(sound)
+                    self.sink.stop(sound.source)
+                    self.source_pool.release_source(sound.source)
+                    sound.source.bufferqueue.clear()
+            self.sink.update()
+        finally:
+            self.mutex.unlock()
 
 
 class AudioEngine(QtCore.QObject):
@@ -112,7 +121,7 @@ class AudioEngine(QtCore.QObject):
         self.sample_rate = sample_rate
         self.channels = channels
         self.master_volume = 0.5
-        self.sounds = []
+        self.sounds: List[SoundData] = []
         self.handler = AudioOutputHandler()
 
         # Set up update timer
@@ -156,7 +165,7 @@ class AudioEngine(QtCore.QObject):
 
     @QtCore.pyqtSlot(int, float, float, float)
     def playSound(self, index: int, volume: float, key: float, panning: float):
-        sound = self.sounds[index]
+        sound = self.sounds[index] if index < len(self.sounds) else None
         if sound is None:
             return
         # data = SoundData(*sound)
