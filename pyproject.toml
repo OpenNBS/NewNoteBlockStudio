@@ -10,9 +10,9 @@ python = "^3.10"
 PyQt5 = "^5.15.6"
 pynbs = "^1.1.0"
 QtAwesome = "^1.1.1"
-numpy = "^1.22.4"
+numpy = "^1.26.4"
 fbs = {git = "https://github.com/Bentroen/fbs.git"}
-python-openal = "^0.4.1"
+python-openal = {git = "https://github.com/koca2000/PyAL.git"}
 soundfile = "^0.12.1"
 
 [tool.poetry.group.dev.dependencies]
