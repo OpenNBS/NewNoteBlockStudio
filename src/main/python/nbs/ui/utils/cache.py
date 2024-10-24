@@ -20,12 +20,14 @@ class ScrollingPaintCache:
         self.painter = QtGui.QPainter(self.pixmap)
         self.paintFunction = paintFunction
 
-    def paint(self, paintDevice: QtGui.QPaintDevice, startPos: int, width: int):
+    def paint(self, paintDevice: QtGui.QPaintDevice, startPos: int, width: int, rect: QtCore.QRect):
 
         # print(startPos, width, self.start, self.end)
 
         if startPos < self.start or startPos + width > self.end:
             self.reset()
+            if width > self.width:
+                self.width = width * 2
         #    print("Redrawing (cache was out of bounds)")
 
         if self.pixmap.isNull():
@@ -39,9 +41,9 @@ class ScrollingPaintCache:
 
         self.painter.begin(paintDevice)
 
-        sourceRect = QtCore.QRect(startPos - self.start, 0, width, self.height)
+        sourceRect = QtCore.QRect(startPos - self.start + rect.x(), rect.y(), rect.width(), rect.height())
         self.painter.drawPixmap(
-            QtCore.QPoint(0, 0),
+            rect,
             self.pixmap,
             sourceRect,
         )

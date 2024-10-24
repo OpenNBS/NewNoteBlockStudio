@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import pickle
+import sys
 import time
 from copy import copy
 from dataclasses import dataclass
@@ -60,8 +61,7 @@ class TimeRuler(QtWidgets.QWidget):
         return textRect
 
     def paintEvent(self, event: QtGui.QPaintEvent):
-        self.resize(self.parent().width(), self.height())
-        self.paintCache.paint(self, self.offset, self.width())
+        self.paintCache.paint(self, self.offset, self.width(), event.rect())
 
     def paint(self, painter: QtGui.QPainter, rect: QtCore.QRect):
         mid = rect.height() // 2
@@ -78,12 +78,15 @@ class TimeRuler(QtWidgets.QWidget):
         # We start on negative coordinates to fill the gap until the first visible line
         x = -startPos
         y = (mid + rect.bottom()) / 2 - 1
+        roundedBlockSize = round(blocksize)
+        halfBlocksize = blocksize // 2
+        halfMid = mid // 2
         while x <= rect.width():
             painter.drawLine(int(x), rect.bottom() - 2, int(x), rect.bottom())
             currentTick = startTick + round((startPos + x) / blocksize)
             if currentTick % 4 == 0:
                 text = str(int(currentTick))
-                textRect = self.getTextRect(fm, text, round(x), y)
+                textRect = QtCore.QRect(round(x + halfBlocksize), round(y - halfMid + 2), roundedBlockSize, mid)
                 painter.drawText(
                     textRect,
                     QtCore.Qt.AlignmentFlag.AlignHCenter
@@ -102,12 +105,14 @@ class TimeRuler(QtWidgets.QWidget):
             timeInterval *= 2
         startTime, startPos = divmod(self.offset, distance)
         startTime *= timeInterval
+        roundedDistance = round(distance)
+        halfDistance = distance // 2
         for i, x in enumerate(range(-startPos, rect.width() + minDistance, distance)):
             painter.drawLine(x, mid - 2, x, mid)
             time = startTime + i * timeInterval
             text = seconds_to_timestr(time)
             y = mid / 2 - 1
-            textRect = self.getTextRect(fm, text, x, y)
+            textRect = QtCore.QRect(round(x + halfDistance), round(y - halfMid + 2), roundedDistance, mid)
             painter.drawText(
                 textRect,
                 QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
@@ -148,9 +153,9 @@ class Marker(QtWidgets.QWidget):
         self.scale = 1
         self.setMouseTracking(True)
         self.setCursor(QtCore.Qt.CursorShape.SizeHorCursor)
-        self.setFixedHeight(800)
         self.setFixedWidth(16)
         self.raise_()
+        self.head = self.getMarkerHead()
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         painter = QtGui.QPainter()
@@ -160,7 +165,7 @@ class Marker(QtWidgets.QWidget):
         pen.setWidth(2)
         painter.setPen(pen)
         painter.drawLine(8, 0, 8, self.height())
-        painter.fillPath(self.getMarkerHead(), QtGui.QBrush(markerColor))
+        painter.fillPath(self.head, QtGui.QBrush(markerColor))
         painter.end()
 
     def getMarkerHead(self) -> QtGui.QPainterPath:
@@ -287,7 +292,8 @@ class NoteBlockView(QtWidgets.QGraphicsView):
         vsb = self.verticalScrollBar()
         vsb.move(0, 32)
         vsb.resize(QtCore.QSize(vsb.width(), self.height() - 32 - SCROLL_BAR_SIZE))
-        self.ruler.update()
+        self.ruler.resize(self.width(), self.ruler.height())
+        self.marker.resize(self.marker.width(), self.height())
         self.scene().updateSceneSize()
 
     ########## Auto-scroll ##########
@@ -372,10 +378,7 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
         self.currentInstrument = 0
         self.minimumLayerCount = 0
         self.soloLayerIds: Set[int] = set()
-        # A value of 12 will generate segments of approximately 4x4 grid spaces,
-        # which can be guaranteed to contain 0-10 notes on average.
-        # See: https://doc.qt.io/qt-6/qgraphicsscene.html#bspTreeDepth-prop
-        self.setBspTreeDepth(12)
+        self.runningAnimations = list[OpacityAnimation]()
         self.initUI()
 
         self.fps = QtWidgets.QLabel(parent=self.view)
@@ -1023,9 +1026,21 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
                 panning = note.panning / 100
             else:
                 panning = ((note.panning / 100) + (layer.panning / 100)) / 2
-            block.triggerPlaybackAnimation()
             payload.append((instrument, key, volume, panning))
+        self.startAnimation(blocks)
         self.tickPlayed.emit(payload)
+
+    def startAnimation(self, blocks: Sequence[NoteBlock]):
+        anim = OpacityAnimation(self, blocks)
+        self.runningAnimations.append(anim)
+        anim.setDuration(round(BLOCK_GLOW_DURATION_SECS * 1000))
+        anim.setStartValue(BLOCK_GLOW_MAX_OPACITY)
+        anim.setEndValue(BLOCK_GLOW_BASE_OPACITY)
+        anim.finished.connect(lambda: self.animationFinished(anim))
+        anim.start(QtCore.QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
+    
+    def animationFinished(self, animation: OpacityAnimation):
+        self.runningAnimations.remove(animation)
 
     def playTick(self, tick: int) -> None:
         blocks = self.getBlocksInTick(tick)
@@ -1164,8 +1179,33 @@ class NoteBlockArea(QtWidgets.QGraphicsScene):
 
         return False
 
+class OpacityAnimation(QtCore.QVariantAnimation):
 
-class NoteBlock(QtWidgets.QGraphicsObject):
+    def __init__(self, scene: NoteBlockArea, items: Sequence[NoteBlock]):
+        super().__init__(None)
+        self.scene = scene
+        self.items = items
+        self.valueChanged.connect(self.updateItem)
+        self.lastUpdateNs = 0
+    
+    def updateItem(self):
+        currentTimeNs = self.currentTime()
+        if currentTimeNs == 0 or currentTimeNs - self.lastUpdateNs > 16:
+            self.lastUpdateNs = currentTimeNs
+            x = sys.maxsize
+            y = sys.maxsize
+            maxY = 0
+            for nb in self.items:
+                if nb.x() < x:
+                    x = nb.x()
+                if nb.y() < y:
+                    y = nb.y()
+                if nb.y() > maxY:
+                    maxY = nb.y()
+                nb.alpha = self.currentValue()
+            self.scene.update(math.floor(x), math.floor(y), BLOCK_SIZE, math.ceil(maxY - y + BLOCK_SIZE))
+        
+class NoteBlock(QtWidgets.QGraphicsItem):
     # Geometry
     RECT = QtCore.QRectF(0, 0, BLOCK_SIZE, BLOCK_SIZE)
     TOP_RECT = QtCore.QRect(0, 0, BLOCK_SIZE, BLOCK_SIZE // 2)
@@ -1185,22 +1225,13 @@ class NoteBlock(QtWidgets.QGraphicsObject):
         self.overlayColor = QtGui.QColor(
             *instrument_data[min(note.instrument, 15)].color
         )
-        self.overlayColor = QtGui.QColor(
-            *instrument_data[min(note.instrument, 15)].color
-        )
         self.label = self.getLabel()
         self.clicks = self.getClicks()
         self.isOutOfRange = False
         self.selected = False
         self.setAcceptHoverEvents(True)
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
-        # TODO: ItemCoordinateCache makes items pixelated. Invalidate the cache
-        # when zooming very close as few notes are being drawn.
-        self.setCacheMode(QtWidgets.QGraphicsItem.ItemCoordinateCache)
-
-        # OPACITY CONTROLS
-        self.animation = QtCore.QPropertyAnimation(self, b"opacity")
-        self.animation.setDuration(round(BLOCK_GLOW_DURATION_SECS * 1000))
+        self.alpha = 1.0
 
         # Update initial opacity based on hover status
         self.hoverCheck()
@@ -1230,6 +1261,7 @@ class NoteBlock(QtWidgets.QGraphicsObject):
         if pixmap is None:
             pixmap = self.getPixmap()
             PIXMAP_CACHE.insert(self.cacheKey, pixmap)
+        painter.setOpacity(self.alpha)
         painter.drawPixmap(0, 0, pixmap)
 
         selectedColor = QtGui.QColor(255, 255, 255, 180)
@@ -1272,6 +1304,13 @@ class NoteBlock(QtWidgets.QGraphicsObject):
     @property
     def cacheKey(self) -> str:
         return f"note_{self.note.instrument}_{self.note.key}"
+
+    def setAlpha(self, value: float):
+        self.alpha = value
+        self.update()
+
+    def setOpacity(self, opacity: float):
+        self.setAlpha(opacity)
 
     def hoverCheck(self):
         """Update the opacity of the note block based on its hover status.
@@ -1317,13 +1356,6 @@ class NoteBlock(QtWidgets.QGraphicsObject):
             return ">"
         else:
             return str(self.note.key - 33)
-
-    def triggerPlaybackAnimation(self):
-        if self.animation.state() == QtCore.QAbstractAnimation.State.Running:
-            self.animation.stop()
-        self.animation.setStartValue(BLOCK_GLOW_MAX_OPACITY)
-        self.animation.setEndValue(BLOCK_GLOW_BASE_OPACITY)
-        self.animation.start(QtCore.QAbstractAnimation.DeletionPolicy.KeepWhenStopped)
 
     def setInstrument(self, id_: int):
         self.note.instrument = id_
