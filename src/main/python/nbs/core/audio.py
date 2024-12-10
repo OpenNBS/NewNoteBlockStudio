@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Sequence, Tuple
 
 import soundfile as sf
+from openal import alc
 from openal.audio import SoundData, SoundSink, SoundSource
 from PyQt5 import QtCore
 
@@ -41,7 +42,7 @@ class SoundInstance:
 
 
 class AudioSourcePool:
-    def __init__(self, sources: int = 256) -> None:
+    def __init__(self, sources: int = 1024) -> None:
         self.free_sources = [SoundSource() for _ in range(sources)]
 
     def get_source(self) -> SoundSource:
@@ -58,7 +59,13 @@ class AudioOutputHandler:
     def __init__(self):
         self.active_sounds: List[SoundInstance] = []
         self.source_pool = AudioSourcePool()
-        self.sink = SoundSink()
+        attributes = [
+            alc.ALC_MONO_SOURCES,
+            0,  # Request 256 mono sources
+            alc.ALC_STEREO_SOURCES,
+            1024,  # Request 1024 stereo sources
+        ]
+        self.sink = SoundSink(None, attributes)
         self.sink.activate()
         self.mutex = QtCore.QMutex()
 

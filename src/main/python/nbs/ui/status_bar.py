@@ -32,7 +32,7 @@ class StatusBar(QtWidgets.QStatusBar):
         self.addPermanentWidget(self.selectedLabel, stretch=5)
 
         self.soundsLabel = QtWidgets.QLabel()
-        self.soundsLabel.setText("Sounds: 0 / 256")
+        self.soundsLabel.setText("Sounds: 0 / 1024")
         self.addPermanentWidget(self.soundsLabel, stretch=5)
 
         self.midiDevicesLabel = QtWidgets.QLabel()
@@ -73,11 +73,11 @@ class StatusBar(QtWidgets.QStatusBar):
 
     @QtCore.pyqtSlot(int)
     def setSoundCount(self, sounds: int):
-        if sounds >= 256:
+        if sounds >= 1024:
             self.soundsLabel.setStyleSheet("color: red")
         else:
             self.soundsLabel.setStyleSheet("color: black")
-        self.soundsLabel.setText(f"Sounds: {sounds} / 256")
+        self.soundsLabel.setText(f"Sounds: {sounds} / 1024")
 
     @QtCore.pyqtSlot(list)
     def setMidiDevices(self, devices: List[str]):
