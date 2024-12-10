@@ -70,9 +70,11 @@ class AudioOutputHandler:
             try:
                 source = self.source_pool.get_source()
             except NoSourceAvailableException:
-                # TODO: remove oldest sound from active_sounds and use that source
-                print("Skipping sound, no free sources available")
-                return
+                z = self.active_sounds.pop(0)
+                self.sink.stop(z.source)
+                self.source_pool.release_source(z.source)
+                z.source.bufferqueue.clear()
+                source = self.source_pool.get_source()
 
             source.gain = volume
             source.pitch = pitch
